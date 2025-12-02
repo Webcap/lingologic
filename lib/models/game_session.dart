@@ -10,6 +10,7 @@ class GameSession {
   final DateTime? endTime;
   final int score;
   final String difficultyLevel;
+  final String? language; // Language being practiced
 
   GameSession({
     required this.userId,
@@ -18,6 +19,7 @@ class GameSession {
     this.endTime,
     required this.score,
     required this.difficultyLevel,
+    this.language,
   });
 
   factory GameSession.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class GameSession {
           : null,
       score: json['score'] as int,
       difficultyLevel: json['difficulty_level'] as String,
+      language: json['language'] as String?,
     );
   }
 
@@ -43,6 +46,7 @@ class GameSession {
       'end_time': endTime?.toIso8601String(),
       'score': score,
       'difficulty_level': difficultyLevel,
+      'language': language,
     };
   }
 }

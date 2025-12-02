@@ -2,18 +2,57 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 
 class AuthService {
-  final SupabaseClient _supabase = SupabaseConfig.client;
+  SupabaseClient? _supabase;
+  
+  SupabaseClient? get _supabaseClient {
+    if (_supabase == null) {
+      _supabase = SupabaseConfig.client;
+    }
+    return _supabase;
+  }
 
-  User? get currentUser => _supabase.auth.currentUser;
-  Session? get currentSession => _supabase.auth.currentSession;
+  User? get currentUser {
+    try {
+      final client = _supabaseClient;
+      if (client == null) return null;
+      return client.auth.currentUser;
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  Session? get currentSession {
+    try {
+      final client = _supabaseClient;
+      if (client == null) return null;
+      return client.auth.currentSession;
+    } catch (e) {
+      return null;
+    }
+  }
 
-  Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
+  Stream<AuthState> get authStateChanges {
+    try {
+      final client = _supabaseClient;
+      if (client == null) {
+        return Stream.value(AuthState(AuthChangeEvent.signedOut, null));
+      }
+      return client.auth.onAuthStateChange;
+    } catch (e) {
+      // Return a stream that immediately emits no user if Supabase isn't initialized
+      return Stream.value(AuthState(AuthChangeEvent.signedOut, null));
+    }
+  }
 
   Future<AuthResponse> signUp({
     required String email,
     required String password,
   }) async {
-    return await _supabase.auth.signUp(
+    final client = _supabaseClient;
+    if (client == null) {
+      throw Exception('Supabase not initialized');
+    }
+    return await client.auth.signUp(
       email: email,
       password: password,
     );
@@ -23,29 +62,39 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    return await _supabase.auth.signInWithPassword(
+    final client = _supabaseClient;
+    if (client == null) {
+      throw Exception('Supabase not initialized');
+    }
+    return await client.auth.signInWithPassword(
       email: email,
       password: password,
     );
   }
 
   Future<AuthResponse> signInAnonymously() async {
-    return await _supabase.auth.signInAnonymously();
+    final client = _supabaseClient;
+    if (client == null) {
+      throw Exception('Supabase not initialized');
+    }
+    return await client.auth.signInAnonymously();
   }
 
   Future<void> signOut() async {
-    await _supabase.auth.signOut();
+    final client = _supabaseClient;
+    if (client == null) return;
+    await client.auth.signOut();
   }
 
   Future<UserResponse> updateUser({
     String? email,
     String? password,
   }) async {
-    final updates = <String, dynamic>{};
-    if (email != null) updates['email'] = email;
-    if (password != null) updates['password'] = password;
-
-    return await _supabase.auth.updateUser(
+    final client = _supabaseClient;
+    if (client == null) {
+      throw Exception('Supabase not initialized');
+    }
+    return await client.auth.updateUser(
       UserAttributes(
         email: email,
         password: password,
@@ -59,7 +108,20 @@ class AuthService {
     await signOut();
   }
 
-  bool get isAuthenticated => currentUser != null;
-  bool get isAnonymous => currentUser?.isAnonymous ?? false;
+  bool get isAuthenticated {
+    try {
+      return currentUser != null;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  bool get isAnonymous {
+    try {
+      return currentUser?.isAnonymous ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
 }
 

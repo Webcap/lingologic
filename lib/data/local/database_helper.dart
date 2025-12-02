@@ -63,6 +63,23 @@ class DatabaseHelper {
       )
     ''');
 
+    // User languages table
+    await db.execute('''
+      CREATE TABLE user_languages (
+        user_id TEXT NOT NULL,
+        language TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 0,
+        started_at TEXT NOT NULL,
+        total_words_learned INTEGER NOT NULL DEFAULT 0,
+        total_lessons_completed INTEGER NOT NULL DEFAULT 0,
+        streak_days INTEGER NOT NULL DEFAULT 0,
+        last_practiced_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (user_id, language)
+      )
+    ''');
+
     // Game sessions table
     await db.execute('''
       CREATE TABLE game_sessions (
@@ -72,7 +89,8 @@ class DatabaseHelper {
         start_time TEXT NOT NULL,
         end_time TEXT,
         score INTEGER NOT NULL DEFAULT 0,
-        difficulty_level TEXT NOT NULL
+        difficulty_level TEXT NOT NULL,
+        language TEXT
       )
     ''');
 
@@ -92,6 +110,8 @@ class DatabaseHelper {
     // Create indexes
     await db.execute('CREATE INDEX idx_word_mastery_user ON word_mastery(user_id)');
     await db.execute('CREATE INDEX idx_word_mastery_review ON word_mastery(next_review_date)');
+    await db.execute('CREATE INDEX idx_user_languages_user ON user_languages(user_id)');
+    await db.execute('CREATE INDEX idx_user_languages_active ON user_languages(user_id, is_active)');
     await db.execute('CREATE INDEX idx_game_sessions_user ON game_sessions(user_id)');
   }
 

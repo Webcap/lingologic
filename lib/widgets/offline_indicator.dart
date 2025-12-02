@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../services/connectivity_service.dart';
 import 'dart:async';
 
@@ -23,16 +24,24 @@ class _OfflineIndicatorState extends State<OfflineIndicator> {
   @override
   void initState() {
     super.initState();
-    _isOnline = widget.connectivityService.isOnline;
-    _subscription = widget.connectivityService.connectivityStream.listen(
-      (isOnline) {
-        if (mounted) {
-          setState(() {
-            _isOnline = isOnline;
-          });
-        }
-      },
-    );
+    try {
+      _isOnline = widget.connectivityService.isOnline;
+      _subscription = widget.connectivityService.connectivityStream.listen(
+        (isOnline) {
+          if (mounted) {
+            setState(() {
+              _isOnline = isOnline;
+            });
+          }
+        },
+        onError: (error) {
+          debugPrint('Connectivity stream error: $error');
+        },
+      );
+    } catch (e) {
+      debugPrint('OfflineIndicator initialization error: $e');
+      _isOnline = true; // Default to online if we can't determine
+    }
   }
 
   @override
@@ -44,6 +53,7 @@ class _OfflineIndicatorState extends State<OfflineIndicator> {
   @override
   Widget build(BuildContext context) {
     return Stack(
+      textDirection: TextDirection.ltr,
       children: [
         widget.child,
         if (!_isOnline)

@@ -1,0 +1,95 @@
+{
+    "designProfile": {
+      "aesthetic": "Playful Modern EdTech",
+      "summary": "A high-brightness pastel color palette combined with heavy usage of rounded corners (pill shapes) and 3D avatar elements. The design balances clean whitespace with vibrant gradients to create a gamified, approachable learning environment.",
+      "colorPalette": {
+        "primary": {
+          "name": "Vibrant Mint Green",
+          "hex": "#4ADE80",
+          "usage": "CTAs, progress bars, active states"
+        },
+        "secondary": [
+          {
+            "name": "Golden Orange",
+            "hex": "#FFB039",
+            "usage": "Gamification elements, rewards"
+          },
+          {
+            "name": "Electric Lavender",
+            "hex": "#A78BFA",
+            "usage": "Accents, icons"
+          },
+          {
+            "name": "Soft Cyan",
+            "hex": "#67E8F9",
+            "usage": "Category cards"
+          },
+          {
+            "name": "Salmon Pink",
+            "hex": "#FF8FA3",
+            "usage": "Category cards"
+          }
+        ],
+        "backgrounds": {
+          "main": "Linear Gradient: Lavender (#E0D4FC) to Soft Pink (#FCE7F3)",
+          "card": "#FFFFFF (High Opacity)",
+          "glass": "rgba(255, 255, 255, 0.7)"
+        },
+        "semantic": {
+          "success": "#4ADE80",
+          "textPrimary": "#111827",
+          "textSecondary": "#6B7280"
+        }
+      },
+      "typography": {
+        "headings": {
+          "familyType": "Sans-Serif (Geometric)",
+          "weight": "Bold / Heavy (700-800)",
+          "characteristics": "Tight tracking, round and friendly structure"
+        },
+        "body": {
+          "familyType": "Sans-Serif",
+          "weight": "Regular (400) to Medium (500)",
+          "readability": "High contrast"
+        },
+        "googleFontRecommendations": [
+          "Poppins",
+          "Nunito"
+        ]
+      },
+      "uiComponents": {
+        "buttons": {
+          "shape": "Pill (Fully rounded)",
+          "height": "48-56px",
+          "border": "None",
+          "shadow": "Subtle colored glow matching the button hue"
+        },
+        "cards": {
+          "cornerRadius": "24px (Standard), 12px (Tags)",
+          "border": "None",
+          "elevation": "Soft, diffuse drop shadow (0px 4px 20px rgba(0,0,0,0.05))"
+        },
+        "navigation": {
+          "style": "Floating pill-shaped bottom bar",
+          "effect": "Glassmorphism or Solid White"
+        }
+      },
+      "layoutAndSpacing": {
+        "whitespaceDensity": "Airy",
+        "gridSystem": "8pt grid",
+        "sideMargins": "24px",
+        "padding": "Generous internal card padding (approx 20px)"
+      },
+      "iconographyAndImagery": {
+        "icons": {
+          "style": "Filled / Solid",
+          "edges": "Soft, rounded"
+        },
+        "imagery": {
+          "subject": "3D Avatars (Memoji style) and diverse photography",
+          "treatment": "Cut-out subjects on abstract backgrounds or inside rounded frames",
+          "radius": "24px (containers) or Circular (profiles)"
+        }
+      }
+    }
+  }

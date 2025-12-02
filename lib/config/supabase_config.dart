@@ -31,20 +31,46 @@ class SupabaseConfig {
       debugPrint('WARNING: Supabase publishable key not configured. Some features may not work.');
     }
 
-    try {
-      await Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabaseAnonKey,
-        authOptions: const FlutterAuthClientOptions(
-          authFlowType: AuthFlowType.pkce,
-        ),
-      );
-    } catch (e) {
-      debugPrint('Supabase initialization error: $e');
-      // Allow app to continue - it will work in offline mode
+    // Only initialize if we have a valid key
+    if (supabaseAnonKey != 'YOUR_SUPABASE_ANON_KEY' && supabaseAnonKey.isNotEmpty) {
+      try {
+        await Supabase.initialize(
+          url: supabaseUrl,
+          anonKey: supabaseAnonKey,
+          authOptions: const FlutterAuthClientOptions(
+            authFlowType: AuthFlowType.pkce,
+          ),
+        );
+        debugPrint('Supabase initialized successfully');
+      } catch (e, stackTrace) {
+        debugPrint('Supabase initialization error: $e');
+        debugPrint('Stack trace: $stackTrace');
+        // Allow app to continue - it will work in offline mode
+      }
+    } else {
+      debugPrint('Skipping Supabase initialization - no valid key provided');
     }
   }
 
-  static SupabaseClient get client => Supabase.instance.client;
+  static SupabaseClient? get client {
+    try {
+      // Check if Supabase is initialized
+      if (!Supabase.instance.isInitialized) {
+        return null;
+      }
+      return Supabase.instance.client;
+    } catch (e) {
+      // Any error means Supabase is not available
+      return null;
+    }
+  }
+  
+  static SupabaseClient get clientOrThrow {
+    final client = SupabaseConfig.client;
+    if (client == null) {
+      throw Exception('Supabase not initialized. Call SupabaseConfig.initialize() first.');
+    }
+    return client;
+  }
 }
 

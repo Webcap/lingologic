@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../services/sync_service.dart';
-import '../services/connectivity_service.dart';
 import '../utils/error_handler.dart';
+import '../theme/app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -71,32 +71,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: const Text('Settings'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          const Text(
-            'Audio Settings',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.mainGradient,
+        ),
+        child: ListView(
+          padding: const EdgeInsets.all(24.0),
+          children: [
+            const Text(
+              'Audio Settings',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+            const SizedBox(height: 16),
+            Container(
+              decoration: AppTheme.cardDecoration(),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Volume'),
-                      Text('${(_volume * 100).toInt()}%'),
+                      const Text(
+                        'Volume',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryMintGreen.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${(_volume * 100).toInt()}%',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.primaryMintGreen,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+                  const SizedBox(height: 12),
                   Slider(
                     value: _volume,
+                    activeColor: AppTheme.primaryMintGreen,
                     onChanged: (value) {
                       setState(() {
                         _volume = value;
@@ -107,70 +136,164 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Sync Status',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+            const SizedBox(height: 24),
+            const Text(
+              'Sync Status',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+            const SizedBox(height: 16),
+            Container(
+              decoration: AppTheme.cardDecoration(),
+              padding: const EdgeInsets.all(20.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        _isOffline ? Icons.cloud_off : Icons.cloud_done,
-                        color: _isOffline ? Colors.orange : Colors.green,
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (_isOffline
+                                  ? AppTheme.goldenOrange
+                                  : AppTheme.primaryMintGreen)
+                              .withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _isOffline ? Icons.cloud_off : Icons.cloud_done,
+                          color: _isOffline
+                              ? AppTheme.goldenOrange
+                              : AppTheme.primaryMintGreen,
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(_isOffline ? 'Offline' : 'Online'),
+                      const SizedBox(width: 12),
+                      Text(
+                        _isOffline ? 'Offline' : 'Online',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                   if (_isOffline)
-                    TextButton(
-                      onPressed: () => _syncService.sync(),
-                      child: const Text('Sync Now'),
+                    Container(
+                      decoration: AppTheme.pillDecoration(AppTheme.goldenOrange),
+                      child: TextButton(
+                        onPressed: () => _syncService.sync(),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: const Text(
+                          'Sync Now',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Account',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+            const SizedBox(height: 24),
+            const Text(
+              'Account',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.person),
-                  title: Text(_authService.currentUser?.email ?? 'Guest User'),
-                  subtitle: Text(
-                    _authService.isAnonymous ? 'Anonymous account' : 'Registered account',
+            const SizedBox(height: 16),
+            Container(
+              decoration: AppTheme.cardDecoration(),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.electricLavender,
+                                AppTheme.softCyan,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _authService.currentUser?.email ?? 'Guest User',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _authService.isAnonymous
+                                    ? 'Anonymous account'
+                                    : 'Registered account',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: const Text('Sign Out'),
-                  onTap: _handleSignOut,
-                ),
-              ],
+                  const Divider(height: 1),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.salmonPink.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.logout,
+                        color: AppTheme.salmonPink,
+                      ),
+                    ),
+                    title: const Text(
+                      'Sign Out',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onTap: _handleSignOut,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

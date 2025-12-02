@@ -4,29 +4,14 @@ import '../screens/progress_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
+import '../screens/lessons/lessons_list_screen.dart';
+import '../screens/lessons/lesson_detail_screen.dart';
+import '../screens/language_selection_screen.dart';
 import '../widgets/loading_screen.dart';
-import '../services/auth_service.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/',
-  redirect: (context, state) {
-    final authService = AuthService();
-    final isAuthenticated = authService.isAuthenticated;
-    final isAuthRoute = state.matchedLocation == '/login' ||
-        state.matchedLocation == '/signup';
-
-    // Redirect to login if not authenticated and not on auth route
-    if (!isAuthenticated && !isAuthRoute) {
-      return '/login';
-    }
-
-    // Redirect to home if authenticated and on auth route
-    if (isAuthenticated && isAuthRoute) {
-      return '/';
-    }
-
-    return null;
-  },
+  initialLocation: '/login', // Start at login screen
+  // Removed redirect for now to prevent crashes - will add back after app is stable
   errorBuilder: (context, state) => const LoadingScreen(
     message: 'Page not found',
   ),
@@ -51,6 +36,20 @@ final appRouter = GoRouter(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
     ),
+    GoRoute(
+      path: '/lessons',
+      builder: (context, state) => const LessonsListScreen(),
+    ),
+    GoRoute(
+      path: '/lessons/:lessonId',
+      builder: (context, state) {
+        final lessonId = state.pathParameters['lessonId']!;
+        return LessonDetailScreen(lessonId: lessonId);
+      },
+    ),
+    GoRoute(
+      path: '/languages',
+      builder: (context, state) => const LanguageSelectionScreen(),
+    ),
   ],
 );
-

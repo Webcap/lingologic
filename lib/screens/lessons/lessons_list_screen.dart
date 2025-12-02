@@ -1,0 +1,720 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../models/lesson.dart';
+import '../../models/lesson_progress.dart';
+import '../../services/lesson_service.dart';
+import '../../services/auth_service.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/error_handler.dart';
+import '../../widgets/language_selector.dart';
+
+class LessonsListScreen extends StatefulWidget {
+  const LessonsListScreen({super.key});
+
+  @override
+  State<LessonsListScreen> createState() => _LessonsListScreenState();
+}
+
+class _LessonsListScreenState extends State<LessonsListScreen> {
+  final _lessonService = LessonService();
+  final _authService = AuthService();
+  
+  List<Lesson> _lessons = [];
+  Map<String, LessonProgress> _progressMap = {};
+  bool _isLoading = true;
+  String? _selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLessons();
+  }
+
+  Future<void> _loadLessons() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = _authService.currentUser;
+      if (user == null) {
+        if (mounted) {
+          context.go('/login');
+        }
+        return;
+      }
+
+      // GetLessons will automatically filter by active language
+      final lessons = await _lessonService.getLessons();
+      final progressList = await _lessonService.getUserLessonProgressAll();
+      
+      // Filter progress to only include lessons for active language
+      final lessonIds = lessons.map((l) => l.id).toSet();
+      final filteredProgress = progressList.where((p) => lessonIds.contains(p.lessonId)).toList();
+
+      final progressMap = <String, LessonProgress>{};
+      for (final progress in filteredProgress) {
+        progressMap[progress.lessonId] = progress;
+      }
+
+      if (mounted) {
+        setState(() {
+          _lessons = lessons;
+          _progressMap = progressMap;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorHandler.handleError(context, e, contextMessage: 'Error loading lessons');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  LessonProgress? _getProgress(String lessonId) {
+    return _progressMap[lessonId];
+  }
+
+  List<Lesson> get _filteredLessons {
+    if (_selectedCategory == null) return _lessons;
+    return _lessons.where((l) => l.category == _selectedCategory).toList();
+  }
+
+  List<String> get _categories {
+    final categories = _lessons.map((l) => l.category).whereType<String>().toSet().toList();
+    categories.sort();
+    return categories;
+  }
+
+  int get _completedCount {
+    return _progressMap.values.where((p) => p.isCompleted).length;
+  }
+
+  int get _inProgressCount {
+    return _progressMap.values.where((p) => p.isInProgress).length;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.mainGradient,
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : CustomScrollView(
+                slivers: [
+                  // App Bar
+                  SliverAppBar(
+                    expandedHeight: 0,
+                    floating: true,
+                    pinned: false,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardWhite.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.arrow_back_ios_new, color: AppTheme.textPrimary, size: 18),
+                      ),
+                      onPressed: () => context.pop(),
+                    ),
+                    actions: [
+                      LanguageSelector(
+                        onLanguageSelected: (language) {
+                          _loadLessons();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                  ),
+                  
+                  // Header Section
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Lessons',
+                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.textPrimary,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Master grammar and vocabulary',
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  color: AppTheme.textSecondary,
+                                ),
+                          ),
+                          const SizedBox(height: 24),
+                          
+                          // Stats Cards
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildStatCard(
+                                  icon: Icons.check_circle_rounded,
+                                  value: '$_completedCount',
+                                  label: 'Completed',
+                                  color: AppTheme.successGreen,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildStatCard(
+                                  icon: Icons.book_rounded,
+                                  value: '$_inProgressCount',
+                                  label: 'In Progress',
+                                  color: AppTheme.goldenOrange,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildStatCard(
+                                  icon: Icons.library_books_rounded,
+                                  value: '${_lessons.length}',
+                                  label: 'Total',
+                                  color: AppTheme.electricLavender,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Category Filter
+                  if (_categories.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Categories',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              height: 44,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: [
+                                  _CategoryChip(
+                                    label: 'All',
+                                    isSelected: _selectedCategory == null,
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedCategory = null;
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ..._categories.map((category) => Padding(
+                                        padding: const EdgeInsets.only(right: 8),
+                                        child: _CategoryChip(
+                                          label: category.replaceAll('_', ' '),
+                                          isSelected: _selectedCategory == category,
+                                          onTap: () {
+                                            setState(() {
+                                              _selectedCategory = category;
+                                            });
+                                          },
+                                        ),
+                                      )),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+                        ),
+                      ),
+                    ),
+                  
+                  // Lessons List
+                  if (_filteredLessons.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.school_outlined,
+                              size: 64,
+                              color: AppTheme.textSecondary.withOpacity(0.5),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No lessons available',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: AppTheme.textSecondary,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final lesson = _filteredLessons[index];
+                            final progress = _getProgress(lesson.id);
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: _LessonCard(
+                                lesson: lesson,
+                                progress: progress,
+                                onTap: () {
+                                  context.push('/lessons/${lesson.id}');
+                                },
+                              ),
+                            );
+                          },
+                          childCount: _filteredLessons.length,
+                        ),
+                      ),
+                    ),
+                  
+                  // Bottom padding
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: 24),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardWhite.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 20, color: color),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppTheme.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CategoryChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [
+                    AppTheme.primaryMintGreen,
+                    AppTheme.primaryMintGreen.withOpacity(0.8),
+                  ],
+                )
+              : null,
+          color: isSelected ? null : AppTheme.cardWhite.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: isSelected
+                ? Colors.transparent
+                : AppTheme.textSecondary.withOpacity(0.2),
+            width: 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppTheme.primaryMintGreen.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppTheme.textPrimary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LessonCard extends StatelessWidget {
+  final Lesson lesson;
+  final LessonProgress? progress;
+  final VoidCallback onTap;
+
+  const _LessonCard({
+    required this.lesson,
+    this.progress,
+    required this.onTap,
+  });
+
+  Color _getCategoryColor(String? category) {
+    if (category == null) return AppTheme.electricLavender;
+    switch (category.toLowerCase()) {
+      case 'grammar':
+        return AppTheme.electricLavender;
+      case 'vocabulary':
+        return AppTheme.softCyan;
+      case 'listening':
+        return AppTheme.salmonPink;
+      default:
+        return AppTheme.primaryMintGreen;
+    }
+  }
+
+  IconData _getCategoryIcon(String? category) {
+    if (category == null) return Icons.school_rounded;
+    switch (category.toLowerCase()) {
+      case 'grammar':
+        return Icons.auto_stories_rounded;
+      case 'vocabulary':
+        return Icons.book_rounded;
+      case 'listening':
+        return Icons.headphones_rounded;
+      default:
+        return Icons.school_rounded;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final status = progress?.status ?? LessonStatus.notStarted;
+    final progressPercentage = progress?.progressPercentage ?? 0;
+    final isCompleted = status == LessonStatus.completed;
+    final isInProgress = status == LessonStatus.inProgress;
+    final categoryColor = _getCategoryColor(lesson.category);
+    final categoryIcon = _getCategoryIcon(lesson.category);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardWhite.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isCompleted
+              ? AppTheme.successGreen.withOpacity(0.3)
+              : isInProgress
+                  ? AppTheme.goldenOrange.withOpacity(0.3)
+                  : AppTheme.textSecondary.withOpacity(0.1),
+          width: isCompleted || isInProgress ? 2 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category Icon
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            categoryColor,
+                            categoryColor.withOpacity(0.7),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: categoryColor.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        categoryIcon,
+                        size: 28,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Title and Description
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  lesson.title,
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppTheme.textPrimary,
+                                      ),
+                                ),
+                              ),
+                              // Status Badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: isCompleted
+                                      ? AppTheme.successGreen.withOpacity(0.15)
+                                      : isInProgress
+                                          ? AppTheme.goldenOrange.withOpacity(0.15)
+                                          : Colors.grey.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isCompleted
+                                          ? Icons.check_circle_rounded
+                                          : isInProgress
+                                              ? Icons.play_circle_rounded
+                                              : Icons.radio_button_unchecked_rounded,
+                                      size: 14,
+                                      color: isCompleted
+                                          ? AppTheme.successGreen
+                                          : isInProgress
+                                              ? AppTheme.goldenOrange
+                                              : Colors.grey,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      isCompleted
+                                          ? 'Done'
+                                          : isInProgress
+                                              ? 'Active'
+                                              : 'New',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: isCompleted
+                                            ? AppTheme.successGreen
+                                            : isInProgress
+                                                ? AppTheme.goldenOrange
+                                                : Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (lesson.description != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              lesson.description!,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppTheme.textSecondary,
+                                  ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                
+                // Progress Bar (if in progress or completed)
+                if (isInProgress || isCompleted) ...[
+                  const SizedBox(height: 16),
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Progress',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppTheme.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                          Text(
+                            '$progressPercentage%',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: isCompleted
+                                      ? AppTheme.successGreen
+                                      : AppTheme.goldenOrange,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: progressPercentage / 100,
+                          minHeight: 8,
+                          backgroundColor: Colors.grey.withOpacity(0.15),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isCompleted ? AppTheme.successGreen : AppTheme.goldenOrange,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                
+                const SizedBox(height: 16),
+                
+                // Footer with Category and Time
+                Row(
+                  children: [
+                    if (lesson.category != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: categoryColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              categoryIcon,
+                              size: 14,
+                              color: categoryColor,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              lesson.category!.replaceAll('_', ' '),
+                              style: TextStyle(
+                                color: categoryColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.textSecondary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 14,
+                            color: AppTheme.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${lesson.estimatedMinutes} min',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

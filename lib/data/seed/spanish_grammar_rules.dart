@@ -1,4 +1,4 @@
-import '../../services/grammar_service.dart';
+import '../../services/grammar/grammar_service_base.dart';
 
 class SpanishGrammarRules {
   static List<GrammarRule> getRules() {

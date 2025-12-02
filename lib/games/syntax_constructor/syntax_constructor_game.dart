@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../models/word.dart';
 import '../../models/game_session.dart';
-import '../../services/grammar_service.dart';
+import '../../services/grammar_service_factory.dart';
+import '../../services/grammar/grammar_service_base.dart';
 import '../../services/srs_service.dart';
 import '../../services/dda_service.dart';
 import '../../data/remote/supabase_repository.dart';
 import '../../services/auth_service.dart';
+import '../../services/lesson_service.dart';
+import '../../services/language_service.dart';
 import '../../utils/error_handler.dart';
-import '../../data/seed/spanish_grammar_rules.dart';
+import '../../theme/app_theme.dart';
 
 enum GameMode {
   guided,
@@ -23,11 +26,13 @@ class SyntaxConstructorGame extends StatefulWidget {
 
 class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
     with TickerProviderStateMixin {
-  final _grammarService = GrammarService();
+  GrammarServiceBase? _grammarService;
   final _srsService = SRSService();
   final _ddaService = DDAService();
   final _supabaseRepository = SupabaseRepository();
   final _authService = AuthService();
+  final _lessonService = LessonService();
+  final _languageService = LanguageService();
 
   GameMode _mode = GameMode.guided;
   final List<Word> _allWords = [];
@@ -92,10 +97,34 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
 
   Future<void> _loadWords() async {
     try {
-      final words = await _supabaseRepository.getWords(language: 'es');
+      final user = _authService.currentUser;
+      if (user == null) return;
+
+      // Get active language and initialize grammar service
+      final activeLanguage = await _languageService.getActiveLanguage();
+      if (activeLanguage != null) {
+        _grammarService = GrammarServiceFactory.getGrammarService(activeLanguage);
+      } else {
+        // Fallback to Spanish
+        _grammarService = GrammarServiceFactory.getGrammarService('spanish');
+      }
+
+      // Load words from repository
+      final words = await _supabaseRepository.getWords(language: activeLanguage);
+      
+      // Filter words based on lesson unlocks
+      final unlockedWordIds = await _lessonService.getUnlockedWordIds(user.id);
+      final filteredWords = words.where((word) {
+        // If word is in unlocked list, allow it
+        if (unlockedWordIds.contains(word.id)) return true;
+        // For MVP, allow all words but prioritize unlocked ones
+        return true;
+      }).toList();
+
       if (mounted) {
         setState(() {
-          _allWords.addAll(words);
+          _allWords.addAll(filteredWords);
+          _availableWords.addAll(filteredWords);
         });
       }
     } catch (e) {
@@ -123,8 +152,10 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
   }
 
   void _generateNewSentence() {
+    if (_grammarService == null) return;
+    
     // Get sentence template based on difficulty
-    final templates = SpanishGrammarRules.getSentenceTemplates();
+    final templates = _grammarService!.getSentenceTemplates();
     final templateIndex = (_level - 1) % templates.length;
     final template = templates[templateIndex];
     
@@ -136,10 +167,10 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
     final availableForSelection = List<Word>.from(_allWords);
     
     for (final category in adjustedTemplate) {
-      final wordType = _grammarService.getWordTypeFromCategory(category);
+      final wordType = _grammarService!.getWordTypeFromCategory(category);
       if (wordType != null) {
         final matchingWords = availableForSelection.where((w) {
-          return _grammarService.getWordTypeFromCategory(w.category) == wordType;
+          return _grammarService!.getWordTypeFromCategory(w.category) == wordType;
         }).toList();
         
         if (matchingWords.isNotEmpty) {
@@ -170,8 +201,8 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
       _availableWords.shuffle();
       _sentenceWords.clear();
       _sentenceStartTime = DateTime.now();
-      _expectedNextType = adjustedTemplate.isNotEmpty
-          ? _grammarService.getWordTypeFromCategory(adjustedTemplate[0])
+      _expectedNextType = adjustedTemplate.isNotEmpty && _grammarService != null
+          ? _grammarService!.getWordTypeFromCategory(adjustedTemplate[0])
           : null;
     });
   }
@@ -190,11 +221,11 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
   }
 
   void _addWordToSentence(Word word, int targetIndex) {
-    if (_isValidating) return;
+    if (_isValidating || _grammarService == null) return;
     
-    final wordType = _grammarService.getWordTypeFromCategory(word.category);
+    final wordType = _grammarService!.getWordTypeFromCategory(word.category);
     final expectedType = _sentenceWords.length < _currentTemplate.length
-        ? _grammarService.getWordTypeFromCategory(
+        ? _grammarService!.getWordTypeFromCategory(
             _currentTemplate[_sentenceWords.length],
           )
         : null;
@@ -209,7 +240,7 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
         
         // Update expected next type
         if (_sentenceWords.length < _currentTemplate.length) {
-          _expectedNextType = _grammarService.getWordTypeFromCategory(
+          _expectedNextType = _grammarService!.getWordTypeFromCategory(
             _currentTemplate[_sentenceWords.length],
           );
         } else {
@@ -247,7 +278,7 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
       
       // Update expected next type
       if (_sentenceWords.length < _currentTemplate.length) {
-        _expectedNextType = _grammarService.getWordTypeFromCategory(
+        _expectedNextType = _grammarService!.getWordTypeFromCategory(
           _currentTemplate[_sentenceWords.length],
         );
       } else {
@@ -257,18 +288,18 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
   }
 
   Future<void> _validateSentence() async {
-    if (_isValidating || _sentenceWords.isEmpty) return;
+    if (_isValidating || _sentenceWords.isEmpty || _grammarService == null) return;
     
     setState(() {
       _isValidating = true;
     });
     
     final wordTypes = _sentenceWords
-        .map((w) => _grammarService.getWordTypeFromCategory(w.category))
+        .map((w) => _grammarService!.getWordTypeFromCategory(w.category))
         .whereType<WordType>()
         .toList();
     
-    final isValid = _grammarService.validateSentence(wordTypes);
+    final isValid = _grammarService!.validateSentence(wordTypes);
     final reactionTime = _sentenceStartTime != null
         ? DateTime.now().difference(_sentenceStartTime!).inMilliseconds
         : 5000;
@@ -355,11 +386,11 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
   }
 
   List<String> _getHints() {
-    if (_mode != GameMode.guided) return [];
+    if (_mode != GameMode.guided || _grammarService == null) return [];
     
     final hints = <String>[];
     final currentTypes = _sentenceWords
-        .map((w) => _grammarService.getWordTypeFromCategory(w.category))
+        .map((w) => _grammarService!.getWordTypeFromCategory(w.category))
         .whereType<WordType>()
         .toList();
     
@@ -383,15 +414,15 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
     }
     
     // Add grammar hints
-    hints.addAll(_grammarService.generateHints(currentTypes));
+    hints.addAll(_grammarService!.generateHints(currentTypes));
     
     return hints;
   }
 
   Color? _getWordTypeColor(Word word) {
-    if (_mode != GameMode.guided) return null;
+    if (_mode != GameMode.guided || _grammarService == null) return null;
     
-    final wordType = _grammarService.getWordTypeFromCategory(word.category);
+    final wordType = _grammarService!.getWordTypeFromCategory(word.category);
     if (wordType == _expectedNextType) {
       return Colors.amber.shade200; // Highlight expected type
     }
@@ -404,6 +435,7 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
       try {
         final user = _authService.currentUser;
         if (user != null) {
+          final activeLanguage = await _languageService.getActiveLanguage();
           final session = GameSession(
             userId: user.id,
             gameType: GameType.syntaxConstructor,
@@ -411,6 +443,7 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
             endTime: DateTime.now(),
             score: _score,
             difficultyLevel: _complexityMultiplier.toStringAsFixed(2),
+            language: activeLanguage,
           );
           
           await _supabaseRepository.createGameSession(session);
@@ -520,35 +553,49 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
               children: [
                 // Score and Level
                 Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
+                  padding: const EdgeInsets.all(20.0),
+                  decoration: AppTheme.cardDecoration(),
+                  margin: const EdgeInsets.all(16.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Score: $_score',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppTheme.softCyan,
+                                      AppTheme.electricLavender,
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '$_score',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 8),
                           Text(
                             'Level: $_level | Complexity: ${_complexityMultiplier.toStringAsFixed(2)}x',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade600,
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
@@ -560,19 +607,24 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.amber.shade100,
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.goldenOrange,
+                                AppTheme.goldenOrange.withValues(alpha: 0.7),
+                              ],
+                            ),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
-                              Icon(Icons.lightbulb, size: 16, color: Colors.amber.shade800),
-                              const SizedBox(width: 4),
+                              Icon(Icons.lightbulb, size: 16, color: Colors.white),
+                              SizedBox(width: 4),
                               Text(
                                 'Guided',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.amber.shade800,
-                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ],
@@ -595,18 +647,29 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: _getHints().map((hint) {
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: Row(
                             children: [
-                              Icon(Icons.lightbulb_outline,
-                                  size: 16, color: Colors.blue.shade700),
-                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.goldenOrange.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.lightbulb_outline,
+                                  size: 16,
+                                  color: AppTheme.goldenOrange,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   hint,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 13,
-                                    color: Colors.blue.shade900,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.textPrimary,
                                   ),
                                 ),
                               ),
@@ -656,22 +719,28 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
                               ),
                             ],
                           ),
-                          child: _sentenceWords.isEmpty
+                              child: _sentenceWords.isEmpty
                               ? Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(
-                                        Icons.construction,
-                                        size: 48,
-                                        color: Colors.grey.shade400,
+                                      Container(
+                                        padding: const EdgeInsets.all(20),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.textSecondary.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Icon(
+                                          Icons.construction,
+                                          size: 48,
+                                          color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                                        ),
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 16),
                                       Text(
                                         'Build your sentence here',
-                                        style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 16,
+                                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                          color: AppTheme.textSecondary,
                                         ),
                                       ),
                                     ],
@@ -691,12 +760,20 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
                                           vertical: 12,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.blue.shade100,
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: Colors.blue.shade300,
-                                            width: 2,
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              AppTheme.softCyan,
+                                              AppTheme.electricLavender,
+                                            ],
                                           ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppTheme.softCyan.withValues(alpha: 0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -705,14 +782,22 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
                                               _sentenceWords[index].wordText,
                                               style: const TextStyle(
                                                 fontSize: 18,
-                                                fontWeight: FontWeight.bold,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
                                               ),
                                             ),
                                             const SizedBox(width: 8),
-                                            Icon(
-                                              Icons.close,
-                                              size: 16,
-                                              color: Colors.grey.shade600,
+                                            Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(alpha: 0.3),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: const Icon(
+                                                Icons.close,
+                                                size: 14,
+                                                color: Colors.white,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -728,14 +813,25 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
                 // Available words
                 Container(
                   height: 120,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white,
+                        AppTheme.electricLavender.withValues(alpha: 0.1),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, -2),
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, -4),
                       ),
                     ],
                   ),
@@ -786,41 +882,73 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
                                 vertical: 12,
                               ),
                               decoration: BoxDecoration(
-                                color: highlightColor ?? Colors.green.shade100,
-                                borderRadius: BorderRadius.circular(12),
+                                gradient: highlightColor != null
+                                    ? LinearGradient(
+                                        colors: [
+                                          AppTheme.goldenOrange,
+                                          AppTheme.goldenOrange.withValues(alpha: 0.7),
+                                        ],
+                                      )
+                                    : LinearGradient(
+                                        colors: [
+                                          AppTheme.primaryMintGreen,
+                                          AppTheme.primaryMintGreen.withValues(alpha: 0.8),
+                                        ],
+                                      ),
+                                borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isDraggingOver
-                                      ? Colors.green.shade600
-                                      : Colors.green.shade300,
-                                  width: isDraggingOver ? 3 : 2,
+                                      ? Colors.white
+                                      : Colors.transparent,
+                                  width: isDraggingOver ? 3 : 0,
                                 ),
                                 boxShadow: isDraggingOver
                                     ? [
                                         BoxShadow(
-                                          color: Colors.green.withOpacity(0.3),
-                                          blurRadius: 8,
+                                          color: (highlightColor ?? AppTheme.primaryMintGreen)
+                                              .withValues(alpha: 0.5),
+                                          blurRadius: 12,
                                           spreadRadius: 2,
                                         ),
                                       ]
-                                    : null,
+                                    : [
+                                        BoxShadow(
+                                          color: (highlightColor ?? AppTheme.primaryMintGreen)
+                                              .withValues(alpha: 0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
                               ),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
                                     word.wordText,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey.shade800,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
                                     ),
                                   ),
                                   if (_mode == GameMode.guided)
-                                    Text(
-                                      word.category,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey.shade600,
+                                    Container(
+                                      margin: const EdgeInsets.only(top: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.3),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        word.category,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
                                 ],
@@ -835,61 +963,127 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
                 // Validate button
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: ElevatedButton.icon(
-                    onPressed: _sentenceWords.isNotEmpty && !_isValidating
-                        ? _validateSentence
+                  child: Container(
+                    decoration: _sentenceWords.isNotEmpty && !_isValidating
+                        ? AppTheme.pillDecoration(AppTheme.primaryMintGreen)
                         : null,
-                    icon: _isValidating
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.check_circle),
-                    label: Text(_isValidating ? 'Validating...' : 'Validate Sentence'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
+                    child: ElevatedButton.icon(
+                      onPressed: _sentenceWords.isNotEmpty && !_isValidating
+                          ? _validateSentence
+                          : null,
+                      icon: _isValidating
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.check_circle),
+                      label: Text(
+                        _isValidating ? 'Validating...' : 'Validate Sentence',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      minimumSize: const Size(double.infinity, 50),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _sentenceWords.isNotEmpty && !_isValidating
+                            ? Colors.transparent
+                            : null,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        minimumSize: const Size(double.infinity, 56),
+                      ),
                     ),
                   ),
                 ),
               ],
             )
-          : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Syntax Constructor',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _mode == GameMode.guided
-                        ? 'Build sentences with helpful hints'
-                        : 'Build sentences without hints',
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 32),
-                  ElevatedButton.icon(
-                    onPressed: _allWords.isNotEmpty ? _startGame : null,
-                    icon: const Icon(Icons.play_arrow),
-                    label: const Text('Start Game'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
+          : Container(
+              decoration: const BoxDecoration(
+                gradient: AppTheme.mainGradient,
+              ),
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: AppTheme.cardDecoration(),
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppTheme.softCyan,
+                                    AppTheme.electricLavender,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(
+                                Icons.construction,
+                                size: 64,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Syntax Constructor',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _mode == GameMode.guided
+                                  ? 'Build sentences with helpful hints'
+                                  : 'Build sentences without hints',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 32),
+                            Container(
+                              decoration: AppTheme.pillDecoration(
+                                AppTheme.primaryMintGreen,
+                              ),
+                              child: ElevatedButton.icon(
+                                onPressed: _allWords.isNotEmpty ? _startGame : null,
+                                icon: const Icon(Icons.play_arrow),
+                                label: const Text(
+                                  'Start Game',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 32,
+                                    vertical: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
     );

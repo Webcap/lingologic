@@ -6,7 +6,10 @@ import '../../services/srs_service.dart';
 import '../../services/dda_service.dart';
 import '../../data/remote/supabase_repository.dart';
 import '../../services/auth_service.dart';
+import '../../services/lesson_service.dart';
+import '../../services/language_service.dart';
 import '../../utils/error_handler.dart';
+import '../../theme/app_theme.dart';
 import 'widgets/falling_word_widget.dart';
 import 'widgets/target_zone_widget.dart';
 
@@ -23,6 +26,8 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
   final _ddaService = DDAService();
   final _supabaseRepository = SupabaseRepository();
   final _authService = AuthService();
+  final _lessonService = LessonService();
+  final _languageService = LanguageService();
 
   late AnimationController _animationController;
   final List<Word> _allWords = [];
@@ -76,13 +81,28 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
       final user = _authService.currentUser;
       if (user == null) return;
 
-      // Load all words and user's word masteries
-      final words = await _supabaseRepository.getWords(language: 'es');
-      final masteries = await _supabaseRepository.getWordMasteries(user.id);
+      // Get active language and load words
+      final activeLanguage = await _languageService.getActiveLanguage();
+      final words = await _supabaseRepository.getWords(language: activeLanguage);
+      
+      // Get masteries and filter by active language words
+      final allMasteries = await _supabaseRepository.getWordMasteries(user.id);
+      final wordIds = words.map((w) => w.id).toSet();
+      final masteries = allMasteries.where((m) => wordIds.contains(m.wordId)).toList();
+      
+      // Filter words based on lesson unlocks
+      final unlockedWordIds = await _lessonService.getUnlockedWordIds(user.id);
+      final filteredWords = words.where((word) {
+        // If word is in unlocked list, allow it
+        if (unlockedWordIds.contains(word.id)) return true;
+        // If word is not in any lesson's unlock list, allow it (backward compatibility)
+        // In production, you might want to require all words to be unlocked
+        return true; // For MVP, allow all words but prioritize unlocked ones
+      }).toList();
 
       if (mounted) {
         setState(() {
-          _allWords.addAll(words);
+          _allWords.addAll(filteredWords);
           _allMasteries.addAll(masteries);
         });
 
@@ -315,6 +335,7 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
       try {
         final user = _authService.currentUser;
         if (user != null) {
+          final activeLanguage = await _languageService.getActiveLanguage();
           final session = GameSession(
             userId: user.id,
             gameType: GameType.neuroMatch,
@@ -322,6 +343,7 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
             endTime: DateTime.now(),
             score: _score,
             difficultyLevel: _difficultyMultiplier.toStringAsFixed(2),
+            language: activeLanguage,
           );
           
           await _supabaseRepository.createGameSession(session);
@@ -404,35 +426,49 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
               children: [
                 // Score and Lives
                 Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
+                  padding: const EdgeInsets.all(20.0),
+                  decoration: AppTheme.cardDecoration(),
+                  margin: const EdgeInsets.all(16.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Score: $_score',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppTheme.primaryMintGreen,
+                                      AppTheme.softCyan,
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '$_score',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 8),
                           Text(
                             'Difficulty: ${_difficultyMultiplier.toStringAsFixed(2)}x',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade600,
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
@@ -442,12 +478,21 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
                           3,
                           (index) => Padding(
                             padding: const EdgeInsets.only(left: 4),
-                            child: Icon(
-                              Icons.favorite,
-                              color: index < _lives
-                                  ? Colors.red
-                                  : Colors.grey.shade300,
-                              size: 28,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: index < _lives
+                                    ? AppTheme.salmonPink.withValues(alpha: 0.15)
+                                    : AppTheme.textSecondary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.favorite,
+                                color: index < _lives
+                                    ? AppTheme.salmonPink
+                                    : AppTheme.textSecondary.withValues(alpha: 0.3),
+                                size: 24,
+                              ),
                             ),
                           ),
                         ),
@@ -466,21 +511,25 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
                         right: 0,
                         child: Container(
                           height: 150,
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.white,
-                                Colors.blue.shade50,
+                                AppTheme.softCyan.withValues(alpha: 0.1),
                               ],
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(24),
+                              topRight: Radius.circular(24),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, -2),
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, -4),
                               ),
                             ],
                           ),

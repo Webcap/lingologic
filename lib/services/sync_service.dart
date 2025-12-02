@@ -44,13 +44,20 @@ class SyncQueueItem {
 }
 
 class SyncService {
-  final SupabaseClient _supabase = SupabaseConfig.client;
+  SupabaseClient? _supabase;
   final AuthService _authService = AuthService();
   ConnectivityService? _connectivityService;
   final List<SyncQueueItem> _localQueue = [];
   bool _isSyncing = false;
   Timer? _syncTimer;
   StreamSubscription<bool>? _connectivitySubscription;
+  
+  SupabaseClient? get _supabaseClient {
+    if (_supabase == null) {
+      _supabase = SupabaseConfig.client;
+    }
+    return _supabase;
+  }
   
   void setConnectivityService(ConnectivityService service) {
     _connectivityService = service;
@@ -88,6 +95,9 @@ class SyncService {
       return; // Don't sync if offline
     }
 
+    final client = _supabaseClient;
+    if (client == null) return; // Supabase not initialized
+
     final user = _authService.currentUser;
     if (user == null) return;
 
@@ -100,13 +110,13 @@ class SyncService {
         try {
           switch (item.operation) {
             case SyncOperation.insert:
-              await _supabase.from(item.tableName).insert(item.data);
+              await client.from(item.tableName).insert(item.data);
               break;
             case SyncOperation.update:
-              await _supabase.from(item.tableName).update(item.data).eq('id', item.data['id']);
+              await client.from(item.tableName).update(item.data).eq('id', item.data['id']);
               break;
             case SyncOperation.delete:
-              await _supabase.from(item.tableName).delete().eq('id', item.data['id']);
+              await client.from(item.tableName).delete().eq('id', item.data['id']);
               break;
           }
 
@@ -122,7 +132,7 @@ class SyncService {
 
       // Also sync to remote sync_queue table for persistence
       if (itemsToSync.isNotEmpty) {
-        await _supabase.from('sync_queue').upsert(
+        await client.from('sync_queue').upsert(
           itemsToSync.map((item) => item.toJson()).toList(),
         );
       }

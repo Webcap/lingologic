@@ -1,0 +1,184 @@
+import '../models/lesson.dart';
+import '../models/lesson_progress.dart';
+import '../data/remote/supabase_repository.dart';
+import '../services/auth_service.dart';
+import 'language_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class LessonService {
+  final SupabaseRepository _repository = SupabaseRepository();
+  final AuthService _authService = AuthService();
+  final LanguageService _languageService = LanguageService();
+
+  /// Get all available lessons, optionally filtered by language and category
+  /// If language is not provided, uses the active language
+  Future<List<Lesson>> getLessons({
+    String? language,
+    String? category,
+  }) async {
+    // If no language specified, use active language
+    final activeLanguage = language ?? await _languageService.getActiveLanguage();
+    
+    return await _repository.getLessons(
+      language: activeLanguage,
+      category: category,
+    );
+  }
+
+  /// Get a specific lesson by ID
+  Future<Lesson?> getLessonById(String id) async {
+    return await _repository.getLessonById(id);
+  }
+
+  /// Get user's progress for a specific lesson
+  Future<LessonProgress?> getUserLessonProgress(
+      String userId, String lessonId) async {
+    return await _repository.getLessonProgressById(userId, lessonId);
+  }
+
+  /// Get all lesson progress for the current user
+  Future<List<LessonProgress>> getUserLessonProgressAll() async {
+    final user = _authService.currentUser;
+    if (user == null) return [];
+
+    return await _repository.getLessonProgress(user.id);
+  }
+
+  /// Start a lesson (mark as in progress)
+  Future<void> startLesson(String userId, String lessonId) async {
+    final existing = await getUserLessonProgress(userId, lessonId);
+
+    final progress = existing != null
+        ? existing.copyWith(
+            status: LessonStatus.inProgress,
+            updatedAt: DateTime.now(),
+          )
+        : LessonProgress(
+            userId: userId,
+            lessonId: lessonId,
+            status: LessonStatus.inProgress,
+            progressPercentage: 0,
+            timeSpentMinutes: 0,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+
+    await _repository.upsertLessonProgress(progress);
+  }
+
+  /// Update lesson progress percentage
+  Future<void> updateLessonProgress(
+      String userId, String lessonId, int progressPercentage) async {
+    final existing = await getUserLessonProgress(userId, lessonId);
+    if (existing == null) {
+      await startLesson(userId, lessonId);
+      return;
+    }
+
+    final progress = existing.copyWith(
+      progressPercentage: progressPercentage,
+      status: progressPercentage == 100
+          ? LessonStatus.completed
+          : LessonStatus.inProgress,
+      updatedAt: DateTime.now(),
+    );
+
+    await _repository.upsertLessonProgress(progress);
+  }
+
+  /// Complete a lesson (mark as completed and unlock content)
+  Future<void> completeLesson(String userId, String lessonId, int timeSpent) async {
+    final progress = LessonProgress(
+      userId: userId,
+      lessonId: lessonId,
+      status: LessonStatus.completed,
+      progressPercentage: 100,
+      completedAt: DateTime.now(),
+      timeSpentMinutes: timeSpent,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    await _repository.upsertLessonProgress(progress);
+  }
+
+  /// Get all word IDs unlocked by completed lessons for a user
+  Future<List<String>> getUnlockedWordIds(String userId) async {
+    final progressList = await _repository.getLessonProgress(userId);
+    final completedLessonIds = progressList
+        .where((p) => p.isCompleted)
+        .map((p) => p.lessonId)
+        .toList();
+
+    if (completedLessonIds.isEmpty) return [];
+
+    // Get lessons for the active language
+    final activeLanguage = await _languageService.getActiveLanguage();
+    final lessons = await _repository.getLessons(language: activeLanguage);
+    final unlockedWordIds = <String>[];
+
+    for (final lesson in lessons) {
+      if (completedLessonIds.contains(lesson.id)) {
+        unlockedWordIds.addAll(lesson.unlocksWordIds);
+      }
+    }
+
+    return unlockedWordIds.toSet().toList(); // Remove duplicates
+  }
+
+  /// Check if a word is unlocked for the current user
+  Future<bool> isWordUnlocked(String userId, String wordId) async {
+    final unlockedWordIds = await getUnlockedWordIds(userId);
+    return unlockedWordIds.contains(wordId);
+  }
+
+  /// Get the next recommended lesson for a user
+  Future<Lesson?> getNextRecommendedLesson(String userId) async {
+    final progressList = await _repository.getLessonProgress(userId);
+    final completedLessonIds = progressList
+        .where((p) => p.isCompleted)
+        .map((p) => p.lessonId)
+        .toSet();
+
+    // Get lessons for the active language
+    final activeLanguage = await _languageService.getActiveLanguage();
+    final lessons = await _repository.getLessons(language: activeLanguage);
+    lessons.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+
+    // Find first lesson that's not completed
+    for (final lesson in lessons) {
+      if (!completedLessonIds.contains(lesson.id)) {
+        return lesson;
+      }
+    }
+
+    return null; // All lessons completed
+  }
+
+  /// Get lesson status for current user
+  Future<LessonStatus> getLessonStatus(String userId, String lessonId) async {
+    final progress = await getUserLessonProgress(userId, lessonId);
+    return progress?.status ?? LessonStatus.notStarted;
+  }
+
+  /// Get progress percentage for a lesson
+  Future<int> getLessonProgressPercentage(
+      String userId, String lessonId) async {
+    final progress = await getUserLessonProgress(userId, lessonId);
+    return progress?.progressPercentage ?? 0;
+  }
+
+  /// Check if user has completed all required lessons for a word
+  Future<bool> canAccessWord(String userId, String wordId) async {
+    // First check if word requires a lesson
+    final word = await _repository.getWordById(wordId);
+    if (word == null) return false;
+
+    // If word doesn't require a lesson, it's accessible
+    // Note: We'd need to add required_lesson_id to Word model if we want to check this
+    // For now, we'll check if the word is in any unlocked list
+    final unlockedWordIds = await getUnlockedWordIds(userId);
+    return unlockedWordIds.contains(wordId);
+  }
+}
+
