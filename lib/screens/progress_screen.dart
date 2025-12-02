@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/lesson_service.dart';

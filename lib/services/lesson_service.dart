@@ -3,7 +3,6 @@ import '../models/lesson_progress.dart';
 import '../data/remote/supabase_repository.dart';
 import '../services/auth_service.dart';
 import 'language_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LessonService {
   final SupabaseRepository _repository = SupabaseRepository();
