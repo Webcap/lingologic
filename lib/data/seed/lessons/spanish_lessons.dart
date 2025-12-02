@@ -1,5 +1,5 @@
-import '../../models/lesson.dart';
-import '../../models/lesson_content.dart';
+import '../../../models/lesson.dart';
+import '../../../models/lesson_content.dart';
 
 class SpanishLessons {
   /// Get seed data for Spanish grammar lessons

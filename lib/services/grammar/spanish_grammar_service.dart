@@ -1,5 +1,5 @@
 import 'grammar_service_base.dart';
-import '../../data/seed/spanish_grammar_rules.dart';
+import '../../data/seed/grammar/spanish_grammar_rules.dart';
 
 class SpanishGrammarService implements GrammarServiceBase {
   @override

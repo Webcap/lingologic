@@ -1,4 +1,4 @@
-import '../../models/word.dart';
+import '../../../models/word.dart';
 
 class SpanishVocabulary {
   static List<Word> getSeedWords() {

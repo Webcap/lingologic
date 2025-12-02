@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import '../lib/data/seed/spanish_lessons.dart';
+import '../lib/data/seed/lessons/spanish_lessons.dart';
 
 void main() {
   final lessons = SpanishLessons.getLessons();
@@ -8,7 +8,7 @@ void main() {
   
   sql.writeln('-- Seed data for Spanish grammar lessons');
   sql.writeln('-- Run this after 002_add_lessons.sql migration');
-  sql.writeln('-- Generated automatically from lib/data/seed/spanish_lessons.dart');
+  sql.writeln('-- Generated automatically from lib/data/seed/lessons/spanish_lessons.dart');
   sql.writeln('');
   
   for (final lesson in lessons) {
