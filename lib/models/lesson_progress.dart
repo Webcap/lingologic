@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum LessonStatus {

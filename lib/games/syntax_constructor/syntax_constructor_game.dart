@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, unused_local_variable, unused_element
+
 import 'package:flutter/material.dart';
 import '../../models/word.dart';
 import '../../models/game_session.dart';
@@ -346,13 +348,15 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
       
       await _updateGrammarMastery(false);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Incorrect sentence structure. Try again!'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Incorrect sentence structure. Try again!'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
       
       await Future.delayed(const Duration(milliseconds: 1000));
       
