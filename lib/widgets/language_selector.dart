@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/user_language.dart';
 import '../config/supported_languages.dart';
 import '../services/language_service.dart';
@@ -174,7 +175,7 @@ class LanguageSelector extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 // Navigate to language selection screen
-                // This will be handled by the router
+                context.push('/languages');
               },
             ),
             SizedBox(height: MediaQuery.of(context).padding.bottom),

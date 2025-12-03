@@ -5,15 +5,19 @@ import '../../../theme/app_theme.dart';
 class ExerciseSectionWidget extends StatefulWidget {
   final ExerciseSection section;
   final ValueChanged<bool>? onAnswerSubmitted;
+  final VoidCallback? onRetry;
   final bool isAnswered;
   final bool isCorrect;
+  final bool canRetry;
 
   const ExerciseSectionWidget({
     super.key,
     required this.section,
     this.onAnswerSubmitted,
+    this.onRetry,
     this.isAnswered = false,
     this.isCorrect = false,
+    this.canRetry = false,
   });
 
   @override
@@ -50,175 +54,293 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
       _showResult = true;
       _isCorrect = widget.isCorrect;
     }
+    // Reset if section changes (for retry)
+    if (widget.section.id != oldWidget.section.id) {
+      _selectedIndex = null;
+      _showResult = false;
+      _isCorrect = null;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final borderColor = _showResult
+        ? (_isCorrect == true
+            ? AppTheme.successGreen
+            : Colors.red)
+        : AppTheme.goldenOrange;
+    
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: AppTheme.cardWhite,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: _showResult
-              ? (_isCorrect == true
-                  ? AppTheme.successGreen
-                  : Colors.red.withOpacity(0.5))
-              : AppTheme.goldenOrange.withOpacity(0.3),
-          width: 2,
+          color: borderColor.withOpacity(_showResult ? 0.4 : 0.2),
+          width: 2.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+          if (_showResult && _isCorrect == true)
+            BoxShadow(
+              color: AppTheme.successGreen.withOpacity(0.2),
+              blurRadius: 15,
+              offset: const Offset(0, 0),
+            ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.quiz,
-                color: AppTheme.goldenOrange,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Exercise',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppTheme.goldenOrange,
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            widget.section.question,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
-                ),
-          ),
-          const SizedBox(height: 16),
-          ...widget.section.options.asMap().entries.map((entry) {
-            final index = entry.key;
-            final option = entry.value;
-            final isSelected = _selectedIndex == index;
-            final isCorrectAnswer = option.isCorrect;
-            final showCorrect = _showResult && isCorrectAnswer;
-            final showIncorrect = _showResult && isSelected && !isCorrectAnswer;
-
-            Color? backgroundColor;
-            Color? borderColor;
-            Color? textColor = AppTheme.textPrimary;
-
-            if (_showResult) {
-              if (showCorrect) {
-                backgroundColor = AppTheme.successGreen.withOpacity(0.2);
-                borderColor = AppTheme.successGreen;
-              } else if (showIncorrect) {
-                backgroundColor = Colors.red.withOpacity(0.2);
-                borderColor = Colors.red.withOpacity(0.5);
-              } else {
-                backgroundColor = Colors.grey.withOpacity(0.1);
-                borderColor = Colors.grey.withOpacity(0.3);
-              }
-            } else {
-              backgroundColor = isSelected
-                  ? AppTheme.goldenOrange.withOpacity(0.2)
-                  : Colors.grey.withOpacity(0.1);
-              borderColor = isSelected
-                  ? AppTheme.goldenOrange
-                  : Colors.grey.withOpacity(0.3);
-            }
-
-            return GestureDetector(
-              onTap: _showResult ? null : () {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: backgroundColor,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: borderColor,
-                    width: 2,
+          // Header with icon
+          Container(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.goldenOrange.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    Icons.quiz_rounded,
+                    color: AppTheme.goldenOrange,
+                    size: 24,
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: borderColor,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Practice',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppTheme.goldenOrange,
+                              fontWeight: FontWeight.w700,
+                            ),
                       ),
-                      child: _showResult
-                          ? Icon(
-                              showCorrect
-                                  ? Icons.check
-                                  : showIncorrect
-                                      ? Icons.close
-                                      : null,
-                              color: Colors.white,
-                              size: 16,
-                            )
-                          : Center(
-                              child: Text(
-                                String.fromCharCode(65 + index), // A, B, C, D
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                ),
+                      if (_showResult)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _isCorrect == true
+                                    ? Icons.check_circle_rounded
+                                    : Icons.cancel_rounded,
+                                size: 16,
+                                color: _isCorrect == true
+                                    ? AppTheme.successGreen
+                                    : Colors.red,
                               ),
-                            ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        option.text,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: textColor,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                            ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _isCorrect == true ? 'Correct!' : 'Try again',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: _isCorrect == true
+                                          ? AppTheme.successGreen
+                                          : Colors.red,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Question
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+            child: Text(
+              widget.section.question,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                    height: 1.4,
+                  ),
+            ),
+          ),
+          
+          // Options
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+            child: Column(
+              children: widget.section.options.asMap().entries.map((entry) {
+                final index = entry.key;
+                final option = entry.value;
+                final isSelected = _selectedIndex == index;
+                final isCorrectAnswer = option.isCorrect;
+                final showCorrect = _showResult && isCorrectAnswer;
+                final showIncorrect = _showResult && isSelected && !isCorrectAnswer;
+
+                Color? backgroundColor;
+                Color? optionBorderColor;
+                Color? textColor = AppTheme.textPrimary;
+                Color? circleColor;
+
+                if (_showResult) {
+                  if (showCorrect) {
+                    backgroundColor = AppTheme.successGreen.withOpacity(0.15);
+                    optionBorderColor = AppTheme.successGreen;
+                    circleColor = AppTheme.successGreen;
+                  } else if (showIncorrect) {
+                    backgroundColor = Colors.red.withOpacity(0.15);
+                    optionBorderColor = Colors.red;
+                    circleColor = Colors.red;
+                  } else {
+                    backgroundColor = Colors.grey.withOpacity(0.05);
+                    optionBorderColor = Colors.grey.withOpacity(0.2);
+                    circleColor = Colors.grey.withOpacity(0.4);
+                  }
+                } else {
+                  backgroundColor = isSelected
+                      ? AppTheme.goldenOrange.withOpacity(0.15)
+                      : Colors.grey.withOpacity(0.05);
+                  optionBorderColor = isSelected
+                      ? AppTheme.goldenOrange
+                      : Colors.grey.withOpacity(0.2);
+                  circleColor = isSelected
+                      ? AppTheme.goldenOrange
+                      : Colors.grey.withOpacity(0.4);
+                }
+
+                return GestureDetector(
+                  onTap: _showResult ? null : () {
+                    setState(() {
+                      _selectedIndex = index;
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: backgroundColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: optionBorderColor,
+                        width: 2,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            );
-          }),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: circleColor,
+                            boxShadow: _showResult && (showCorrect || showIncorrect)
+                                ? [
+                                    BoxShadow(
+                                      color: circleColor.withOpacity(0.4),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: _showResult
+                              ? Icon(
+                                  showCorrect
+                                      ? Icons.check_rounded
+                                      : showIncorrect
+                                          ? Icons.close_rounded
+                                          : null,
+                                  color: Colors.white,
+                                  size: 18,
+                                )
+                              : Center(
+                                  child: Text(
+                                    String.fromCharCode(65 + index), // A, B, C, D
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            option.text,
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  color: textColor,
+                                  fontWeight: isSelected || showCorrect
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                  height: 1.4,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          
+          // Explanation
           if (_showResult && widget.section.explanation != null) ...[
-            const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: (_isCorrect == true
                         ? AppTheme.successGreen
                         : Colors.red)
                     .withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: (_isCorrect == true
+                          ? AppTheme.successGreen
+                          : Colors.red)
+                      .withOpacity(0.3),
+                  width: 2,
+                ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    _isCorrect == true ? Icons.check_circle : Icons.error,
-                    color: _isCorrect == true
-                        ? AppTheme.successGreen
-                        : Colors.red,
-                    size: 20,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: (_isCorrect == true
+                              ? AppTheme.successGreen
+                              : Colors.red)
+                          .withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      _isCorrect == true
+                          ? Icons.check_circle_rounded
+                          : Icons.error_rounded,
+                      color: _isCorrect == true
+                          ? AppTheme.successGreen
+                          : Colors.red,
+                      size: 20,
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       widget.section.explanation!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.textPrimary,
+                            height: 1.5,
                           ),
                     ),
                   ),
@@ -226,9 +348,71 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
               ),
             ),
           ],
+          
+          // Retry button (shown when answer is incorrect)
+          if (_showResult && _isCorrect == false && widget.canRetry && widget.onRetry != null) ...[
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.goldenOrange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppTheme.goldenOrange.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.refresh_rounded,
+                          color: AppTheme.goldenOrange,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Try a different question',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.goldenOrange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: widget.onRetry,
+                      icon: const Icon(Icons.refresh_rounded, size: 20),
+                      label: const Text('Retry with Different Question'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.goldenOrange,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        side: BorderSide(
+                          color: AppTheme.goldenOrange,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          
+          // Submit button
           if (!_showResult && _selectedIndex != null) ...[
-            const SizedBox(height: 16),
-            SizedBox(
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
@@ -239,7 +423,22 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
                   });
                   widget.onAnswerSubmitted?.call(isCorrect);
                 },
-                child: const Text('Submit Answer'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.goldenOrange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Submit Answer',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ],

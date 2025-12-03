@@ -148,6 +148,23 @@ class UserService {
     }
   }
 
+  /// Mark onboarding as completed
+  Future<void> markOnboardingCompleted() async {
+    final user = _authService.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final client = _supabaseClient;
+    if (client == null) {
+      throw Exception('Supabase not initialized');
+    }
+
+    await client.from('user_profiles').update({
+      'onboarding_completed': true,
+    }).eq('id', user.id);
+  }
+
   User? get currentUser => _authService.currentUser;
 }
 

@@ -67,13 +67,8 @@ class _SignupScreenState extends State<SignupScreen> {
         throw Exception(initError);
       }
 
-      try {
-        await _languageService.initializeDefaultLanguage();
-        debugPrint('Default language initialized successfully');
-      } catch (e) {
-        debugPrint('Language initialization error: $e');
-        // This is less critical, so we continue
-      }
+      // Don't initialize default language - let user choose during onboarding
+      // The router will redirect to onboarding if no languages are set
 
       if (mounted) {
         context.go('/');

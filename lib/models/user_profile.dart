@@ -5,6 +5,7 @@ class UserProfile {
   final int streakDays;
   final int totalTimeMinutes;
   final DateTime? lastActivityDate;
+  final bool onboardingCompleted;
 
   UserProfile({
     required this.id,
@@ -13,6 +14,7 @@ class UserProfile {
     required this.streakDays,
     required this.totalTimeMinutes,
     this.lastActivityDate,
+    this.onboardingCompleted = false,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,7 @@ class UserProfile {
       lastActivityDate: json['last_activity_date'] != null
           ? DateTime.parse(json['last_activity_date'] as String)
           : null,
+      onboardingCompleted: json['onboarding_completed'] as bool? ?? false,
     );
   }
 
@@ -37,6 +40,7 @@ class UserProfile {
       'total_time_minutes': totalTimeMinutes,
       if (lastActivityDate != null)
         'last_activity_date': lastActivityDate!.toIso8601String(),
+      'onboarding_completed': onboardingCompleted,
     };
   }
 
@@ -47,6 +51,7 @@ class UserProfile {
     int? streakDays,
     int? totalTimeMinutes,
     DateTime? lastActivityDate,
+    bool? onboardingCompleted,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -55,6 +60,7 @@ class UserProfile {
       streakDays: streakDays ?? this.streakDays,
       totalTimeMinutes: totalTimeMinutes ?? this.totalTimeMinutes,
       lastActivityDate: lastActivityDate ?? this.lastActivityDate,
+      onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }
 }

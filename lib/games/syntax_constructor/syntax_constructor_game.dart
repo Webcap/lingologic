@@ -123,10 +123,29 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
 
       final words = await _supabaseRepository.getWords(language: activeLanguage);
       final unlockedWordIds = await _lessonService.getUnlockedWordIds(user.id);
+      
+      if (unlockedWordIds.isEmpty) {
+        debugPrint('No unlocked words found. User needs to complete lessons first.');
+        if (mounted) {
+          setState(() {
+            _allWords.clear();
+            _availableWords.clear();
+          });
+          ErrorHandler.handleError(
+            context, 
+            'Complete lessons to unlock words for practice!',
+            contextMessage: 'No words available',
+          );
+        }
+        return;
+      }
+      
+      // Only include words that have been unlocked through lessons
       final filteredWords = words.where((word) {
-        if (unlockedWordIds.contains(word.id)) return true;
-        return true;
+        return unlockedWordIds.contains(word.id);
       }).toList();
+      
+      debugPrint('Filtered words: ${filteredWords.length} unlocked words available (out of ${words.length} total)');
 
       if (mounted) {
         setState(() {

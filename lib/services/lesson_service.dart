@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../models/lesson.dart';
 import '../models/lesson_progress.dart';
 import '../data/remote/supabase_repository.dart';
@@ -102,27 +103,45 @@ class LessonService {
   }
 
   /// Get all word IDs unlocked by completed lessons for a user
-  Future<List<String>> getUnlockedWordIds(String userId) async {
+  /// Optionally filters by language if provided
+  Future<List<String>> getUnlockedWordIds(String userId, {String? language}) async {
     final progressList = await _repository.getLessonProgress(userId);
     final completedLessonIds = progressList
         .where((p) => p.isCompleted)
         .map((p) => p.lessonId)
-        .toList();
+        .toSet(); // Use Set for faster lookup
 
-    if (completedLessonIds.isEmpty) return [];
+    if (completedLessonIds.isEmpty) {
+      debugPrint('LessonService: No completed lessons found for user');
+      return [];
+    }
 
-    // Get lessons for the active language
-    final activeLanguage = await _languageService.getActiveLanguage();
-    final lessons = await _repository.getLessons(language: activeLanguage);
+    debugPrint('LessonService: Found ${completedLessonIds.length} completed lessons: $completedLessonIds');
+
+    // Get lessons - use provided language or active language
+    final targetLanguage = language ?? await _languageService.getActiveLanguage();
+    final lessons = await _repository.getLessons(language: targetLanguage);
+    
+    debugPrint('LessonService: Found ${lessons.length} lessons for language: $targetLanguage');
+    
     final unlockedWordIds = <String>[];
 
     for (final lesson in lessons) {
       if (completedLessonIds.contains(lesson.id)) {
+        debugPrint('LessonService: Lesson ${lesson.id} is completed. Unlocks ${lesson.unlocksWordIds.length} words: ${lesson.unlocksWordIds.take(5)}...');
         unlockedWordIds.addAll(lesson.unlocksWordIds);
       }
     }
 
-    return unlockedWordIds.toSet().toList(); // Remove duplicates
+    final uniqueWordIds = unlockedWordIds.toSet().toList(); // Remove duplicates
+    debugPrint('LessonService: Total unlocked word IDs: ${uniqueWordIds.length}');
+    return uniqueWordIds;
+  }
+  
+  /// Get unlocked word IDs for a specific lesson (useful after completion)
+  Future<List<String>> getUnlockedWordIdsForLesson(String lessonId) async {
+    final lesson = await getLessonById(lessonId);
+    return lesson?.unlocksWordIds ?? [];
   }
 
   /// Check if a word is unlocked for the current user

@@ -78,6 +78,44 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
     _loadWordsAndMasteries();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh words when navigating to the game (e.g., after completing a lesson)
+    // This ensures we get newly unlocked words
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isGameActive && !_isLoadingWords) {
+        _refreshWordsIfNeeded();
+      }
+    });
+  }
+
+  /// Refresh words to pick up newly unlocked vocabulary from completed lessons
+  Future<void> _refreshWordsIfNeeded() async {
+    try {
+      final user = _authService.currentUser;
+      if (user == null) return;
+
+      final activeLanguage = await _languageService.getActiveLanguage();
+      if (activeLanguage == null) return;
+
+      // Get current unlocked words count
+      final currentUnlockedCount = _allWords.length;
+      
+      // Reload to get newly unlocked words
+      await _loadWordsAndMasteries();
+      
+      final newUnlockedCount = _allWords.length;
+      
+      if (newUnlockedCount > currentUnlockedCount && mounted) {
+        debugPrint('Neuro Match: Found ${newUnlockedCount - currentUnlockedCount} newly unlocked words! Regenerating review queue...');
+        _generateReviewQueue();
+      }
+    } catch (e) {
+      debugPrint('Error refreshing words: $e');
+    }
+  }
+
   void _updateFallingPosition() {
     if (!_isPaused && _isGameActive && mounted) {
       // Use setState only when necessary to maintain 60fps
@@ -126,37 +164,91 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
         debugPrint('Active language set to: $activeLanguage');
       }
       
-      // Map language name to language code (e.g., 'spanish' -> 'es')
-      final languageCode = _mapLanguageToCode(activeLanguage);
+      // Get unlocked word IDs first (before loading words)
+      final unlockedWordIds = await _lessonService.getUnlockedWordIds(
+        user.id,
+        language: activeLanguage,
+      );
       
-      // Try with language code first, then fallback to language name, then no filter
+      if (unlockedWordIds.isEmpty) {
+        debugPrint('Neuro Match: No unlocked words found for language: $activeLanguage. User needs to complete lessons first.');
+        if (mounted) {
+          setState(() {
+            _isLoadingWords = false;
+            _loadingError = 'Complete lessons to unlock words for practice!';
+          });
+        }
+        return;
+      }
+      
+      debugPrint('Neuro Match: Found ${unlockedWordIds.length} unlocked word IDs');
+      
+      // Load words - try multiple approaches to find the words
       List<Word> words = [];
+      
+      // First, try to load words by their IDs directly (most reliable)
       try {
-        // First try with mapped language code
-        if (languageCode != null) {
-          words = await _supabaseRepository.getWords(language: languageCode);
-          debugPrint('Loaded ${words.length} words with language code: $languageCode');
+        for (final wordId in unlockedWordIds) {
+          try {
+            final word = await _supabaseRepository.getWordById(wordId);
+            if (word != null) {
+              words.add(word);
+            }
+          } catch (e) {
+            debugPrint('Neuro Match: Could not load word $wordId: $e');
+          }
         }
-        
-        // If no words found with code, try with language name
-        if (words.isEmpty && activeLanguage != null && languageCode != activeLanguage) {
-          words = await _supabaseRepository.getWords(language: activeLanguage);
-          debugPrint('Loaded ${words.length} words with language name: $activeLanguage');
-        }
-        
-        // Final fallback: load all words if still empty
-        if (words.isEmpty) {
-          words = await _supabaseRepository.getWords();
-          debugPrint('Loaded ${words.length} words without language filter (fallback)');
-        }
+        debugPrint('Neuro Match: Loaded ${words.length} words by direct ID lookup');
       } catch (e) {
-        debugPrint('Error loading words: $e');
-        // Try one more time without filter as last resort
+        debugPrint('Neuro Match: Error in direct word lookup: $e');
+      }
+      
+      // If direct lookup didn't work well, try loading all words and filtering
+      if (words.length < unlockedWordIds.length * 0.8) {
+        debugPrint('Neuro Match: Direct lookup incomplete, trying bulk load...');
+        
+        // Map language name to language code (e.g., 'spanish' -> 'es')
+        final languageCode = _mapLanguageToCode(activeLanguage);
+        
         try {
-          words = await _supabaseRepository.getWords();
-        } catch (e2) {
-          debugPrint('Final fallback also failed: $e2');
-          rethrow;
+          // Try with language code first
+          if (languageCode != null) {
+            final wordsByLang = await _supabaseRepository.getWords(language: languageCode);
+            debugPrint('Neuro Match: Loaded ${wordsByLang.length} words with language code: $languageCode');
+            
+            // Add words that match unlocked IDs
+            for (final word in wordsByLang) {
+              if (unlockedWordIds.contains(word.id) && !words.any((w) => w.id == word.id)) {
+                words.add(word);
+              }
+            }
+          }
+          
+          // Try with language name
+          if (activeLanguage != null && languageCode != activeLanguage) {
+            final wordsByLang = await _supabaseRepository.getWords(language: activeLanguage);
+            debugPrint('Neuro Match: Loaded ${wordsByLang.length} words with language name: $activeLanguage');
+            
+            for (final word in wordsByLang) {
+              if (unlockedWordIds.contains(word.id) && !words.any((w) => w.id == word.id)) {
+                words.add(word);
+              }
+            }
+          }
+          
+          // Final fallback: load all words and filter
+          if (words.length < unlockedWordIds.length * 0.8) {
+            final allWords = await _supabaseRepository.getWords();
+            debugPrint('Neuro Match: Loaded ${allWords.length} total words, filtering by unlocked IDs...');
+            
+            for (final word in allWords) {
+              if (unlockedWordIds.contains(word.id) && !words.any((w) => w.id == word.id)) {
+                words.add(word);
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('Neuro Match: Error in bulk word loading: $e');
         }
       }
       
@@ -165,19 +257,14 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
       final wordIds = words.map((w) => w.id).toSet();
       final masteries = allMasteries.where((m) => wordIds.contains(m.wordId)).toList();
       
-      // Filter words based on lesson unlocks
-      final unlockedWordIds = await _lessonService.getUnlockedWordIds(user.id);
-      final filteredWords = words.where((word) {
-        // If word is in unlocked list, allow it
-        if (unlockedWordIds.contains(word.id)) return true;
-        // If word is not in any lesson's unlock list, allow it (backward compatibility)
-        // In production, you might want to require all words to be unlocked
-        return true; // For MVP, allow all words but prioritize unlocked ones
-      }).toList();
+      debugPrint('Neuro Match: Successfully loaded ${words.length} unlocked words (looking for ${unlockedWordIds.length} total)');
 
       if (mounted) {
         setState(() {
-          _allWords.addAll(filteredWords);
+          // Clear existing words and add newly loaded ones (already filtered by unlocked IDs)
+          _allWords.clear();
+          _allWords.addAll(words);
+          _allMasteries.clear();
           _allMasteries.addAll(masteries);
           _isLoadingWords = false;
         });
@@ -186,14 +273,16 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
         
         // If still no words, show helpful message
         if (_reviewQueue.isEmpty && _allWords.isEmpty) {
-          debugPrint('No words loaded. Total words: ${words.length}, Filtered: ${filteredWords.length}');
+          debugPrint('Neuro Match: No words loaded. Expected ${unlockedWordIds.length} words from completed lessons.');
           if (mounted) {
             setState(() {
-              _loadingError = 'No words available. Please complete a lesson first.';
+              _loadingError = 'Words from completed lessons not found. Please try refreshing or complete the lesson again.';
             });
           }
         } else if (_reviewQueue.isEmpty) {
           debugPrint('Review queue is empty but words exist: ${_allWords.length}');
+        } else {
+          debugPrint('Neuro Match: Successfully loaded ${_allWords.length} unlocked words, ${_reviewQueue.length} in review queue');
         }
       }
     } catch (e) {
@@ -313,8 +402,10 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
   void _handleSwipeUpdate(Offset globalPosition) {
     if (_isPaused || _currentWord == null) return;
     
-    // Find which target zone the swipe position is over
+    // Find which target zone the swipe position is over (with padding for easier detection)
     Word? hoveredTarget;
+    double? closestDistance;
+    
     for (final target in _targetWords) {
       final key = _targetKeys[target];
       if (key?.currentContext != null) {
@@ -323,13 +414,33 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
           final targetPosition = renderBox.localToGlobal(Offset.zero);
           final targetSize = renderBox.size;
           
-          // Check if swipe position is within target bounds
-          if (globalPosition.dx >= targetPosition.dx &&
-              globalPosition.dx <= targetPosition.dx + targetSize.width &&
-              globalPosition.dy >= targetPosition.dy &&
-              globalPosition.dy <= targetPosition.dy + targetSize.height) {
-            hoveredTarget = target;
-            break;
+          // Calculate the center of the target zone
+          final targetCenter = Offset(
+            targetPosition.dx + targetSize.width / 2,
+            targetPosition.dy + targetSize.height / 2,
+          );
+          
+          // Calculate distance from swipe position to target center
+          final distance = (globalPosition - targetCenter).distance;
+          
+          // Use padding for more forgiving detection during swipe
+          final padding = 30.0;
+          final isWithinBounds = 
+              globalPosition.dx >= targetPosition.dx - padding &&
+              globalPosition.dx <= targetPosition.dx + targetSize.width + padding &&
+              globalPosition.dy >= targetPosition.dy - padding &&
+              globalPosition.dy <= targetPosition.dy + targetSize.height + padding;
+          
+          // Also check if we're close to the target center
+          final maxDistance = 120.0;
+          final isCloseToCenter = distance <= maxDistance;
+          
+          if (isWithinBounds || isCloseToCenter) {
+            // Choose the closest target if multiple are within range
+            if (closestDistance == null || distance < closestDistance) {
+              hoveredTarget = target;
+              closestDistance = distance;
+            }
           }
         }
       }
@@ -345,8 +456,12 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
   void _handleSwipeEnd(Offset globalPosition) {
     if (_isPaused || _currentWord == null) return;
     
+    debugPrint('Neuro Match: Swipe ended at position: $globalPosition');
+    
     // Find which target zone the swipe ended over
     Word? matchedTarget;
+    double? closestDistance;
+    
     for (final target in _targetWords) {
       final key = _targetKeys[target];
       if (key?.currentContext != null) {
@@ -355,20 +470,55 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
           final targetPosition = renderBox.localToGlobal(Offset.zero);
           final targetSize = renderBox.size;
           
-          // Check if swipe end position is within target bounds
-          if (globalPosition.dx >= targetPosition.dx &&
-              globalPosition.dx <= targetPosition.dx + targetSize.width &&
-              globalPosition.dy >= targetPosition.dy &&
-              globalPosition.dy <= targetPosition.dy + targetSize.height) {
-            matchedTarget = target;
-            break;
+          // Calculate the center of the target zone
+          final targetCenter = Offset(
+            targetPosition.dx + targetSize.width / 2,
+            targetPosition.dy + targetSize.height / 2,
+          );
+          
+          // Calculate distance from swipe end to target center
+          final distance = (globalPosition - targetCenter).distance;
+          
+          // Make the hit area more forgiving with padding
+          final padding = 30.0; // Extra pixels for easier matching
+          final isWithinBounds = 
+              globalPosition.dx >= targetPosition.dx - padding &&
+              globalPosition.dx <= targetPosition.dx + targetSize.width + padding &&
+              globalPosition.dy >= targetPosition.dy - padding &&
+              globalPosition.dy <= targetPosition.dy + targetSize.height + padding;
+          
+          // Also check if we're close to the target center (within reasonable distance)
+          final maxDistance = 120.0; // Maximum distance from center to count as a match
+          final isCloseToCenter = distance <= maxDistance;
+          
+          if (isWithinBounds || isCloseToCenter) {
+            // Choose the closest target if multiple match
+            if (closestDistance == null || distance < closestDistance) {
+              matchedTarget = target;
+              closestDistance = distance;
+              debugPrint('Neuro Match: Found target match: ${target.translation} (distance: ${distance.toStringAsFixed(1)}px)');
+            }
           }
         }
       }
     }
     
+    // Fallback: If no target matched but user was hovering over one, use that
+    final hoveredTarget = _hoveredTarget;
+    if (matchedTarget == null && hoveredTarget != null) {
+      debugPrint('Neuro Match: Using hovered target as fallback: ${hoveredTarget.translation}');
+      matchedTarget = hoveredTarget;
+    }
+    
     if (matchedTarget != null) {
+      debugPrint('Neuro Match: ✅ Matching word "${_currentWord!.wordText}" with target "${matchedTarget.translation}"');
       _handleTargetMatch(matchedTarget);
+    } else {
+      debugPrint('Neuro Match: ❌ No target matched at swipe end position: $globalPosition');
+      debugPrint('Neuro Match: Current word: ${_currentWord!.wordText}');
+      debugPrint('Neuro Match: Word will continue falling - try swiping again or wait for timeout');
+      // Don't auto-fail here - let the word continue falling so user can try again
+      // The word will naturally fail if it reaches the bottom
     }
     
     setState(() {
@@ -509,6 +659,13 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
         Navigator.pop(context);
       }
     });
+  }
+
+  void _showInstructions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const _InstructionsDialog(),
+    );
   }
 
   Future<void> _endGame() async {
@@ -869,7 +1026,34 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 32),
+                    // How to Play Button
+                    OutlinedButton.icon(
+                      onPressed: () => _showInstructions(context),
+                      icon: const Icon(Icons.help_outline_rounded, size: 20),
+                      label: const Text(
+                        'How to Play',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primaryMintGreen,
+                        side: const BorderSide(
+                          color: AppTheme.primaryMintGreen,
+                          width: 2,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
@@ -974,6 +1158,199 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
               ),
             ),
       ),
+    );
+  }
+}
+
+// Instructions Dialog Widget
+class _InstructionsDialog extends StatelessWidget {
+  const _InstructionsDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(32),
+      ),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          AppTheme.primaryMintGreen,
+                          AppTheme.softCyan,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.school_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Text(
+                      'How to Play',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(context),
+                    color: AppTheme.textSecondary,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              // Objective
+              _InstructionSection(
+                icon: Icons.flag_rounded,
+                iconColor: AppTheme.primaryMintGreen,
+                title: 'Objective',
+                description: 'Match falling words with their correct translations by swiping them to the right target zone.',
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // How to Play
+              _InstructionSection(
+                icon: Icons.gesture_rounded,
+                iconColor: AppTheme.goldenOrange,
+                title: 'Controls',
+                description: '• Swipe the falling word down to its matching translation\n• You can swipe in any direction to move the word\n• Match correctly to earn points and continue',
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Scoring
+              _InstructionSection(
+                icon: Icons.star_rounded,
+                iconColor: AppTheme.goldenOrange,
+                title: 'Scoring',
+                description: '• +10 points for each correct match\n• You start with 3 lives (hearts)\n• Lose a life for incorrect matches or missed words\n• Game ends when you run out of lives',
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Tips
+              _InstructionSection(
+                icon: Icons.lightbulb_rounded,
+                iconColor: AppTheme.softCyan,
+                title: 'Tips',
+                description: '• Words fall faster as you progress\n• Act quickly but accurately\n• Practice regularly to improve your vocabulary\n• Focus on words you\'ve learned in lessons',
+              ),
+              
+              const SizedBox(height: 32),
+              
+              // Close Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryMintGreen,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Got it!',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Instruction Section Widget
+class _InstructionSection extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String description;
+
+  const _InstructionSection({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: iconColor,
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

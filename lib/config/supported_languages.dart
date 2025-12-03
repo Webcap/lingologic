@@ -10,6 +10,13 @@ class SupportedLanguages {
       isAvailable: true,
     ),
     LanguageInfo(
+      code: 'english',
+      name: 'English',
+      nativeName: 'English',
+      flagEmoji: '🇬🇧',
+      isAvailable: true,
+    ),
+    LanguageInfo(
       code: 'french',
       name: 'French',
       nativeName: 'Français',

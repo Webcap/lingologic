@@ -1,0 +1,547 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../theme/app_theme.dart';
+import 'home/home_tab.dart';
+import 'lessons/lessons_list_screen.dart';
+import 'progress_screen.dart';
+import '../games/neuro_match/neuro_match_game.dart';
+import '../games/syntax_constructor/syntax_constructor_game.dart';
+import '../widgets/language_selector.dart';
+import '../services/game_service.dart';
+
+class MainTabsScreen extends StatefulWidget {
+  const MainTabsScreen({super.key});
+
+  @override
+  State<MainTabsScreen> createState() => _MainTabsScreenState();
+}
+
+class _MainTabsScreenState extends State<MainTabsScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  int _currentIndex = 0;
+  final GlobalKey<_GamesTabState> _gamesTabKey = GlobalKey<_GamesTabState>();
+  int _previousTabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      final newIndex = _tabController.index;
+      // Refresh games tab when it becomes visible
+      if (newIndex == 2 && _previousTabIndex != 2) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _gamesTabKey.currentState?.refresh();
+        });
+      }
+      setState(() {
+        _currentIndex = newIndex;
+        _previousTabIndex = newIndex;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.mainGradient,
+        ),
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            const HomeTab(),
+            const _LessonsTab(),
+            _GamesTab(key: _gamesTabKey),
+            const ProgressScreen(),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.cardWhite,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Container(
+            height: 64,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildTabItem(
+                  icon: Icons.home_rounded,
+                  label: 'Home',
+                  index: 0,
+                  onTap: () => _tabController.animateTo(0),
+                ),
+                _buildTabItem(
+                  icon: Icons.school_rounded,
+                  label: 'Lessons',
+                  index: 1,
+                  onTap: () => _tabController.animateTo(1),
+                ),
+                _buildTabItem(
+                  icon: Icons.sports_esports_rounded,
+                  label: 'Games',
+                  index: 2,
+                  onTap: () => _tabController.animateTo(2),
+                ),
+                _buildTabItem(
+                  icon: Icons.bar_chart_rounded,
+                  label: 'Progress',
+                  index: 3,
+                  onTap: () => _tabController.animateTo(3),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabItem({
+    required IconData icon,
+    required String label,
+    required int index,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = _currentIndex == index;
+    
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppTheme.primaryMintGreen.withOpacity(0.15)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected
+                    ? AppTheme.primaryMintGreen
+                    : AppTheme.textSecondary,
+                size: 22,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected
+                    ? AppTheme.primaryMintGreen
+                    : AppTheme.textSecondary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Wrapper for Lessons List - shows lessons without back button in tab context
+class _LessonsTab extends StatelessWidget {
+  const _LessonsTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return const LessonsListScreen();
+  }
+}
+
+// Games Tab
+class _GamesTab extends StatefulWidget {
+  const _GamesTab({super.key});
+
+  @override
+  State<_GamesTab> createState() => _GamesTabState();
+}
+
+class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin {
+  final _gameService = GameService();
+  bool _areGamesUnlocked = false;
+  bool _isLoading = true;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkGameUnlockStatus();
+  }
+
+  void refresh() {
+    // Public method to refresh unlock status
+    _checkGameUnlockStatus();
+  }
+
+  Future<void> _checkGameUnlockStatus() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final unlocked = await _gameService.areGamesUnlocked();
+      if (mounted) {
+        setState(() {
+          _areGamesUnlocked = unlocked;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _areGamesUnlocked = false;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: AppTheme.mainGradient,
+      ),
+      child: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 0,
+              floating: true,
+              pinned: false,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              actions: [
+                LanguageSelector(
+                  onLanguageSelected: (language) {
+                    // Reload unlock status when language changes
+                    _checkGameUnlockStatus();
+                  },
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Games',
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Practice with interactive games',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                    ),
+                    const SizedBox(height: 32),
+                    if (_isLoading)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    else if (!_areGamesUnlocked)
+                      _buildLockedGamesMessage(context)
+                    else ...[
+                      _buildGameCard(
+                        context: context,
+                        title: 'Neuro-Match',
+                        description: 'Fast-paced word matching game',
+                        icon: Icons.psychology_rounded,
+                        gradient: const LinearGradient(
+                          colors: [AppTheme.salmonPink, Color(0xFFFF6B9D)],
+                        ),
+                        isUnlocked: true,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NeuroMatchGame(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildGameCard(
+                        context: context,
+                        title: 'Syntax Constructor',
+                        description: 'Build sentences with drag & drop',
+                        icon: Icons.construction_rounded,
+                        gradient: const LinearGradient(
+                          colors: [AppTheme.softCyan, Color(0xFF22D3EE)],
+                        ),
+                        isUnlocked: true,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SyntaxConstructorGame(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLockedGamesMessage(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: AppTheme.cardWhite.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: AppTheme.textSecondary.withOpacity(0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: AppTheme.textSecondary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.lock_rounded,
+              size: 50,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Games Locked',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                  fontSize: 24,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Complete your first lesson to unlock games and practice what you\'ve learned!',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textSecondary,
+                  fontSize: 15,
+                  height: 1.5,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          // Refresh button for testing
+          TextButton.icon(
+            onPressed: () => refresh(),
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Refresh'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.primaryMintGreen,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppTheme.primaryMintGreen, AppTheme.softCyan],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryMintGreen.withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  // Switch to lessons tab (index 1)
+                  if (context.mounted) {
+                    // Use a callback or navigate - for now show lessons route
+                    context.go('/lessons');
+                  }
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.school_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Go to Lessons',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameCard({
+    required BuildContext context,
+    required String title,
+    required String description,
+    required IconData icon,
+    required Gradient gradient,
+    required bool isUnlocked,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardWhite.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppTheme.textSecondary.withOpacity(0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    gradient: gradient,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: gradient.colors.first.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(icon, size: 32, color: Colors.white),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        description,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.textSecondary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+

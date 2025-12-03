@@ -138,49 +138,57 @@ class _TargetZoneWidgetState extends State<TargetZoneWidget>
                   ],
                 ),
               )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Image placeholder with better styling
-                  Container(
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      color: widget.isHovered
-                          ? gradientColor1?.withValues(alpha: 0.1)
-                          : Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: borderColor.withValues(alpha: 0.3),
-                        width: 2,
+            : Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Image placeholder with better styling
+                    Flexible(
+                      child: Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: widget.isHovered
+                              ? gradientColor1?.withValues(alpha: 0.1)
+                              : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: borderColor.withValues(alpha: 0.3),
+                            width: 2,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.image_rounded,
+                          size: 28,
+                          color: widget.isHovered
+                              ? gradientColor1
+                              : Colors.grey.shade400,
+                        ),
                       ),
                     ),
-                    child: Icon(
-                      Icons.image_rounded,
-                      size: 32,
-                      color: widget.isHovered
-                          ? gradientColor1
-                          : Colors.grey.shade400,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      widget.targetWord.translation,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: widget.isHovered
-                            ? gradientColor1
-                            : AppTheme.textPrimary,
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Text(
+                          widget.targetWord.translation,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: widget.isHovered
+                                ? gradientColor1
+                                : AppTheme.textPrimary,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
       ),
     );

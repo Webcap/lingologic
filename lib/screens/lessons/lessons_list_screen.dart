@@ -105,6 +105,42 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
     return filtered;
   }
 
+  // Group lessons by level (A1, A2, B1, etc.)
+  Map<String, List<Lesson>> get _lessonsByLevel {
+    final grouped = <String, List<Lesson>>{};
+    
+    for (final lesson in _filteredLessons) {
+      final level = lesson.level ?? 'Other';
+      grouped.putIfAbsent(level, () => []).add(lesson);
+    }
+    
+    // Sort lessons within each level by orderIndex
+    for (final level in grouped.keys) {
+      grouped[level]!.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    }
+    
+    return grouped;
+  }
+
+  List<String> get _levels {
+    // Get all levels and sort them in CEFR order
+    final levels = _lessonsByLevel.keys.toList();
+    final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+    
+    levels.sort((a, b) {
+      final aIndex = cefrOrder.indexOf(a);
+      final bIndex = cefrOrder.indexOf(b);
+      
+      if (aIndex == -1 && bIndex == -1) return a.compareTo(b);
+      if (aIndex == -1) return 1;
+      if (bIndex == -1) return -1;
+      
+      return aIndex.compareTo(bIndex);
+    });
+    
+    return levels;
+  }
+
   List<String> get _categories {
     // Only include categories from visible (non-completed) lessons
     final visibleLessons = _lessons.where((lesson) {
@@ -114,6 +150,44 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
     final categories = visibleLessons.map((l) => l.category).whereType<String>().toSet().toList();
     categories.sort();
     return categories;
+  }
+  
+  String _getLevelDescription(String level) {
+    switch (level) {
+      case 'A1':
+        return 'Beginner';
+      case 'A2':
+        return 'Elementary';
+      case 'B1':
+        return 'Intermediate';
+      case 'B2':
+        return 'Upper Intermediate';
+      case 'C1':
+        return 'Advanced';
+      case 'C2':
+        return 'Proficient';
+      default:
+        return 'Mixed Level';
+    }
+  }
+  
+  Color _getLevelColor(String level) {
+    switch (level) {
+      case 'A1':
+        return AppTheme.primaryMintGreen;
+      case 'A2':
+        return AppTheme.softCyan;
+      case 'B1':
+        return AppTheme.electricLavender;
+      case 'B2':
+        return AppTheme.goldenOrange;
+      case 'C1':
+        return AppTheme.salmonPink;
+      case 'C2':
+        return const Color(0xFF9333EA);
+      default:
+        return AppTheme.textSecondary;
+    }
   }
 
   int get _completedCount {
@@ -280,7 +354,7 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                       ),
                     ),
                   
-                  // Lessons List
+                  // Lessons List Grouped by Level
                   if (_filteredLessons.isEmpty)
                     SliverFillRemaining(
                       hasScrollBody: false,
@@ -305,32 +379,54 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                       ),
                     )
                   else
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final lesson = _filteredLessons[index];
-                            final progress = _getProgress(lesson.id);
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: _LessonCard(
-                                lesson: lesson,
-                                progress: progress,
-                                onTap: () async {
-                                  final result = await context.push('/lessons/${lesson.id}');
-                                  // Refresh if lesson was completed
-                                  if (result == true) {
-                                    _loadLessons();
-                                  }
-                                },
-                              ),
-                            );
-                          },
-                          childCount: _filteredLessons.length,
+                    ..._levels.expand((level) {
+                      final levelLessons = _lessonsByLevel[level]!;
+                      return [
+                        // Level Header
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              24, 
+                              level == _levels.first ? 0 : 32, 
+                              24, 
+                              16,
+                            ),
+                            child: _LevelHeader(
+                              level: level,
+                              description: _getLevelDescription(level),
+                              color: _getLevelColor(level),
+                              lessonCount: levelLessons.length,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                        // Level Lessons
+                        SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final lesson = levelLessons[index];
+                                final progress = _getProgress(lesson.id);
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 16),
+                                  child: _LessonCard(
+                                    lesson: lesson,
+                                    progress: progress,
+                                    onTap: () async {
+                                      final result = await context.push('/lessons/${lesson.id}');
+                                      if (result == true) {
+                                        _loadLessons();
+                                      }
+                                    },
+                                  ),
+                                );
+                              },
+                              childCount: levelLessons.length,
+                            ),
+                          ),
+                        ),
+                      ];
+                    }).toList(),
                   
                   // Bottom padding
                   const SliverToBoxAdapter(
@@ -750,6 +846,92 @@ class _LessonCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _LevelHeader extends StatelessWidget {
+  final String level;
+  final String description;
+  final Color color;
+  final int lessonCount;
+
+  const _LevelHeader({
+    required this.level,
+    required this.description,
+    required this.color,
+    required this.lessonCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withOpacity(0.2),
+            color.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 2,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text(
+              level,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$lessonCount ${lessonCount == 1 ? 'lesson' : 'lessons'}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
