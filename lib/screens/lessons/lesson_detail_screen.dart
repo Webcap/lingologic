@@ -224,7 +224,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  context.pop(); // Go back to lessons list
+                  context.pop(true); // Return true to indicate lesson was completed
                 },
                 child: const Text('Continue'),
               ),

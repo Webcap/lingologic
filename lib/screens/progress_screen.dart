@@ -16,7 +16,8 @@ class ProgressScreen extends StatefulWidget {
   State<ProgressScreen> createState() => _ProgressScreenState();
 }
 
-class _ProgressScreenState extends State<ProgressScreen> {
+class _ProgressScreenState extends State<ProgressScreen>
+    with SingleTickerProviderStateMixin {
   final _supabaseRepository = SupabaseRepository();
   final _lessonService = LessonService();
   final _languageService = LanguageService();
@@ -30,45 +31,68 @@ class _ProgressScreenState extends State<ProgressScreen> {
   String? _activeLanguage;
   bool _isLoading = true;
   bool _hasInitialLoad = false;
+  
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    );
     _loadProgress();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Refresh when screen becomes visible again (e.g., after completing a lesson)
-    // Skip the first call since initState already loads
     if (_hasInitialLoad && !_isLoading) {
       _loadProgress();
     }
   }
 
   Future<void> _loadProgress() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
     try {
       final authService = AuthService();
       final user = authService.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _hasInitialLoad = true;
+          });
+        }
+        return;
+      }
 
-      // Get active language
       final activeLanguage = await _languageService.getActiveLanguage();
-      
-      // Get words for active language
       final words = await _supabaseRepository.getWords(language: activeLanguage);
       final wordIds = words.map((w) => w.id).toSet();
       
-      // Get masteries and filter by active language words
       final allMasteries = await _supabaseRepository.getWordMasteries(user.id);
       final masteries = allMasteries.where((m) => wordIds.contains(m.wordId)).toList();
       
-      // Get lessons for active language
       final lessons = await _lessonService.getLessons();
       final lessonIds = lessons.map((l) => l.id).toSet();
       
-      // Get progress and filter by active language lessons
       final allProgress = await _lessonService.getUserLessonProgressAll();
       final progressList = allProgress.where((p) => lessonIds.contains(p.lessonId)).toList();
       
@@ -87,181 +111,388 @@ class _ProgressScreenState extends State<ProgressScreen> {
           _isLoading = false;
           _hasInitialLoad = true;
         });
+        _animationController.forward();
       }
     } catch (e) {
       if (mounted) {
         ErrorHandler.handleError(context, e, contextMessage: 'Error loading progress');
         setState(() {
           _isLoading = false;
+          _hasInitialLoad = true;
         });
       }
     }
   }
 
+  double get _totalMasteryProgress {
+    if (_wordsLearned == 0) return 0.0;
+    final total = _noviceCount + _intermediateCount + _masteredCount;
+    if (total == 0) return 0.0;
+    return (_masteredCount / total);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Progress'),
-        actions: [
-          LanguageSelector(
-            onLanguageSelected: (language) {
-              // Reload progress when language changes
-              _loadProgress();
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppTheme.mainGradient,
         ),
-        child: RefreshIndicator(
-          onRefresh: _loadProgress,
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(), // Enable pull-to-refresh
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      'Learning Progress',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    _buildStatCard(
-                      title: 'Words Learned',
-                      value: '$_wordsLearned',
-                      icon: Icons.book,
-                      color: AppTheme.primaryMintGreen,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildMasteryCard(
-                      title: 'Novice',
-                      count: _noviceCount,
-                      color: AppTheme.salmonPink,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildMasteryCard(
-                      title: 'Intermediate',
-                      count: _intermediateCount,
-                      color: AppTheme.goldenOrange,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildMasteryCard(
-                      title: 'Mastered',
-                      count: _masteredCount,
-                      color: AppTheme.primaryMintGreen,
-                    ),
-                    const SizedBox(height: 32),
-                    // Lessons Progress
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.electricLavender.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppTheme.electricLavender.withOpacity(0.3),
+        child: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _loadProgress,
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _hasNoData()
+                    ? _buildEmptyState()
+                    : FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: CustomScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          slivers: [
+                            // App Bar
+                            SliverAppBar(
+                              expandedHeight: 0,
+                              floating: true,
+                              pinned: false,
+                              backgroundColor: Colors.transparent,
+                              elevation: 0,
+                              leading: IconButton(
+                                icon: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.cardWhite.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_back_ios_new,
+                                    color: AppTheme.textPrimary,
+                                    size: 18,
+                                  ),
+                                ),
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                              actions: [
+                                LanguageSelector(
+                                  onLanguageSelected: (language) {
+                                    _loadProgress();
+                                  },
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                            ),
+                            
+                            // Header Section
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Your Progress',
+                                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            color: AppTheme.textPrimary,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Track your learning journey',
+                                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                            color: AppTheme.textSecondary,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            
+                            // Hero Stats Card
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                                child: _buildHeroCard(),
+                              ),
+                            ),
+                            
+                            // Mastery Progress Section
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                                child: _buildMasterySection(),
+                              ),
+                            ),
+                            
+                            // Lessons Progress Section
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                                child: _buildLessonsSection(),
+                              ),
+                            ),
+                            
+                            // Bottom padding
+                            const SliverToBoxAdapter(
+                              child: SizedBox(height: 24),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.school,
-                                color: AppTheme.electricLavender,
-                                size: 24,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Lessons Progress',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _buildStatCard(
-                                title: 'Completed',
-                                value: '$_lessonsCompleted',
-                                icon: Icons.check_circle,
-                                color: AppTheme.successGreen,
-                              ),
-                              _buildStatCard(
-                                title: 'In Progress',
-                                value: '$_lessonsInProgress',
-                                icon: Icons.play_circle,
-                                color: AppTheme.goldenOrange,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildStatCard({
+  Widget _buildHeroCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.softCyan,
+            AppTheme.electricLavender,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.electricLavender.withOpacity(0.4),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$_wordsLearned',
+                    style: const TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Words Learned',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 40,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Overall Mastery Progress
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Mastery Progress',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    '${(_totalMasteryProgress * 100).toStringAsFixed(0)}%',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: _totalMasteryProgress,
+                  minHeight: 8,
+                  backgroundColor: Colors.white.withOpacity(0.3),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMasterySection() {
+    final total = _noviceCount + _intermediateCount + _masteredCount;
+    final novicePercent = total > 0 ? _noviceCount / total : 0.0;
+    final intermediatePercent = total > 0 ? _intermediateCount / total : 0.0;
+    final masteredPercent = total > 0 ? _masteredCount / total : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: AppTheme.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryMintGreen,
+                      AppTheme.primaryMintGreen.withOpacity(0.7),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.stars_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Word Mastery',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Mastery Cards
+          _buildMasteryLevelCard(
+            title: 'Mastered',
+            count: _masteredCount,
+            percent: masteredPercent,
+            color: AppTheme.primaryMintGreen,
+            icon: Icons.check_circle_rounded,
+          ),
+          const SizedBox(height: 16),
+          _buildMasteryLevelCard(
+            title: 'Intermediate',
+            count: _intermediateCount,
+            percent: intermediatePercent,
+            color: AppTheme.goldenOrange,
+            icon: Icons.trending_up_rounded,
+          ),
+          const SizedBox(height: 16),
+          _buildMasteryLevelCard(
+            title: 'Novice',
+            count: _noviceCount,
+            percent: novicePercent,
+            color: AppTheme.salmonPink,
+            icon: Icons.school_rounded,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMasteryLevelCard({
     required String title,
-    required String value,
-    required IconData icon,
+    required int count,
+    required double percent,
     required Color color,
+    required IconData icon,
   }) {
     return Container(
-      decoration: AppTheme.cardDecoration(),
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1.5,
+        ),
+      ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  color,
-                  color.withValues(alpha: 0.7),
-                ],
+                colors: [color, color.withOpacity(0.7)],
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.white, size: 32),
+            child: Icon(icon, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        count.toString(),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: percent,
+                    minHeight: 6,
+                    backgroundColor: color.withOpacity(0.1),
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
                   ),
                 ),
               ],
@@ -272,53 +503,201 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 
-  Widget _buildMasteryCard({
+  Widget _buildLessonsSection() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: AppTheme.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.electricLavender,
+                      AppTheme.electricLavender.withOpacity(0.7),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.school_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Lessons Progress',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: _buildLessonStatCard(
+                  title: 'Completed',
+                  value: '$_lessonsCompleted',
+                  icon: Icons.check_circle_rounded,
+                  color: AppTheme.successGreen,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildLessonStatCard(
+                  title: 'In Progress',
+                  value: '$_lessonsInProgress',
+                  icon: Icons.play_circle_rounded,
+                  color: AppTheme.goldenOrange,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLessonStatCard({
     required String title,
-    required int count,
+    required String value,
+    required IconData icon,
     required Color color,
   }) {
     return Container(
-      decoration: AppTheme.cardDecoration(),
-      padding: const EdgeInsets.all(20.0),
-      child: Row(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withOpacity(0.15),
+            color.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
         children: [
           Container(
-            width: 6,
-            height: 50,
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                colors: [color, color.withOpacity(0.7)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.white, size: 28),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              color: AppTheme.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _hasNoData() {
+    return _wordsLearned == 0 && 
+           _lessonsCompleted == 0 && 
+           _lessonsInProgress == 0 &&
+           !_isLoading;
+  }
+
+  Widget _buildEmptyState() {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 80),
+          Container(
+            padding: const EdgeInsets.all(40),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
                 colors: [
-                  color,
-                  color.withValues(alpha: 0.6),
+                  AppTheme.electricLavender.withOpacity(0.2),
+                  AppTheme.softCyan.withOpacity(0.2),
                 ],
               ),
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(32),
+            ),
+            child: Icon(
+              Icons.trending_up_rounded,
+              size: 100,
+              color: AppTheme.textSecondary.withOpacity(0.4),
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
+          const SizedBox(height: 32),
+          Text(
+            'No Progress Yet',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
+              'Start learning to see your progress here!\nComplete lessons or play games to track your achievements.',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+              textAlign: TextAlign.center,
             ),
           ),
+          const SizedBox(height: 48),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              count.toString(),
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: color,
+            decoration: AppTheme.pillDecoration(AppTheme.primaryMintGreen),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.school_rounded, size: 20),
+              label: const Text(
+                'Start Learning',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
               ),
             ),
           ),
@@ -327,4 +706,3 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 }
-

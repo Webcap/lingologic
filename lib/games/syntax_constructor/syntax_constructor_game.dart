@@ -60,28 +60,34 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
   
   late AnimationController _successController;
   late AnimationController _errorController;
-  late AnimationController _snapController;
+  late AnimationController _pulseController;
+  late AnimationController _shimmerController;
   late Animation<double> _successAnimation;
   late Animation<double> _errorAnimation;
-  late Animation<double> _snapAnimation;
+  late Animation<double> _pulseAnimation;
+  late Animation<double> _shimmerAnimation;
 
   @override
   void initState() {
     super.initState();
     
-    // Animation controllers - optimized for 60fps
+    // Animation controllers
     _successController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 800),
     );
     _errorController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 500),
     );
-    _snapController = AnimationController(
+    _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
     
     _successAnimation = CurvedAnimation(
       parent: _successController,
@@ -91,9 +97,13 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
       parent: _errorController,
       curve: Curves.easeInOut,
     );
-    _snapAnimation = CurvedAnimation(
-      parent: _snapController,
-      curve: Curves.easeOut,
+    _pulseAnimation = CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    );
+    _shimmerAnimation = CurvedAnimation(
+      parent: _shimmerController,
+      curve: Curves.easeInOut,
     );
     
     _loadWords();
@@ -104,24 +114,17 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
       final user = _authService.currentUser;
       if (user == null) return;
 
-      // Get active language and initialize grammar service
       final activeLanguage = await _languageService.getActiveLanguage();
       if (activeLanguage != null) {
         _grammarService = GrammarServiceFactory.getGrammarService(activeLanguage);
       } else {
-        // Fallback to Spanish
         _grammarService = GrammarServiceFactory.getGrammarService('spanish');
       }
 
-      // Load words from repository
       final words = await _supabaseRepository.getWords(language: activeLanguage);
-      
-      // Filter words based on lesson unlocks
       final unlockedWordIds = await _lessonService.getUnlockedWordIds(user.id);
       final filteredWords = words.where((word) {
-        // If word is in unlocked list, allow it
         if (unlockedWordIds.contains(word.id)) return true;
-        // For MVP, allow all words but prioritize unlocked ones
         return true;
       }).toList();
 
@@ -158,15 +161,11 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
   void _generateNewSentence() {
     if (_grammarService == null) return;
     
-    // Get sentence template based on difficulty
     final templates = _grammarService!.getSentenceTemplates();
     final templateIndex = (_level - 1) % templates.length;
     final template = templates[templateIndex];
-    
-    // Adjust complexity based on DDA
     final adjustedTemplate = _adjustTemplateComplexity(template);
     
-    // Select words for the sentence
     final selectedWords = <Word>[];
     final availableForSelection = List<Word>.from(_allWords);
     
@@ -185,7 +184,6 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
       }
     }
     
-    // Create word pool with correct words + distractors
     final distractors = <Word>[];
     final usedCategories = adjustedTemplate.toSet();
     
@@ -212,9 +210,7 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
   }
 
   List<String> _adjustTemplateComplexity(List<String> template) {
-    // Increase complexity based on DDA multiplier
     if (_complexityMultiplier >= 1.5 && template.length < 5) {
-      // Add adjective or additional words
       if (!template.contains('adjective')) {
         final newTemplate = List<String>.from(template);
         newTemplate.insert(1, 'adjective');
@@ -224,7 +220,7 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
     return template;
   }
 
-  void _addWordToSentence(Word word, int targetIndex) {
+  void _addWordToSentence(Word word) {
     if (_isValidating || _grammarService == null) return;
     
     final wordType = _grammarService!.getWordTypeFromCategory(word.category);
@@ -234,7 +230,6 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
           )
         : null;
     
-    // Check if word type matches expected
     final isValidPlacement = wordType == expectedType;
     
     if (isValidPlacement) {
@@ -242,7 +237,6 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
         _sentenceWords.add(word);
         _availableWords.remove(word);
         
-        // Update expected next type
         if (_sentenceWords.length < _currentTemplate.length) {
           _expectedNextType = _grammarService!.getWordTypeFromCategory(
             _currentTemplate[_sentenceWords.length],
@@ -252,21 +246,25 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
         }
       });
       
-      // Snap animation
-      _snapController.forward(from: 0.0).then((_) {
-        _snapController.reverse();
-      });
+      // Haptic feedback would go here
     } else {
-      // Error animation
       _errorController.forward(from: 0.0).then((_) {
         _errorController.reverse();
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Wrong word type for this position'),
-          duration: Duration(milliseconds: 800),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Text('Wrong word type for this position'),
+            ],
+          ),
+          duration: const Duration(milliseconds: 1000),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -280,7 +278,6 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
       _availableWords.add(word);
       _availableWords.shuffle();
       
-      // Update expected next type
       if (_sentenceWords.length < _currentTemplate.length) {
         _expectedNextType = _grammarService!.getWordTypeFromCategory(
           _currentTemplate[_sentenceWords.length],
@@ -308,14 +305,12 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
         ? DateTime.now().difference(_sentenceStartTime!).inMilliseconds
         : 5000;
     
-    // Record DDA result
     _ddaService.recordResult(
       isCorrect: isValid,
       reactionTimeMs: reactionTime,
     );
     
     if (isValid) {
-      // Success animation
       _successController.forward();
       setState(() {
         _showSuccessAnimation = true;
@@ -324,12 +319,10 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
         _level++;
       });
       
-      // Adjust complexity based on DDA
       setState(() {
         _complexityMultiplier = _ddaService.adjustDifficulty(_complexityMultiplier);
       });
       
-      // Update grammar concept mastery (simplified - track as word mastery)
       await _updateGrammarMastery(true);
       
       await Future.delayed(const Duration(milliseconds: 1500));
@@ -341,7 +334,6 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
       
       _generateNewSentence();
     } else {
-      // Error animation
       _errorController.forward();
       setState(() {
         _showErrorAnimation = true;
@@ -353,9 +345,17 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Incorrect sentence structure. Try again!'),
-            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                Icon(Icons.close, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text('Incorrect sentence structure. Try again!'),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
             duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -374,18 +374,9 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
   }
 
   Future<void> _updateGrammarMastery(bool isCorrect) async {
-    // For MVP, we'll track grammar concepts similar to word mastery
-    // In a full implementation, you'd have a separate grammar_mastery table
     try {
       final user = _authService.currentUser;
       if (user == null) return;
-      
-      // Track grammar rule mastery (simplified approach)
-      // Quality: 4 = correct, 1 = incorrect
-      final quality = isCorrect ? 4 : 1;
-      
-      // For now, we'll just track that grammar was practiced
-      // In a full implementation, you'd update grammar concept mastery
     } catch (e) {
       // Handle error
     }
@@ -419,7 +410,6 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
       }
     }
     
-    // Add grammar hints
     hints.addAll(_grammarService!.generateHints(currentTypes));
     
     return hints;
@@ -430,7 +420,7 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
     
     final wordType = _grammarService!.getWordTypeFromCategory(word.category);
     if (wordType == _expectedNextType) {
-      return Colors.amber.shade200; // Highlight expected type
+      return AppTheme.goldenOrange;
     }
     
     return null;
@@ -453,8 +443,6 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
           );
           
           await _supabaseRepository.createGameSession(session);
-          
-          // Update streaks (both user profile and language-specific)
           await _userService.updateStreak();
           if (activeLanguage != null) {
             await _languageService.updateLanguageStreak(activeLanguage);
@@ -472,24 +460,77 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
     if (mounted) {
       showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: const Text('Game Over'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppTheme.primaryMintGreen, AppTheme.softCyan],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(Icons.celebration, color: Colors.white, size: 28),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Game Complete!',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Final Score: $_score'),
-              const SizedBox(height: 8),
-              Text('Level Reached: $_level'),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.electricLavender.withOpacity(0.1),
+                      AppTheme.softCyan.withOpacity(0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '$_score',
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.primaryMintGreen,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Final Score',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildStatItem('Level', '$_level', Icons.trending_up),
+                  _buildStatItem('Streak', '$_consecutiveCorrect', Icons.local_fire_department),
+                ],
+              ),
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _startGame();
-              },
-              child: const Text('Play Again'),
-            ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -497,607 +538,723 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
               },
               child: const Text('Exit'),
             ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _startGame();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryMintGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Play Again'),
+            ),
           ],
         ),
       );
     }
   }
 
+  Widget _buildStatItem(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: AppTheme.electricLavender, size: 24),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   void dispose() {
     _successController.dispose();
     _errorController.dispose();
-    _snapController.dispose();
+    _pulseController.dispose();
+    _shimmerController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Syntax Constructor'),
-        actions: [
-          if (!_isGameActive)
-            PopupMenuButton<GameMode>(
-              icon: const Icon(Icons.settings),
-              onSelected: (mode) {
-                setState(() {
-                  _mode = mode;
-                });
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: GameMode.guided,
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.lightbulb,
-                        color: _mode == GameMode.guided
-                            ? Colors.amber
-                            : Colors.grey,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.mainGradient,
+        ),
+        child: _isGameActive ? _buildGameView() : _buildStartScreen(),
+      ),
+    );
+  }
+
+  Widget _buildStartScreen() {
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Game Icon
+              Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppTheme.softCyan, AppTheme.electricLavender],
+                  ),
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.electricLavender.withOpacity(0.4),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.construction_rounded,
+                  size: 80,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 32),
+              
+              // Title
+              Text(
+                'Syntax Constructor',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // Description
+              Text(
+                _mode == GameMode.guided
+                    ? 'Build sentences with helpful hints'
+                    : 'Build sentences without hints',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 48),
+              
+              // Mode Selector
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardWhite.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildModeButton(
+                        mode: GameMode.guided,
+                        icon: Icons.lightbulb_rounded,
+                        label: 'Guided',
+                        isSelected: _mode == GameMode.guided,
                       ),
-                      const SizedBox(width: 8),
-                      const Text('Guided Mode'),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildModeButton(
+                        mode: GameMode.expert,
+                        icon: Icons.school_rounded,
+                        label: 'Expert',
+                        isSelected: _mode == GameMode.expert,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              
+              // Start Button
+              Container(
+                decoration: AppTheme.pillDecoration(AppTheme.primaryMintGreen),
+                child: ElevatedButton.icon(
+                  onPressed: _allWords.isNotEmpty ? _startGame : null,
+                  icon: const Icon(Icons.play_arrow_rounded, size: 24),
+                  label: const Text(
+                    'Start Game',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 48,
+                      vertical: 20,
+                    ),
+                    minimumSize: const Size(double.infinity, 64),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModeButton({
+    required GameMode mode,
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _mode = mode;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [AppTheme.goldenOrange, AppTheme.goldenOrange.withOpacity(0.8)],
+                )
+              : null,
+          color: isSelected ? null : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : AppTheme.textSecondary,
+              size: 28,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGameView() {
+    return SafeArea(
+      child: Column(
+        children: [
+          // Header with Score and Level
+          _buildHeader(),
+          
+          // Hints (Guided mode)
+          if (_mode == GameMode.guided && _getHints().isNotEmpty)
+            _buildHintsSection(),
+          
+          // Sentence Construction Area
+          Expanded(
+            child: _buildSentenceArea(),
+          ),
+          
+          // Available Words
+          _buildWordsSection(),
+          
+          // Validate Button
+          _buildValidateButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardWhite.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Score
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppTheme.softCyan, AppTheme.electricLavender],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.star_rounded, color: Colors.white, size: 20),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$_score',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Level $_level • ${_complexityMultiplier.toStringAsFixed(1)}x',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          
+          // Mode Badge & Exit
+          Row(
+            children: [
+              if (_mode == GameMode.guided)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppTheme.goldenOrange, AppTheme.goldenOrange.withOpacity(0.8)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.lightbulb_rounded, size: 16, color: Colors.white),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Guided',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                PopupMenuItem(
-                  value: GameMode.expert,
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.school,
-                        color: _mode == GameMode.expert
-                            ? Colors.blue
-                            : Colors.grey,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text('Expert Mode'),
-                    ],
+              const SizedBox(width: 12),
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.textSecondary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.close, color: AppTheme.textPrimary, size: 20),
+                ),
+                onPressed: _endGame,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHintsSection() {
+    final hints = _getHints();
+    if (hints.isEmpty) return const SizedBox.shrink();
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.goldenOrange.withOpacity(0.15),
+            AppTheme.goldenOrange.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppTheme.goldenOrange.withOpacity(0.3),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: hints.map((hint) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.goldenOrange.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.lightbulb_rounded,
+                    size: 16,
+                    color: AppTheme.goldenOrange,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    hint,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
                   ),
                 ),
               ],
             ),
-        ],
+          );
+        }).toList(),
       ),
-      body: _isGameActive
-          ? Column(
-              children: [
-                // Score and Level
-                Container(
-                  padding: const EdgeInsets.all(20.0),
-                  decoration: AppTheme.cardDecoration(),
-                  margin: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    );
+  }
+
+  Widget _buildSentenceArea() {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_successAnimation, _errorAnimation, _pulseAnimation]),
+      builder: (context, child) {
+        Color borderColor = AppTheme.primaryMintGreen.withOpacity(0.3);
+        Color backgroundColor = AppTheme.cardWhite.withOpacity(0.7);
+        double borderWidth = 2;
+        
+        if (_showSuccessAnimation) {
+          borderColor = AppTheme.successGreen;
+          backgroundColor = AppTheme.successGreen.withOpacity(0.1);
+          borderWidth = 3 + (_successAnimation.value * 2);
+        } else if (_showErrorAnimation) {
+          borderColor = Colors.red.shade600;
+          backgroundColor = Colors.red.withOpacity(0.1);
+          borderWidth = 3;
+        } else if (_sentenceWords.isEmpty) {
+          borderColor = AppTheme.textSecondary.withOpacity(0.2);
+        }
+        
+        return Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            border: Border.all(
+              color: borderColor,
+              width: borderWidth,
+            ),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: borderColor.withOpacity(0.2),
+                blurRadius: 16,
+                spreadRadius: _showSuccessAnimation ? _successAnimation.value * 4 : 0,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: _sentenceWords.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppTheme.softCyan,
-                                      AppTheme.electricLavender,
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '$_score',
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Level: $_level | Complexity: ${_complexityMultiplier.toStringAsFixed(2)}x',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppTheme.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_mode == GameMode.guided)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppTheme.goldenOrange,
-                                AppTheme.goldenOrange.withValues(alpha: 0.7),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.lightbulb, size: 16, color: Colors.white),
-                              SizedBox(width: 4),
-                              Text(
-                                'Guided',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                // Hints (Guided mode)
-                if (_mode == GameMode.guided && _getHints().isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _getHints().map((hint) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.goldenOrange.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.lightbulb_outline,
-                                  size: 16,
-                                  color: AppTheme.goldenOrange,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  hint,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                // Sentence construction area (Bridge)
-                Expanded(
-                  child: AnimatedBuilder(
-                    animation: Listenable.merge([
-                      _successAnimation,
-                      _errorAnimation,
-                      _snapAnimation,
-                    ]),
-                    builder: (context, child) {
-                      Color borderColor = Colors.blue;
-                      Color backgroundColor = Colors.white;
-                      
-                      if (_showSuccessAnimation) {
-                        borderColor = Colors.green;
-                        backgroundColor = Colors.green.shade50;
-                      } else if (_showErrorAnimation) {
-                        borderColor = Colors.red;
-                        backgroundColor = Colors.red.shade50;
-                      }
-                      
-                      return Transform.scale(
-                        scale: _snapAnimation.value * 0.05 + 1.0,
-                        child: Container(
-                          margin: const EdgeInsets.all(16),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: backgroundColor,
-                            border: Border.all(
-                              color: borderColor,
-                              width: 2 + (_successAnimation.value * 2),
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: borderColor.withOpacity(0.3),
-                                blurRadius: 8,
-                                spreadRadius: _successAnimation.value * 4,
-                              ),
-                            ],
-                          ),
-                              child: _sentenceWords.isEmpty
-                              ? Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(20),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.textSecondary.withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                        child: Icon(
-                                          Icons.construction,
-                                          size: 48,
-                                          color: AppTheme.textSecondary.withValues(alpha: 0.5),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'Build your sentence here',
-                                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                          color: AppTheme.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : Wrap(
-                                  alignment: WrapAlignment.center,
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: List.generate(
-                                    _sentenceWords.length,
-                                    (index) => GestureDetector(
-                                      onTap: () => _removeWordFromSentence(index),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              AppTheme.softCyan,
-                                              AppTheme.electricLavender,
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(16),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: AppTheme.softCyan.withValues(alpha: 0.3),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              _sentenceWords[index].wordText,
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w700,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Container(
-                                              padding: const EdgeInsets.all(4),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withValues(alpha: 0.3),
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: const Icon(
-                                                Icons.close,
-                                                size: 14,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                // Available words
-                Container(
-                  height: 120,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.white,
-                        AppTheme.electricLavender.withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, -4),
-                      ),
-                    ],
-                  ),
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _availableWords.length,
-                    itemBuilder: (context, index) {
-                      final word = _availableWords[index];
-                      final highlightColor = _getWordTypeColor(word);
-                      
-                      return DragTarget<Word>(
-                        onAcceptWithDetails: (details) {
-                          _addWordToSentence(word, index);
-                        },
-                        builder: (context, candidateData, rejectedData) {
-                          final isDraggingOver = candidateData.isNotEmpty;
-                          
-                          return Draggable<Word>(
-                            data: word,
-                            feedback: Material(
-                              elevation: 8,
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.shade600,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  word.wordText,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              margin: const EdgeInsets.only(right: 8),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
+                      AnimatedBuilder(
+                        animation: _pulseAnimation,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: 1.0 + (_pulseAnimation.value * 0.1),
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                gradient: highlightColor != null
-                                    ? LinearGradient(
-                                        colors: [
-                                          AppTheme.goldenOrange,
-                                          AppTheme.goldenOrange.withValues(alpha: 0.7),
-                                        ],
-                                      )
-                                    : LinearGradient(
-                                        colors: [
-                                          AppTheme.primaryMintGreen,
-                                          AppTheme.primaryMintGreen.withValues(alpha: 0.8),
-                                        ],
-                                      ),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isDraggingOver
-                                      ? Colors.white
-                                      : Colors.transparent,
-                                  width: isDraggingOver ? 3 : 0,
-                                ),
-                                boxShadow: isDraggingOver
-                                    ? [
-                                        BoxShadow(
-                                          color: (highlightColor ?? AppTheme.primaryMintGreen)
-                                              .withValues(alpha: 0.5),
-                                          blurRadius: 12,
-                                          spreadRadius: 2,
-                                        ),
-                                      ]
-                                    : [
-                                        BoxShadow(
-                                          color: (highlightColor ?? AppTheme.primaryMintGreen)
-                                              .withValues(alpha: 0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
+                                color: AppTheme.textSecondary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(24),
                               ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    word.wordText,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  if (_mode == GameMode.guided)
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 4),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.3),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        word.category,
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                ],
+                              child: Icon(
+                                Icons.auto_awesome_rounded,
+                                size: 48,
+                                color: AppTheme.textSecondary.withOpacity(0.5),
                               ),
                             ),
                           );
                         },
-                      );
-                    },
-                  ),
-                ),
-                // Validate button
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    decoration: _sentenceWords.isNotEmpty && !_isValidating
-                        ? AppTheme.pillDecoration(AppTheme.primaryMintGreen)
-                        : null,
-                    child: ElevatedButton.icon(
-                      onPressed: _sentenceWords.isNotEmpty && !_isValidating
-                          ? _validateSentence
-                          : null,
-                      icon: _isValidating
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Icon(Icons.check_circle),
-                      label: Text(
-                        _isValidating ? 'Validating...' : 'Validate Sentence',
-                        style: const TextStyle(
-                          fontSize: 16,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Build your sentence here',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppTheme.textSecondary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _sentenceWords.isNotEmpty && !_isValidating
-                            ? Colors.transparent
-                            : null,
-                        shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
-                        minimumSize: const Size(double.infinity, 56),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            )
-          : Container(
-              decoration: const BoxDecoration(
-                gradient: AppTheme.mainGradient,
-              ),
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(32),
-                        decoration: AppTheme.cardDecoration(),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppTheme.softCyan,
-                                    AppTheme.electricLavender,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Icon(
-                                Icons.construction,
-                                size: 64,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            const Text(
-                              'Syntax Constructor',
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              _mode == GameMode.guided
-                                  ? 'Build sentences with helpful hints'
-                                  : 'Build sentences without hints',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 32),
-                            Container(
-                              decoration: AppTheme.pillDecoration(
-                                AppTheme.primaryMintGreen,
-                              ),
-                              child: ElevatedButton.icon(
-                                onPressed: _allWords.isNotEmpty ? _startGame : null,
-                                icon: const Icon(Icons.play_arrow),
-                                label: const Text(
-                                  'Start Game',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 32,
-                                    vertical: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tap words below to add them',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondary.withOpacity(0.7),
                         ),
                       ),
                     ],
                   ),
+                )
+              : Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: List.generate(
+                    _sentenceWords.length,
+                    (index) => _buildSentenceWord(_sentenceWords[index], index),
+                  ),
                 ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSentenceWord(Word word, int index) {
+    return GestureDetector(
+      onTap: () => _removeWordFromSentence(index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppTheme.softCyan, AppTheme.electricLavender],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.electricLavender.withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              word.wordText,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
               ),
             ),
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.close_rounded,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWordsSection() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardWhite,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Text(
+              'Available Words',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 100,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              itemCount: _availableWords.length,
+              itemBuilder: (context, index) {
+                final word = _availableWords[index];
+                final highlightColor = _getWordTypeColor(word);
+                final isHighlighted = highlightColor != null;
+                
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: GestureDetector(
+                    onTap: () => _addWordToSentence(word),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                      decoration: BoxDecoration(
+                        gradient: isHighlighted
+                            ? LinearGradient(
+                                colors: [
+                                  AppTheme.goldenOrange,
+                                  AppTheme.goldenOrange.withOpacity(0.8),
+                                ],
+                              )
+                            : LinearGradient(
+                                colors: [
+                                  AppTheme.primaryMintGreen,
+                                  AppTheme.primaryMintGreen.withOpacity(0.8),
+                                ],
+                              ),
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isHighlighted ? AppTheme.goldenOrange : AppTheme.primaryMintGreen)
+                                .withOpacity(0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            word.wordText,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          if (_mode == GameMode.guided) ...[
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                word.category,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildValidateButton() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Container(
+        decoration: _sentenceWords.isNotEmpty && !_isValidating
+            ? AppTheme.pillDecoration(AppTheme.primaryMintGreen)
+            : null,
+        child: ElevatedButton.icon(
+          onPressed: _sentenceWords.isNotEmpty && !_isValidating
+              ? _validateSentence
+              : null,
+          icon: _isValidating
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Icon(Icons.check_circle_rounded, size: 24),
+          label: Text(
+            _isValidating ? 'Validating...' : 'Validate Sentence',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _sentenceWords.isNotEmpty && !_isValidating
+                ? Colors.transparent
+                : null,
+            shadowColor: Colors.transparent,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
+            minimumSize: const Size(double.infinity, 60),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -91,22 +91,42 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
   }
 
   List<Lesson> get _filteredLessons {
-    if (_selectedCategory == null) return _lessons;
-    return _lessons.where((l) => l.category == _selectedCategory).toList();
+    // Filter out completed lessons
+    var filtered = _lessons.where((lesson) {
+      final progress = _getProgress(lesson.id);
+      return progress?.isCompleted != true;
+    }).toList();
+    
+    // Apply category filter if selected
+    if (_selectedCategory != null) {
+      filtered = filtered.where((l) => l.category == _selectedCategory).toList();
+    }
+    
+    return filtered;
   }
 
   List<String> get _categories {
-    final categories = _lessons.map((l) => l.category).whereType<String>().toSet().toList();
+    // Only include categories from visible (non-completed) lessons
+    final visibleLessons = _lessons.where((lesson) {
+      final progress = _getProgress(lesson.id);
+      return progress?.isCompleted != true;
+    }).toList();
+    final categories = visibleLessons.map((l) => l.category).whereType<String>().toSet().toList();
     categories.sort();
     return categories;
   }
 
   int get _completedCount {
+    // Count all completed lessons (even if hidden)
     return _progressMap.values.where((p) => p.isCompleted).length;
   }
 
   int get _inProgressCount {
-    return _progressMap.values.where((p) => p.isInProgress).length;
+    // Count only visible in-progress lessons
+    return _lessons.where((lesson) {
+      final progress = _getProgress(lesson.id);
+      return progress?.isInProgress == true;
+    }).length;
   }
 
   @override
@@ -195,8 +215,8 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                               Expanded(
                                 child: _buildStatCard(
                                   icon: Icons.library_books_rounded,
-                                  value: '${_lessons.length}',
-                                  label: 'Total',
+                                  value: '${_filteredLessons.length}',
+                                  label: 'Available',
                                   color: AppTheme.electricLavender,
                                 ),
                               ),
@@ -297,8 +317,12 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                               child: _LessonCard(
                                 lesson: lesson,
                                 progress: progress,
-                                onTap: () {
-                                  context.push('/lessons/${lesson.id}');
+                                onTap: () async {
+                                  final result = await context.push('/lessons/${lesson.id}');
+                                  // Refresh if lesson was completed
+                                  if (result == true) {
+                                    _loadLessons();
+                                  }
                                 },
                               ),
                             );
