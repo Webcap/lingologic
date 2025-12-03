@@ -51,7 +51,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
   }
 
   Future<void> _checkPermissions() async {
-    // Check microphone permission
+    // Check microphone permission status only - don't request automatically
     final microphoneStatus = await Permission.microphone.status;
     
     setState(() {
@@ -60,42 +60,203 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
 
     if (microphoneStatus.isGranted) {
       _initializeSpeechRecognition();
-    } else if (microphoneStatus.isDenied || microphoneStatus.isLimited) {
-      // Request permission
-      await _requestMicrophonePermission();
     }
   }
 
   Future<void> _requestMicrophonePermission() async {
+    if (!mounted) return;
+    
+    // First, check current status
+    final currentStatus = await Permission.microphone.status;
+    debugPrint('Microphone permission status: $currentStatus');
+    
+    // If permanently denied, show settings dialog
+    if (currentStatus.isPermanentlyDenied) {
+      if (mounted) {
+        _showPermissionDeniedDialog();
+      }
+      return;
+    }
+    
+    // If already granted, initialize speech recognition
+    if (currentStatus.isGranted) {
+      setState(() {
+        _permissionGranted = true;
+      });
+      _initializeSpeechRecognition();
+      return;
+    }
+    
+    // Show an informational dialog first explaining why we need permission
+    // The permission request will be triggered directly from the dialog button
+    if (mounted) {
+      await _showPermissionRequestDialog();
+      // Permission request is handled in the dialog button callback
+    }
+  }
+
+  Future<void> _requestMicrophonePermissionDirectly() async {
+    if (!mounted) return;
+    
+    debugPrint('Requesting microphone permission directly...');
     final status = await Permission.microphone.request();
+    debugPrint('Permission request result: $status');
+    
+    if (!mounted) return;
     
     setState(() {
       _permissionGranted = status.isGranted;
     });
 
     if (status.isGranted) {
+      debugPrint('Microphone permission granted!');
       _initializeSpeechRecognition();
     } else if (status.isPermanentlyDenied) {
+      debugPrint('Microphone permission permanently denied');
       // Show dialog to open app settings
       if (mounted) {
         _showPermissionDeniedDialog();
       }
+    } else if (status.isDenied) {
+      debugPrint('Microphone permission denied');
+      // Permission was denied, show a message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Microphone permission is required to practice pronunciation.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
+  }
+
+  Future<bool> _showPermissionRequestDialog() async {
+    if (!mounted) return false;
+    
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryMintGreen.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.mic_rounded,
+                color: AppTheme.primaryMintGreen,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Microphone Permission',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'To practice pronunciation, we need access to your microphone to record and check your pronunciation.\n\nA system dialog will appear asking for permission.',
+          style: TextStyle(height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(
+              'Not Now',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(true);
+              // Use post-frame callback to ensure dialog is fully dismissed
+              // before requesting permission (required for Android)
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _requestMicrophonePermissionDirectly();
+                }
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryMintGreen,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Allow',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    
+    return result ?? false;
   }
 
   void _showPermissionDeniedDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Microphone Permission Required'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.settings_rounded,
+                color: Colors.orange,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Permission Required',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
         content: const Text(
-          'To practice pronunciation, we need access to your microphone. '
-          'Please enable microphone permission in your device settings.',
+          'Microphone permission is required to practice pronunciation. '
+          'Please enable it in your device settings.',
+          style: TextStyle(height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -105,8 +266,14 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryMintGreen,
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            child: const Text('Open Settings'),
+            child: const Text(
+              'Open Settings',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -171,11 +338,24 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
   }
 
   Future<void> _startListening() async {
-    // Check permission first
+    // Check permission first - request from user action if needed
     if (!_permissionGranted) {
-      await _requestMicrophonePermission();
-      if (!_permissionGranted) {
-        return;
+      // Re-check status in case it changed
+      final status = await Permission.microphone.status;
+      if (!status.isGranted) {
+        await _requestMicrophonePermission();
+        // Re-check after request
+        final newStatus = await Permission.microphone.status;
+        if (!newStatus.isGranted) {
+          return;
+        }
+        setState(() {
+          _permissionGranted = true;
+        });
+      } else {
+        setState(() {
+          _permissionGranted = true;
+        });
       }
     }
 
@@ -504,9 +684,13 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: (_isListening || !_permissionGranted)
+                    onPressed: _isListening
                         ? null
-                        : _startListening,
+                        : (!_permissionGranted)
+                            ? _requestMicrophonePermission
+                            : (!_speechAvailable || !_initialized)
+                                ? null
+                                : _startListening,
                     icon: Icon(
                       _isListening 
                           ? Icons.mic_rounded 
@@ -519,7 +703,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                       _isListening
                           ? 'Listening...'
                           : (!_permissionGranted)
-                              ? 'Microphone Permission Required'
+                              ? 'Enable Microphone Permission'
                               : (!_speechAvailable || !_initialized)
                                   ? 'Initializing...'
                                   : 'Record Your Pronunciation',
@@ -528,7 +712,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                       backgroundColor: _isListening
                           ? Colors.red
                           : (!_permissionGranted)
-                              ? Colors.grey
+                              ? AppTheme.primaryMintGreen
                               : AppTheme.goldenOrange,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
@@ -539,30 +723,6 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                     ),
                   ),
                 ),
-                
-                // Permission request button if not granted
-                if (!_permissionGranted) ...[
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _requestMicrophonePermission,
-                      icon: const Icon(Icons.settings, size: 20),
-                      label: const Text('Grant Microphone Permission'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.primaryMintGreen,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        side: BorderSide(
-                          color: AppTheme.primaryMintGreen,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
                 
                 // Recognized text
                 if (_recognizedText.isNotEmpty) ...[

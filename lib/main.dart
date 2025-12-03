@@ -7,8 +7,10 @@ import 'router/app_router.dart';
 import 'services/connectivity_service.dart';
 import 'services/sync_service.dart';
 import 'services/asset_preloader.dart';
+import 'services/app_language_service.dart';
 import 'theme/app_theme.dart';
 import 'widgets/offline_indicator.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +51,9 @@ void main() async {
 class LingoLogicApp extends StatefulWidget {
   const LingoLogicApp({super.key});
 
+  static _LingoLogicAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<_LingoLogicAppState>();
+
   @override
   State<LingoLogicApp> createState() => _LingoLogicAppState();
 }
@@ -56,10 +61,13 @@ class LingoLogicApp extends StatefulWidget {
 class _LingoLogicAppState extends State<LingoLogicApp> {
   ConnectivityService? _connectivityService;
   SyncService? _syncService;
+  final _appLanguageService = AppLanguageService();
+  Locale? _locale;
 
   @override
   void initState() {
     super.initState();
+    _loadAppLanguage();
     // Initialize services synchronously but safely
     try {
       _connectivityService = ConnectivityService();
@@ -94,6 +102,23 @@ class _LingoLogicAppState extends State<LingoLogicApp> {
     });
   }
 
+  Future<void> _loadAppLanguage() async {
+    final locale = await _appLanguageService.getAppLanguage();
+    if (mounted) {
+      setState(() {
+        _locale = locale;
+      });
+    }
+    // Listen for language changes
+    AppLanguageService.onLanguageChanged = (Locale newLocale) {
+      if (mounted) {
+        setState(() {
+          _locale = newLocale;
+        });
+      }
+    };
+  }
+
   @override
   void dispose() {
     _connectivityService?.dispose();
@@ -108,6 +133,13 @@ class _LingoLogicAppState extends State<LingoLogicApp> {
       theme: AppTheme.lightTheme,
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
+      locale: _locale,
+      supportedLocales: AppLanguageService.supportedLanguages.map((lang) => lang.locale),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       builder: (context, child) {
         try {
           // Only wrap with gradient and offline indicator if services are ready

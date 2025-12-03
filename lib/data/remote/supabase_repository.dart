@@ -5,6 +5,7 @@ import '../../models/game_session.dart';
 import '../../models/lesson.dart';
 import '../../models/lesson_progress.dart';
 import '../../models/user_language.dart';
+import '../../models/feature_flag.dart';
 import '../../config/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -231,6 +232,32 @@ class SupabaseRepository {
   Future<void> upsertUserLanguage(UserLanguage userLanguage) async {
     final client = _getClient();
     await client.from('user_languages').upsert(userLanguage.toJson());
+  }
+
+  // Feature Flags
+  Future<List<FeatureFlag>> getFeatureFlags() async {
+    final client = _getClient();
+    try {
+      final response = await client
+          .from('feature_flags')
+          .select()
+          .order('key');
+      return (response as List).map((json) => FeatureFlag.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<FeatureFlag?> getFeatureFlagByKey(String key) async {
+    final client = _getClient();
+    final response = await client
+        .from('feature_flags')
+        .select()
+        .eq('key', key)
+        .maybeSingle();
+
+    if (response == null) return null;
+    return FeatureFlag.fromJson(response);
   }
 }
 

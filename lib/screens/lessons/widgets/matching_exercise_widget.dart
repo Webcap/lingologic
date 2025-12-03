@@ -263,6 +263,7 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
 
                 return _MatchRow(
                   word: pair.word,
+                  wordTranslation: pair.translation,
                   matchedTranslation: matchedTranslation,
                   availableTranslations: allTranslations,
                   isCorrect: _showResult && isCorrectMatch,
@@ -459,6 +460,7 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
 
 class _MatchRow extends StatelessWidget {
   final String word;
+  final String wordTranslation;
   final String? matchedTranslation;
   final List<String> availableTranslations;
   final bool isCorrect;
@@ -470,6 +472,7 @@ class _MatchRow extends StatelessWidget {
 
   const _MatchRow({
     required this.word,
+    required this.wordTranslation,
     required this.matchedTranslation,
     required this.availableTranslations,
     required this.isCorrect,
@@ -488,30 +491,46 @@ class _MatchRow extends StatelessWidget {
         children: [
           // Word side
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.primaryMintGreen.withOpacity(0.15),
-                    AppTheme.softCyan.withOpacity(0.15),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            child: GestureDetector(
+              onTap: () => _showWordTranslation(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primaryMintGreen.withOpacity(0.15),
+                      AppTheme.softCyan.withOpacity(0.15),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppTheme.primaryMintGreen.withOpacity(0.3),
+                    width: 2,
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppTheme.primaryMintGreen.withOpacity(0.3),
-                  width: 2,
-                ),
-              ),
-              child: Text(
-                word,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        word,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                textAlign: TextAlign.center,
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 18,
+                      color: AppTheme.textSecondary.withOpacity(0.6),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -614,6 +633,123 @@ class _MatchRow extends StatelessWidget {
                       ),
                   textAlign: TextAlign.center,
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showWordTranslation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryMintGreen.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.translate_rounded,
+                color: AppTheme.primaryMintGreen,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Translation',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primaryMintGreen.withOpacity(0.15),
+                    AppTheme.softCyan.withOpacity(0.15),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppTheme.primaryMintGreen.withOpacity(0.3),
+                  width: 2,
+                ),
+              ),
+              child: Text(
+                word,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(
+                  Icons.arrow_downward_rounded,
+                  color: AppTheme.textSecondary,
+                  size: 24,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.softCyan.withOpacity(0.15),
+                    AppTheme.electricLavender.withOpacity(0.15),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppTheme.softCyan.withOpacity(0.3),
+                  width: 2,
+                ),
+              ),
+              child: Text(
+                wordTranslation,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.primaryMintGreen,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Close',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),

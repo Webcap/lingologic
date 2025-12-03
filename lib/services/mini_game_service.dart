@@ -41,7 +41,7 @@ class MiniGameService {
     // Get all lessons for the active language, sorted by order_index
     final lessons = await _lessonService.getLessons();
     final sortedLessons = lessons
-      ..sort((a, b) => (a.orderIndex ?? 0).compareTo(b.orderIndex ?? 0));
+      ..sort((a, b) => (a.orderIndex).compareTo(b.orderIndex));
 
     // Get all completed lessons
     final progressList = await _lessonService.getUserLessonProgressAll();

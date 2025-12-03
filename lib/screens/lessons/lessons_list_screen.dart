@@ -5,11 +5,14 @@ import '../../models/lesson_progress.dart';
 import '../../services/lesson_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/mini_game_service.dart';
+import '../../services/level_progression_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/language_selector.dart';
 import 'widgets/mini_game_card.dart';
 import '../mini_games/vocabulary_review_mini_game.dart';
+import '../level_tests/level_knowledge_test_screen.dart';
+import 'widgets/knowledge_test_card.dart';
 
 class LessonsListScreen extends StatefulWidget {
   const LessonsListScreen({super.key});
@@ -22,6 +25,7 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
   final _lessonService = LessonService();
   final _authService = AuthService();
   final _miniGameService = MiniGameService();
+  final _levelProgressionService = LevelProgressionService();
   
   List<Lesson> _lessons = [];
   Map<String, LessonProgress> _progressMap = {};
@@ -29,6 +33,9 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
   String? _selectedCategory;
   bool _hasInitialLoad = false;
   int? _availableMiniGame;
+  String? _currentLevel;
+  bool _canTakeLevelTest = false;
+  bool _hasPassedLevelTest = false;
 
   @override
   void initState() {
@@ -76,11 +83,75 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
       // Check if a mini game should be shown
       final miniGameNumber = await _miniGameService.shouldShowMiniGame();
 
+      // Calculate current level (highest level from completed lessons)
+      String? currentLevel;
+      final completedLessonIds = filteredProgress
+          .where((p) => p.isCompleted)
+          .map((p) => p.lessonId)
+          .toSet();
+      
+      final completedLessons = lessons.where((l) => completedLessonIds.contains(l.id)).toList();
+      if (completedLessons.isNotEmpty) {
+        final levels = completedLessons.map((l) => l.level).whereType<String>().toList();
+        if (levels.isNotEmpty) {
+          // Sort levels by CEFR order and get highest
+          final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+          levels.sort((a, b) {
+            final aIndex = cefrOrder.indexOf(a);
+            final bIndex = cefrOrder.indexOf(b);
+            if (aIndex == -1 && bIndex == -1) return 0;
+            if (aIndex == -1) return 1;
+            if (bIndex == -1) return -1;
+            return aIndex.compareTo(bIndex);
+          });
+          currentLevel = levels.last;
+        }
+      }
+      
+      // Default to A1 if no completed lessons
+      final effectiveCurrentLevel = currentLevel ?? 'A1';
+      
+      // Check if all lessons in current level are completed
+      // If so, advance to next level
+      final currentLevelLessons = lessons.where((l) => l.level == effectiveCurrentLevel).toList();
+      final allCurrentLevelCompleted = currentLevelLessons.isNotEmpty &&
+          currentLevelLessons.every((lesson) {
+            final progress = progressMap[lesson.id];
+            return progress?.isCompleted == true;
+          });
+      
+      // Check level progression test status
+      final hasPassedTest = await _levelProgressionService.hasPassedLevelTest(effectiveCurrentLevel);
+      final completionPercentage = _levelProgressionService.calculateLevelCompletionPercentage(
+        effectiveCurrentLevel,
+        lessons,
+        progressMap,
+      );
+      final canTakeTest = completionPercentage >= 60 && !hasPassedTest;
+
+      // Advance to next level if all current level lessons are completed OR if test is passed
+      String finalCurrentLevel = effectiveCurrentLevel;
+      if (allCurrentLevelCompleted || hasPassedTest) {
+        final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+        final currentLevelIndex = cefrOrder.indexOf(effectiveCurrentLevel);
+        if (currentLevelIndex >= 0 && currentLevelIndex < cefrOrder.length - 1) {
+          // Check if next level has lessons available
+          final nextLevel = cefrOrder[currentLevelIndex + 1];
+          final hasNextLevelLessons = lessons.any((l) => l.level == nextLevel);
+          if (hasNextLevelLessons) {
+            finalCurrentLevel = nextLevel;
+          }
+        }
+      }
+
       if (mounted) {
         setState(() {
           _lessons = lessons;
           _progressMap = progressMap;
           _availableMiniGame = miniGameNumber;
+          _currentLevel = finalCurrentLevel;
+          _canTakeLevelTest = canTakeTest;
+          _hasPassedLevelTest = hasPassedTest;
           _isLoading = false;
           _hasInitialLoad = true;
         });
@@ -100,8 +171,13 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
   }
 
   List<Lesson> get _filteredLessons {
-    // Filter out completed lessons
+    // Filter to only show lessons for current level
     var filtered = _lessons.where((lesson) {
+      // Only show lessons matching current level
+      if (_currentLevel != null && lesson.level != _currentLevel) {
+        return false;
+      }
+      // Filter out completed lessons
       final progress = _getProgress(lesson.id);
       return progress?.isCompleted != true;
     }).toList();
@@ -113,6 +189,7 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
     
     return filtered;
   }
+
 
   // Group lessons by level (A1, A2, B1, etc.)
   Map<String, List<Lesson>> get _lessonsByLevel {
@@ -132,22 +209,10 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
   }
 
   List<String> get _levels {
-    // Get all levels and sort them in CEFR order
-    final levels = _lessonsByLevel.keys.toList();
-    final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-    
-    levels.sort((a, b) {
-      final aIndex = cefrOrder.indexOf(a);
-      final bIndex = cefrOrder.indexOf(b);
-      
-      if (aIndex == -1 && bIndex == -1) return a.compareTo(b);
-      if (aIndex == -1) return 1;
-      if (bIndex == -1) return -1;
-      
-      return aIndex.compareTo(bIndex);
-    });
-    
-    return levels;
+    // Only show current level
+    if (_currentLevel == null) return [];
+    if (!_lessonsByLevel.containsKey(_currentLevel!)) return [];
+    return [_currentLevel!];
   }
 
   List<String> get _categories {
@@ -390,6 +455,13 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                   else
                     ..._levels.expand((level) {
                       final levelLessons = _lessonsByLevel[level]!;
+                      // Get completion percentage for current level (before filtering)
+                      final completionPercentage = _levelProgressionService.calculateLevelCompletionPercentage(
+                        level,
+                        _lessons,
+                        _progressMap,
+                      );
+                      
                       return [
                         // Level Header
                         SliverToBoxAdapter(
@@ -405,9 +477,24 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                               description: _getLevelDescription(level),
                               color: _getLevelColor(level),
                               lessonCount: levelLessons.length,
+                              completionPercentage: completionPercentage,
                             ),
                           ),
                         ),
+                        // Knowledge Test Card (if 60% completed and test not passed)
+                        if (_currentLevel == level && _canTakeLevelTest && !_hasPassedLevelTest)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                              child: KnowledgeTestCard(
+                                level: level,
+                                completionPercentage: completionPercentage,
+                                onTap: () async {
+                                  await _launchKnowledgeTest(level);
+                                },
+                              ),
+                            ),
+                          ),
                         // Level Lessons
                         SliverPadding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -459,6 +546,26 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
               ),
       ),
     );
+  }
+
+  Future<void> _launchKnowledgeTest(String level) async {
+    try {
+      // Launch the knowledge test
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => LevelKnowledgeTestScreen(level: level),
+        ),
+      );
+
+      // Reload lessons after completing test (if test was completed)
+      if (result == true) {
+        _loadLessons();
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorHandler.handleError(context, e, contextMessage: 'Error launching knowledge test');
+      }
+    }
   }
 
   Future<void> _launchMiniGame(int miniGameNumber) async {
@@ -917,12 +1024,14 @@ class _LevelHeader extends StatelessWidget {
   final String description;
   final Color color;
   final int lessonCount;
+  final double? completionPercentage;
 
   const _LevelHeader({
     required this.level,
     required this.description,
     required this.color,
     required this.lessonCount,
+    this.completionPercentage,
   });
 
   @override
@@ -982,12 +1091,34 @@ class _LevelHeader extends StatelessWidget {
                       ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  '$lessonCount ${lessonCount == 1 ? 'lesson' : 'lessons'}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondary,
-                        fontWeight: FontWeight.w500,
+                Row(
+                  children: [
+                    Text(
+                      '$lessonCount ${lessonCount == 1 ? 'lesson' : 'lessons'}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                    if (completionPercentage != null) ...[
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${completionPercentage!.round()}% complete',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: color,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                              ),
+                        ),
                       ),
+                    ],
+                  ],
                 ),
               ],
             ),

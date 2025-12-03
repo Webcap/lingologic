@@ -1,5 +1,6 @@
 // ignore_for_file: unused_field, unused_element
 
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/lesson.dart';
@@ -20,10 +21,7 @@ import 'widgets/pronunciation_exercise_widget.dart';
 class LessonDetailScreen extends StatefulWidget {
   final String lessonId;
 
-  const LessonDetailScreen({
-    super.key,
-    required this.lessonId,
-  });
+  const LessonDetailScreen({super.key, required this.lessonId});
 
   @override
   State<LessonDetailScreen> createState() => _LessonDetailScreenState();
@@ -41,16 +39,25 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   bool _isLoading = true;
   int _currentSlideIndex = 0;
   final Map<int, bool> _completedExercises = {};
-  final Map<int, bool?> _exerciseAnswers = {}; // null = not answered, true = correct, false = incorrect
-  final Map<int, ExerciseSection> _alternativeExercises = {}; // Track alternative exercises for retry
-  final Map<int, List<String>> _usedExerciseIds = {}; // Track which exercise IDs have been used for each position
-  final Map<int, String> _originalExerciseIds = {}; // Track original exercise ID for each slide position
-  final List<ExerciseSection> _retryExerciseQueue = []; // Queue for exercises answered incorrectly
-  final List<MatchingExerciseSection> _retryMatchingQueue = []; // Queue for matching exercises answered incorrectly
-  final List<PronunciationExerciseSection> _retryPronunciationQueue = []; // Queue for pronunciation exercises answered incorrectly
+  final Map<int, bool?> _exerciseAnswers =
+      {}; // null = not answered, true = correct, false = incorrect
+  final Map<int, ExerciseSection> _alternativeExercises =
+      {}; // Track alternative exercises for retry
+  final Map<int, List<String>> _usedExerciseIds =
+      {}; // Track which exercise IDs have been used for each position
+  final Map<int, String> _originalExerciseIds =
+      {}; // Track original exercise ID for each slide position
+  final List<ExerciseSection> _retryExerciseQueue =
+      []; // Queue for exercises answered incorrectly
+  final List<MatchingExerciseSection> _retryMatchingQueue =
+      []; // Queue for matching exercises answered incorrectly
+  final List<PronunciationExerciseSection> _retryPronunciationQueue =
+      []; // Queue for pronunciation exercises answered incorrectly
   bool _isInRetryPhase = false; // Track if we're showing retry exercises
   DateTime? _startTime;
   int _timeSpentMinutes = 0;
+  List<LessonSection> _shuffledSections =
+      []; // Store shuffled sections for this lesson session
 
   @override
   void initState() {
@@ -81,9 +88,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       final lesson = await _lessonService.getLessonById(widget.lessonId);
       if (lesson == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Lesson not found')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Lesson not found')));
           context.pop();
         }
         return;
@@ -106,12 +113,18 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         setState(() {
           _lesson = lesson;
           _progress = progress;
+          // Randomize all exercises in the lesson
+          _shuffledSections = _randomizeExercises(lesson.content.sections);
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        ErrorHandler.handleError(context, e, contextMessage: 'Error loading lesson');
+        ErrorHandler.handleError(
+          context,
+          e,
+          contextMessage: 'Error loading lesson',
+        );
         setState(() {
           _isLoading = false;
         });
@@ -146,7 +159,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       }
     });
     _updateProgress();
-    
+
     // If incorrect, automatically move to next slide after a brief delay
     if (!isCorrect) {
       Future.delayed(const Duration(milliseconds: 800), () {
@@ -156,13 +169,15 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       });
     }
   }
-  
+
   void _moveToNextSlide() {
     if (_pageController.hasClients) {
       // Check if we've finished all slides and have retry exercises
-        if (_currentSlideIndex >= _getTotalSlides() - 1 && 
-            (_retryExerciseQueue.isNotEmpty || _retryMatchingQueue.isNotEmpty || _retryPronunciationQueue.isNotEmpty) &&
-            !_isInRetryPhase) {
+      if (_currentSlideIndex >= _getTotalSlides() - 1 &&
+          (_retryExerciseQueue.isNotEmpty ||
+              _retryMatchingQueue.isNotEmpty ||
+              _retryPronunciationQueue.isNotEmpty) &&
+          !_isInRetryPhase) {
         // Start retry phase
         setState(() {
           _isInRetryPhase = true;
@@ -176,20 +191,61 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       }
     }
   }
-  
+
+  // Randomize all exercises within the lesson
+  // This shuffles all exercises together while keeping non-exercise sections in place
+  List<LessonSection> _randomizeExercises(List<LessonSection> sections) {
+    final result = <LessonSection>[];
+    final exercises = <LessonSection>[];
+
+    // Separate exercises from non-exercises
+    for (final section in sections) {
+      if (section is ExerciseSection ||
+          section is MatchingExerciseSection ||
+          section is PronunciationExerciseSection) {
+        exercises.add(section);
+      }
+    }
+
+    // Shuffle all exercises together
+    exercises.shuffle(Random());
+
+    // Rebuild the sections list, replacing exercises with shuffled ones
+    int exerciseIndex = 0;
+    for (final section in sections) {
+      if (section is ExerciseSection ||
+          section is MatchingExerciseSection ||
+          section is PronunciationExerciseSection) {
+        // Replace with shuffled exercise
+        result.add(exercises[exerciseIndex]);
+        exerciseIndex++;
+      } else {
+        // Keep non-exercise sections in their original position
+        result.add(section);
+      }
+    }
+
+    return result;
+  }
+
   int _getTotalSlides() {
     if (_lesson == null) return 0;
-    int count = _lesson!.content.sections.length;
+    int count = _shuffledSections.isNotEmpty
+        ? _shuffledSections.length
+        : _lesson!.content.sections.length;
     if (_isInRetryPhase) {
-      count = _retryExerciseQueue.length + _retryMatchingQueue.length;
+      count =
+          _retryExerciseQueue.length +
+          _retryMatchingQueue.length +
+          _retryPronunciationQueue.length;
     }
     return count;
   }
-  
+
   // Get the current section (either from lesson or retry queue)
   LessonSection? _getCurrentSection(int slideIndex) {
     if (_lesson == null) return null;
-    
+
     if (_isInRetryPhase) {
       // In retry phase, get from retry queues
       if (slideIndex < _retryExerciseQueue.length) {
@@ -207,16 +263,22 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       }
       return null;
     } else {
-      // Normal phase, get from lesson sections
-      if (slideIndex < _lesson!.content.sections.length) {
-        return _lesson!.content.sections[slideIndex];
+      // Normal phase, get from shuffled sections
+      final sectionsToUse = _shuffledSections.isNotEmpty
+          ? _shuffledSections
+          : _lesson!.content.sections;
+      if (slideIndex < sectionsToUse.length) {
+        return sectionsToUse[slideIndex];
       }
       return null;
     }
   }
 
   // Get an alternative exercise from the lesson for retry
-  ExerciseSection? _getAlternativeExercise(int slideIndex, String currentExerciseId) {
+  ExerciseSection? _getAlternativeExercise(
+    int slideIndex,
+    String currentExerciseId,
+  ) {
     if (_lesson == null) return null;
 
     final allExercises = _lesson!.content.exercises;
@@ -225,7 +287,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     // Initialize used IDs list if needed
     if (!_usedExerciseIds.containsKey(slideIndex)) {
       final originalId = _originalExerciseIds[slideIndex];
-      _usedExerciseIds[slideIndex] = originalId != null ? [originalId] : [currentExerciseId];
+      _usedExerciseIds[slideIndex] = originalId != null
+          ? [originalId]
+          : [currentExerciseId];
     }
 
     // Add current exercise ID to used list
@@ -244,24 +308,30 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       // Reset to just the original
       final originalId = _originalExerciseIds[slideIndex] ?? currentExerciseId;
       _usedExerciseIds[slideIndex] = [originalId];
-      
+
       // Pick a random exercise that's different from current
       final differentExercises = allExercises
-          .where((exercise) => exercise.id != currentExerciseId && exercise.id != originalId)
+          .where(
+            (exercise) =>
+                exercise.id != currentExerciseId && exercise.id != originalId,
+          )
           .toList();
-      
+
       if (differentExercises.isEmpty) {
         // If only one exercise exists or all are the same, return null
         return null;
       }
-      
-      final random = differentExercises[DateTime.now().millisecondsSinceEpoch % differentExercises.length];
+
+      final random =
+          differentExercises[DateTime.now().millisecondsSinceEpoch %
+              differentExercises.length];
       _usedExerciseIds[slideIndex]!.add(random.id);
       return random;
     }
 
     // Pick a random exercise from available ones
-    final randomIndex = DateTime.now().millisecondsSinceEpoch % availableExercises.length;
+    final randomIndex =
+        DateTime.now().millisecondsSinceEpoch % availableExercises.length;
     final randomExercise = availableExercises[randomIndex];
     _usedExerciseIds[slideIndex]!.add(randomExercise.id);
     return randomExercise;
@@ -271,20 +341,26 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   void _retryExerciseWithDifferentQuestion(int slideIndex) {
     if (_lesson == null) return;
 
+    final sectionsToUse = _shuffledSections.isNotEmpty
+        ? _shuffledSections
+        : _lesson!.content.sections;
+
     // Get the current exercise being shown (either original or alternative)
-    final currentExercise = _alternativeExercises[slideIndex] ?? 
-                           (_lesson!.content.sections[slideIndex] as ExerciseSection?);
+    final currentExercise =
+        _alternativeExercises[slideIndex] ??
+        (sectionsToUse[slideIndex] as ExerciseSection?);
     if (currentExercise == null) return;
 
     // Get the original exercise ID for this position
-    final originalExerciseId = _originalExerciseIds[slideIndex] ?? 
-                              (_lesson!.content.sections[slideIndex] as ExerciseSection?)?.id;
+    final originalExerciseId =
+        _originalExerciseIds[slideIndex] ??
+        (sectionsToUse[slideIndex] as ExerciseSection?)?.id;
     if (originalExerciseId == null) return;
 
     // Get exercise index for tracking
     int exerciseIndex = 0;
     for (int i = 0; i < slideIndex; i++) {
-      if (_lesson!.content.sections[i] is ExerciseSection) {
+      if (sectionsToUse[i] is ExerciseSection) {
         exerciseIndex++;
       }
     }
@@ -295,7 +371,10 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     }
 
     // Get alternative exercise using the original ID as reference
-    final alternativeExercise = _getAlternativeExercise(slideIndex, currentExercise.id);
+    final alternativeExercise = _getAlternativeExercise(
+      slideIndex,
+      currentExercise.id,
+    );
     if (alternativeExercise == null) return;
 
     // Reset answer state for this exercise
@@ -408,7 +487,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Text(
                       'Lesson Complete!',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
                             fontWeight: FontWeight.w800,
                             color: AppTheme.textPrimary,
                           ),
@@ -422,9 +502,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     child: Text(
                       'Great job! You\'ve completed "${_lesson!.title}"',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppTheme.textSecondary,
-                            height: 1.5,
-                          ),
+                        color: AppTheme.textSecondary,
+                        height: 1.5,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -458,7 +538,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                         Flexible(
                           child: Text(
                             'New content unlocked!',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(
                                   color: AppTheme.successGreen,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -480,7 +561,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context);
-                        context.pop(true); // Return true to indicate lesson was completed
+                        context.pop(
+                          true,
+                        ); // Return true to indicate lesson was completed
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryMintGreen,
@@ -518,7 +601,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ErrorHandler.handleError(context, e, contextMessage: 'Error completing lesson');
+        ErrorHandler.handleError(
+          context,
+          e,
+          contextMessage: 'Error completing lesson',
+        );
       }
     }
   }
@@ -526,7 +613,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   bool get _canCompleteLesson {
     if (_lesson == null) return false;
     final totalExercises = _lesson!.content.totalExercises;
-    if (totalExercises == 0) return true; // No exercises, can complete immediately
+    if (totalExercises == 0)
+      return true; // No exercises, can complete immediately
     final completedCount = _completedExercises.values.where((v) => v).length;
     return completedCount >= totalExercises;
   }
@@ -535,10 +623,10 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     if (_lesson == null) return false;
     final currentSection = _getCurrentSection(_currentSlideIndex);
     if (currentSection == null) return false;
-    
+
     // If it's an exercise, allow proceeding if it's been answered (correct or incorrect)
     // In retry phase, always allow proceeding after answering
-    if (currentSection is ExerciseSection || 
+    if (currentSection is ExerciseSection ||
         currentSection is MatchingExerciseSection ||
         currentSection is PronunciationExerciseSection) {
       if (_isInRetryPhase) {
@@ -548,7 +636,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         int exerciseIndex = 0;
         for (int i = 0; i < _currentSlideIndex; i++) {
           final section = _getCurrentSection(i);
-          if (section is ExerciseSection || section is MatchingExerciseSection) {
+          if (section is ExerciseSection ||
+              section is MatchingExerciseSection) {
             exerciseIndex++;
           }
         }
@@ -556,7 +645,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         return _exerciseAnswers[exerciseIndex] != null;
       }
     }
-    
+
     // For text and example sections, can always proceed
     return true;
   }
@@ -570,7 +659,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       );
     } else if (_canCompleteLesson) {
       _completeLesson();
-    } else if (!_isInRetryPhase && (_retryExerciseQueue.isNotEmpty || _retryMatchingQueue.isNotEmpty)) {
+    } else if (!_isInRetryPhase &&
+        (_retryExerciseQueue.isNotEmpty || _retryMatchingQueue.isNotEmpty)) {
       // Start retry phase
       setState(() {
         _isInRetryPhase = true;
@@ -602,11 +692,14 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         }
       }
     } else {
-      // Normal phase, count from lesson sections
+      // Normal phase, count from shuffled sections
+      final sectionsToUse = _shuffledSections.isNotEmpty
+          ? _shuffledSections
+          : _lesson!.content.sections;
       for (int i = 0; i < slideIndex; i++) {
-        if (_lesson!.content.sections[i] is ExerciseSection || 
-            _lesson!.content.sections[i] is MatchingExerciseSection ||
-            _lesson!.content.sections[i] is PronunciationExerciseSection) {
+        if (sectionsToUse[i] is ExerciseSection ||
+            sectionsToUse[i] is MatchingExerciseSection ||
+            sectionsToUse[i] is PronunciationExerciseSection) {
           exerciseIndex++;
         }
       }
@@ -622,23 +715,24 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       if (!_originalExerciseIds.containsKey(slideIndex)) {
         _originalExerciseIds[slideIndex] = section.id;
       }
-      
+
       // Use alternative exercise if available, otherwise use the original
       final exerciseToShow = _alternativeExercises[slideIndex] ?? section;
-      
+
       return ExerciseSectionWidget(
         section: exerciseToShow,
         onAnswerSubmitted: (isCorrect) {
           _onExerciseAnswered(currentExerciseIndex, isCorrect);
         },
-        onRetry: null, // Disable manual retry - wrong answers auto-advance and are added to retry queue
+        onRetry:
+            null, // Disable manual retry - wrong answers auto-advance and are added to retry queue
         isAnswered: _exerciseAnswers[currentExerciseIndex] != null,
         isCorrect: _exerciseAnswers[currentExerciseIndex] == true,
         canRetry: false, // Disable retry button - wrong answers auto-advance
       );
     } else if (section is MatchingExerciseSection) {
       final currentExerciseIndex = exerciseIndex;
-      
+
       return MatchingExerciseWidget(
         section: section,
         onAnswerSubmitted: (isCorrect) {
@@ -646,11 +740,12 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         },
         isAnswered: _exerciseAnswers[currentExerciseIndex] != null,
         isCorrect: _exerciseAnswers[currentExerciseIndex] == true,
-        canRetry: false, // Matching exercises don't support retry with different question yet
+        canRetry:
+            false, // Matching exercises don't support retry with different question yet
       );
     } else if (section is PronunciationExerciseSection) {
       final currentExerciseIndex = exerciseIndex;
-      
+
       return PronunciationExerciseWidget(
         section: section,
         onAnswerSubmitted: (isCorrect) {
@@ -669,22 +764,22 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     if (_isLoading) {
       return Scaffold(
         body: Container(
-          decoration: const BoxDecoration(
-            gradient: AppTheme.mainGradient,
-          ),
+          decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryMintGreen),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppTheme.primaryMintGreen,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Text(
                   'Loading lesson...',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.textSecondary,
-                      ),
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -696,9 +791,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     if (_lesson == null) {
       return Scaffold(
         body: Container(
-          decoration: const BoxDecoration(
-            gradient: AppTheme.mainGradient,
-          ),
+          decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -711,9 +804,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Lesson not found',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppTheme.textPrimary,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(color: AppTheme.textPrimary),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
@@ -729,25 +822,23 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
 
     final totalSlides = _getTotalSlides();
     final isLastSlide = _currentSlideIndex == totalSlides - 1;
-    final progressPercentage = totalSlides > 0 
-        ? ((_currentSlideIndex + 1) / totalSlides) 
+    final progressPercentage = totalSlides > 0
+        ? ((_currentSlideIndex + 1) / totalSlides)
         : 0.0;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.mainGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
         child: SafeArea(
           child: Column(
             children: [
               // Modern AppBar with lesson title
               _buildModernAppBar(context),
-              
+
               // Enhanced progress indicator
               _buildProgressIndicator(context, totalSlides, progressPercentage),
-              
+
               // Slide content with smooth animations
               Expanded(
                 child: PageView.builder(
@@ -772,10 +863,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                         }
                         return Transform.scale(
                           scale: value,
-                          child: Opacity(
-                            opacity: value,
-                            child: child,
-                          ),
+                          child: Opacity(opacity: value, child: child),
                         );
                       },
                       child: SingleChildScrollView(
@@ -794,7 +882,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   },
                 ),
               ),
-              
+
               // Modern navigation footer
               _buildNavigationFooter(context, isLastSlide),
             ],
@@ -835,9 +923,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 Text(
                   _lesson!.title,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
-                      ),
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -846,8 +934,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   Text(
                     _lesson!.description!,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
+                      color: AppTheme.textSecondary,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -908,11 +996,17 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Section type indicator
-              _buildSectionTypeBadge(_lesson!.content.sections[_currentSlideIndex]),
+              _buildSectionTypeBadge(
+                _getCurrentSection(_currentSlideIndex) ??
+                    _lesson!.content.sections[_currentSlideIndex],
+              ),
               const SizedBox(width: 12),
               // Slide counter
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.glassWhite,
                   borderRadius: BorderRadius.circular(20),
@@ -927,16 +1021,16 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     Text(
                       '${_currentSlideIndex + 1}',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.primaryMintGreen,
-                          ),
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.primaryMintGreen,
+                      ),
                     ),
                     Text(
                       ' / $totalSlides',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -972,10 +1066,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1.5,
-        ),
+        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1032,15 +1123,15 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 ),
               ),
             if (_currentSlideIndex > 0) const SizedBox(width: 12),
-            
+
             // Next/Complete button
             Expanded(
               flex: _currentSlideIndex > 0 ? 1 : 1,
               child: ElevatedButton.icon(
                 onPressed: _canGoToNextSlide()
                     ? (isLastSlide && _canCompleteLesson
-                        ? _completeLesson
-                        : _goToNextSlide)
+                          ? _completeLesson
+                          : _goToNextSlide)
                     : null,
                 icon: Icon(
                   isLastSlide && _canCompleteLesson
@@ -1052,8 +1143,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   isLastSlide && _canCompleteLesson
                       ? 'Complete'
                       : isLastSlide
-                          ? 'Complete'
-                          : 'Continue',
+                      ? 'Complete'
+                      : 'Continue',
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isLastSlide && _canCompleteLesson
