@@ -29,11 +29,22 @@ class _ProgressScreenState extends State<ProgressScreen> {
   int _lessonsInProgress = 0;
   String? _activeLanguage;
   bool _isLoading = true;
+  bool _hasInitialLoad = false;
 
   @override
   void initState() {
     super.initState();
     _loadProgress();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh when screen becomes visible again (e.g., after completing a lesson)
+    // Skip the first call since initState already loads
+    if (_hasInitialLoad && !_isLoading) {
+      _loadProgress();
+    }
   }
 
   Future<void> _loadProgress() async {
@@ -74,6 +85,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
           _lessonsCompleted = completed;
           _lessonsInProgress = inProgress;
           _isLoading = false;
+          _hasInitialLoad = true;
         });
       }
     } catch (e) {
@@ -105,11 +117,14 @@ class _ProgressScreenState extends State<ProgressScreen> {
         decoration: const BoxDecoration(
           gradient: AppTheme.mainGradient,
         ),
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
+        child: RefreshIndicator(
+          onRefresh: _loadProgress,
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(), // Enable pull-to-refresh
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
@@ -199,6 +214,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ],
                 ),
               ),
+        ),
       ),
     );
   }

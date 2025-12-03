@@ -11,6 +11,7 @@ import '../../data/remote/supabase_repository.dart';
 import '../../services/auth_service.dart';
 import '../../services/lesson_service.dart';
 import '../../services/language_service.dart';
+import '../../services/user_service.dart';
 import '../../utils/error_handler.dart';
 import '../../theme/app_theme.dart';
 
@@ -35,6 +36,7 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
   final _authService = AuthService();
   final _lessonService = LessonService();
   final _languageService = LanguageService();
+  final _userService = UserService();
 
   GameMode _mode = GameMode.guided;
   final List<Word> _allWords = [];
@@ -451,6 +453,12 @@ class _SyntaxConstructorGameState extends State<SyntaxConstructorGame>
           );
           
           await _supabaseRepository.createGameSession(session);
+          
+          // Update streaks (both user profile and language-specific)
+          await _userService.updateStreak();
+          if (activeLanguage != null) {
+            await _languageService.updateLanguageStreak(activeLanguage);
+          }
         }
       } catch (e) {
         // Handle error

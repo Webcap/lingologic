@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../../models/word.dart';
+import '../../../theme/app_theme.dart';
 
 class TargetZoneWidget extends StatefulWidget {
   final Word targetWord;
   final VoidCallback onMatch;
   final bool isActive;
   final bool isMatched;
+  final bool isHovered;
 
   const TargetZoneWidget({
     super.key,
@@ -13,6 +15,7 @@ class TargetZoneWidget extends StatefulWidget {
     required this.onMatch,
     this.isActive = false,
     this.isMatched = false,
+    this.isHovered = false,
   });
 
   @override
@@ -60,71 +63,122 @@ class _TargetZoneWidgetState extends State<TargetZoneWidget>
 
   @override
   Widget build(BuildContext context) {
-    Color borderColor = Colors.grey.shade400;
-    Color backgroundColor = Colors.grey.shade100;
+    Color borderColor = Colors.grey.shade300;
+    Color backgroundColor = Colors.white;
+    Color? gradientColor1;
+    Color? gradientColor2;
 
     if (widget.isMatched) {
-      borderColor = Colors.green;
-      backgroundColor = Colors.green.shade50;
+      borderColor = AppTheme.successGreen;
+      backgroundColor = AppTheme.successGreen.withValues(alpha: 0.1);
+      gradientColor1 = AppTheme.successGreen;
+      gradientColor2 = AppTheme.primaryMintGreen;
+    } else if (widget.isHovered) {
+      borderColor = AppTheme.goldenOrange;
+      backgroundColor = AppTheme.goldenOrange.withValues(alpha: 0.15);
+      gradientColor1 = AppTheme.goldenOrange;
+      gradientColor2 = AppTheme.salmonPink;
     } else if (widget.isActive) {
-      borderColor = Colors.blue;
-      backgroundColor = Colors.blue.shade50;
+      borderColor = AppTheme.primaryMintGreen;
+      backgroundColor = AppTheme.primaryMintGreen.withValues(alpha: 0.1);
+      gradientColor1 = AppTheme.primaryMintGreen;
+      gradientColor2 = AppTheme.softCyan;
     }
 
     return Expanded(
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        margin: const EdgeInsets.symmetric(horizontal: 6),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: borderColor,
-            width: widget.isActive ? 3 : 2,
+            width: (widget.isActive || widget.isHovered || widget.isMatched) ? 3 : 2,
           ),
-          boxShadow: widget.isActive
+          boxShadow: (widget.isActive || widget.isHovered || widget.isMatched)
               ? [
                   BoxShadow(
-                    color: borderColor.withOpacity(_glowAnimation.value * 0.5),
-                    blurRadius: 12,
-                    spreadRadius: 2,
+                    color: borderColor.withValues(
+                      alpha: _glowAnimation.value * (widget.isHovered ? 0.6 : 0.4),
+                    ),
+                    blurRadius: widget.isHovered ? 20 : widget.isMatched ? 16 : 12,
+                    spreadRadius: widget.isHovered ? 4 : widget.isMatched ? 3 : 2,
                   ),
                 ]
-              : null,
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: widget.isMatched
-            ? const Center(
-                child: Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                  size: 48,
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            gradientColor1 ?? AppTheme.successGreen,
+                            gradientColor2 ?? AppTheme.primaryMintGreen,
+                          ],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                  ],
                 ),
               )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Placeholder for image - in real app, load from word.imageUrl
+                  // Image placeholder with better styling
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 70,
+                    height: 70,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(8),
+                      color: widget.isHovered
+                          ? gradientColor1?.withValues(alpha: 0.1)
+                          : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: borderColor.withValues(alpha: 0.3),
+                        width: 2,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.image,
-                      size: 40,
-                      color: Colors.grey,
+                    child: Icon(
+                      Icons.image_rounded,
+                      size: 32,
+                      color: widget.isHovered
+                          ? gradientColor1
+                          : Colors.grey.shade400,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.targetWord.translation,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      widget.targetWord.translation,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: widget.isHovered
+                            ? gradientColor1
+                            : AppTheme.textPrimary,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

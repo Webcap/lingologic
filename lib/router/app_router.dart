@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/main_menu_screen.dart';
 import '../screens/progress_screen.dart';
@@ -8,10 +9,35 @@ import '../screens/lessons/lessons_list_screen.dart';
 import '../screens/lessons/lesson_detail_screen.dart';
 import '../screens/language_selection_screen.dart';
 import '../widgets/loading_screen.dart';
+import '../services/auth_service.dart';
+
+final _authService = AuthService();
+
+// Determine initial location based on auth state
+String _getInitialLocation() {
+  return _authService.isAuthenticated ? '/' : '/login';
+}
 
 final appRouter = GoRouter(
-  initialLocation: '/login', // Start at login screen
-  // Removed redirect for now to prevent crashes - will add back after app is stable
+  initialLocation: _getInitialLocation(),
+  redirect: (context, state) {
+    final isAuthenticated = _authService.isAuthenticated;
+    final isLoginRoute = state.matchedLocation == '/login' || state.matchedLocation == '/signup';
+    
+    // If user is authenticated and trying to access login/signup, redirect to home
+    if (isAuthenticated && isLoginRoute) {
+      return '/';
+    }
+    
+    // If user is not authenticated and trying to access protected routes, redirect to login
+    if (!isAuthenticated && !isLoginRoute) {
+      return '/login';
+    }
+    
+    // Allow navigation
+    return null;
+  },
+  refreshListenable: _AuthStateNotifier(),
   errorBuilder: (context, state) => const LoadingScreen(
     message: 'Page not found',
   ),
@@ -53,3 +79,12 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+/// Listenable that notifies router when auth state changes
+class _AuthStateNotifier extends ChangeNotifier {
+  _AuthStateNotifier() {
+    _authService.authStateChanges.listen((authState) {
+      notifyListeners();
+    });
+  }
+}

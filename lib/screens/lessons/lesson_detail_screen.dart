@@ -7,6 +7,8 @@ import '../../models/lesson_progress.dart';
 import '../../models/lesson_content.dart';
 import '../../services/lesson_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/user_service.dart';
+import '../../services/language_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import 'widgets/text_section_widget.dart';
@@ -28,6 +30,8 @@ class LessonDetailScreen extends StatefulWidget {
 class _LessonDetailScreenState extends State<LessonDetailScreen> {
   final _lessonService = LessonService();
   final _authService = AuthService();
+  final _userService = UserService();
+  final _languageService = LanguageService();
   final PageController _pageController = PageController();
 
   Lesson? _lesson;
@@ -164,6 +168,13 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         widget.lessonId,
         _timeSpentMinutes,
       );
+
+      // Update streaks (both user profile and language-specific)
+      await _userService.updateStreak();
+      final activeLanguage = await _languageService.getActiveLanguage();
+      if (activeLanguage != null) {
+        await _languageService.updateLanguageStreak(activeLanguage);
+      }
 
       if (mounted) {
         // Show completion dialog

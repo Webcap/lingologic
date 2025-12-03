@@ -151,6 +151,63 @@ class LanguageService {
     );
   }
 
+  /// Update language-specific streak based on last practice date
+  Future<void> updateLanguageStreak(String language) async {
+    final user = _authService.currentUser;
+    if (user == null) return;
+
+    final current = await getLanguageProgress(language);
+    if (current == null) return;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    // Get last practice date
+    final lastPractice = current.lastPracticedAt;
+    if (lastPractice == null) {
+      // First practice - set streak to 1
+      await _repository.upsertUserLanguage(
+        current.copyWith(
+          streakDays: 1,
+          lastPracticedAt: now,
+          updatedAt: now,
+        ),
+      );
+      return;
+    }
+    
+    final lastPracticeDate = DateTime(lastPractice.year, lastPractice.month, lastPractice.day);
+    final daysDifference = today.difference(lastPracticeDate).inDays;
+    
+    int newStreak = current.streakDays;
+    
+    if (daysDifference == 0) {
+      // Same day - no streak update needed, but update last_practiced_at
+      await _repository.upsertUserLanguage(
+        current.copyWith(
+          lastPracticedAt: now,
+          updatedAt: now,
+        ),
+      );
+      return;
+    } else if (daysDifference == 1) {
+      // Consecutive day - increment streak
+      newStreak = current.streakDays + 1;
+    } else {
+      // Streak broken (more than 1 day gap) - reset to 1
+      newStreak = 1;
+    }
+
+    // Update streak and last practice date
+    await _repository.upsertUserLanguage(
+      current.copyWith(
+        streakDays: newStreak,
+        lastPracticedAt: now,
+        updatedAt: now,
+      ),
+    );
+  }
+
   /// Initialize default language for new users (Spanish)
   Future<void> initializeDefaultLanguage() async {
     final user = _authService.currentUser;

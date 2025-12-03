@@ -12,44 +12,38 @@ import 'widgets/offline_indicator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Set up global error handlers
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     debugPrint('Flutter Error: ${details.exception}');
     debugPrint('Stack trace: ${details.stack}');
   };
-  
+
   // Handle async errors
   PlatformDispatcher.instance.onError = (error, stack) {
     debugPrint('Unhandled error: $error');
     debugPrint('Stack trace: $stack');
     return true;
   };
-  
+
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
-  // Initialize Supabase (with error handling)
-  // Defer Supabase initialization to avoid blocking app startup
-  Future.microtask(() async {
-    try {
-      await SupabaseConfig.initialize();
-      debugPrint('Supabase initialized successfully');
-    } catch (e) {
-      // Handle initialization error
-      debugPrint('Supabase initialization error: $e');
-    }
-  });
-  
-  runApp(
-    const ProviderScope(
-      child: LingoLogicApp(),
-    ),
-  );
+
+  // Initialize Supabase BEFORE running the app to ensure session persistence
+  // This is critical for keeping user sessions across app restarts
+  try {
+    await SupabaseConfig.initialize();
+    debugPrint('Supabase initialized successfully');
+  } catch (e) {
+    // Handle initialization error but still allow app to start
+    debugPrint('Supabase initialization error: $e');
+  }
+
+  runApp(const ProviderScope(child: LingoLogicApp()));
 }
 
 class LingoLogicApp extends StatefulWidget {
@@ -73,7 +67,7 @@ class _LingoLogicAppState extends State<LingoLogicApp> {
     } catch (e) {
       debugPrint('Service initialization error: $e');
     }
-    
+
     // Link connectivity service to sync service (non-blocking)
     Future.microtask(() {
       try {
@@ -85,7 +79,7 @@ class _LingoLogicAppState extends State<LingoLogicApp> {
         debugPrint('Sync service setup error: $e');
       }
     });
-    
+
     // Preload assets after first frame (non-blocking)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.microtask(() {
@@ -119,9 +113,7 @@ class _LingoLogicAppState extends State<LingoLogicApp> {
           // Only wrap with gradient and offline indicator if services are ready
           if (_connectivityService != null) {
             return Container(
-              decoration: const BoxDecoration(
-                gradient: AppTheme.mainGradient,
-              ),
+              decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
               child: OfflineIndicator(
                 connectivityService: _connectivityService!,
                 child: child ?? const SizedBox(),
@@ -130,9 +122,7 @@ class _LingoLogicAppState extends State<LingoLogicApp> {
           } else {
             // Fallback: just gradient, no offline indicator
             return Container(
-              decoration: const BoxDecoration(
-                gradient: AppTheme.mainGradient,
-              ),
+              decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
               child: child ?? const SizedBox(),
             );
           }
@@ -142,14 +132,16 @@ class _LingoLogicAppState extends State<LingoLogicApp> {
           // Return a simple error screen
           return Material(
             child: Container(
-              decoration: const BoxDecoration(
-                gradient: AppTheme.mainGradient,
-              ),
+              decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: 16),
                     Text('Error: $e'),
                   ],

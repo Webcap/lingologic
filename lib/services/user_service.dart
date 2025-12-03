@@ -21,11 +21,12 @@ class UserService {
       throw Exception('User not authenticated');
     }
 
-      final client = _supabaseClient;
-      if (client == null) {
-        throw Exception('Supabase not initialized');
-      }
-      
+    final client = _supabaseClient;
+    if (client == null) {
+      throw Exception('Supabase not initialized');
+    }
+    
+    try {
       // Check if profile exists
       final response = await client
           .from('user_profiles')
@@ -33,50 +34,82 @@ class UserService {
           .eq('id', user.id)
           .maybeSingle();
 
-    if (response != null) {
-      return UserProfile.fromJson(response);
+      if (response != null) {
+        final profile = UserProfile.fromJson(response);
+        // Sync email if it's missing or different from auth user
+        final currentEmail = user.email ?? '';
+        if (profile.email != currentEmail && currentEmail.isNotEmpty) {
+          await client.from('user_profiles').update({
+            'email': currentEmail,
+          }).eq('id', user.id);
+          return profile.copyWith(email: currentEmail);
+        }
+        return profile;
+      }
+
+      // Create new profile
+      final newProfile = UserProfile(
+        id: user.id,
+        email: user.email ?? '',
+        createdAt: DateTime.now(),
+        streakDays: 0,
+        totalTimeMinutes: 0,
+      );
+
+      final insertResponse = await client
+          .from('user_profiles')
+          .insert(newProfile.toJson())
+          .select()
+          .single();
+
+      return UserProfile.fromJson(insertResponse);
+    } catch (e) {
+      // Re-throw with more context
+      throw Exception('Failed to create user profile: $e');
     }
-
-    // Create new profile
-    final newProfile = UserProfile(
-      id: user.id,
-      createdAt: DateTime.now(),
-      streakDays: 0,
-      totalTimeMinutes: 0,
-    );
-
-      await client.from('user_profiles').insert(newProfile.toJson());
-
-    return newProfile;
   }
 
-  /// Update streak days based on daily login
+  /// Update streak days based on activity date
+  /// This should be called whenever a user completes an activity (lesson, game, etc.)
   Future<void> updateStreak() async {
     final user = _authService.currentUser;
     if (user == null) return;
 
     final profile = await getOrCreateUserProfile();
-    final lastLogin = profile.createdAt; // In a real app, track last login separately
+    final client = _supabaseClient;
+    if (client == null) return;
+
     final now = DateTime.now();
-
-    // Check if it's a new day
-    if (now.difference(lastLogin).inDays >= 1) {
-      int newStreak = profile.streakDays;
-      if (now.difference(lastLogin).inDays == 1) {
-        // Consecutive day
-        newStreak += 1;
-      } else {
-        // Streak broken
-        newStreak = 1;
-      }
-
-              final client = _supabaseClient;
-              if (client != null) {
-                await client.from('user_profiles').update({
-                  'streak_days': newStreak,
-                }).eq('id', user.id);
-              }
+    final today = DateTime(now.year, now.month, now.day);
+    
+    // Get last activity date, defaulting to createdAt if never set
+    final lastActivity = profile.lastActivityDate ?? profile.createdAt;
+    final lastActivityDate = DateTime(lastActivity.year, lastActivity.month, lastActivity.day);
+    
+    // Calculate days difference
+    final daysDifference = today.difference(lastActivityDate).inDays;
+    
+    int newStreak = profile.streakDays;
+    
+    if (daysDifference == 0) {
+      // Same day - no streak update needed, but update last_activity_date
+      await client.from('user_profiles').update({
+        'last_activity_date': now.toIso8601String(),
+      }).eq('id', user.id);
+      return;
+    } else if (daysDifference == 1) {
+      // Consecutive day - increment streak
+      newStreak = profile.streakDays + 1;
+    } else {
+      // Streak broken (more than 1 day gap) - reset to 1
+      newStreak = 1;
     }
+
+    // Update streak and last activity date
+    await client.from('user_profiles').update({
+      'streak_days': newStreak,
+      'last_activity_date': now.toIso8601String(),
+    }).eq('id', user.id);
   }
 
   /// Add time spent in a game session

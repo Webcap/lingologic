@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
+import '../../services/user_service.dart';
+import '../../services/language_service.dart';
 import '../../utils/error_handler.dart';
 import '../../theme/app_theme.dart';
 
@@ -17,6 +20,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _authService = AuthService();
+  final _userService = UserService();
+  final _languageService = LanguageService();
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -31,10 +36,44 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
+      // Sign up the user
       await _authService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+
+      // Wait for session to be established (with retries)
+      User? user;
+      for (int i = 0; i < 5; i++) {
+        await Future.delayed(const Duration(milliseconds: 300));
+        user = _authService.currentUser;
+        if (user != null) break;
+      }
+
+      // Verify user is authenticated
+      if (user == null) {
+        throw Exception('User authentication failed. Please try logging in.');
+      }
+
+      // Initialize user profile and default language
+      String? initError;
+      try {
+        await _userService.getOrCreateUserProfile();
+        debugPrint('User profile created successfully');
+      } catch (e) {
+        initError = 'Failed to create user profile: $e';
+        debugPrint('User profile creation error: $e');
+        // Re-throw to show user the error
+        throw Exception(initError);
+      }
+
+      try {
+        await _languageService.initializeDefaultLanguage();
+        debugPrint('Default language initialized successfully');
+      } catch (e) {
+        debugPrint('Language initialization error: $e');
+        // This is less critical, so we continue
+      }
 
       if (mounted) {
         context.go('/');

@@ -39,6 +39,8 @@ class SupabaseConfig {
           anonKey: supabaseAnonKey,
           authOptions: const FlutterAuthClientOptions(
             authFlowType: AuthFlowType.pkce,
+            // Session persistence is enabled by default in Supabase Flutter
+            // It uses secure storage to persist sessions across app restarts
           ),
         );
         debugPrint('Supabase initialized successfully');

@@ -200,9 +200,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             ),
                             const SizedBox(height: 24),
                             
-                            // Streak Card - Hero Feature
-                            _buildStreakCard(),
-                            const SizedBox(height: 24),
+                            // Streak Card - Hero Feature (only show if streak > 0)
+                            if (_streakDays > 0) ...[
+                              _buildStreakCard(),
+                              const SizedBox(height: 24),
+                            ],
                             
                             // Quick Stats
                             _buildQuickStats(),

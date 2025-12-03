@@ -23,11 +23,22 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
   Map<String, LessonProgress> _progressMap = {};
   bool _isLoading = true;
   String? _selectedCategory;
+  bool _hasInitialLoad = false;
 
   @override
   void initState() {
     super.initState();
     _loadLessons();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh when screen becomes visible again (e.g., after completing a lesson)
+    // Skip the first call since initState already loads
+    if (_hasInitialLoad && !_isLoading) {
+      _loadLessons();
+    }
   }
 
   Future<void> _loadLessons() async {
@@ -62,6 +73,7 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
           _lessons = lessons;
           _progressMap = progressMap;
           _isLoading = false;
+          _hasInitialLoad = true;
         });
       }
     } catch (e) {
