@@ -1,3 +1,5 @@
+// ignore_for_file: dead_code
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/word.dart';
@@ -12,7 +14,7 @@ class MiniGameService {
   final AuthService _authService;
   final LanguageService _languageService;
   final SupabaseRepository _repository = SupabaseRepository();
-  
+
   SupabaseClient get _supabase {
     final client = SupabaseConfig.client;
     if (client == null) {
@@ -22,9 +24,9 @@ class MiniGameService {
   }
 
   MiniGameService()
-      : _lessonService = LessonService(),
-        _authService = AuthService(),
-        _languageService = LanguageService();
+    : _lessonService = LessonService(),
+      _authService = AuthService(),
+      _languageService = LanguageService();
 
   /// Check if a mini game should be shown based on completed lessons
   /// Returns the mini game index if one should be shown (e.g., after lessons 2, 4, 6...)
@@ -66,7 +68,7 @@ class MiniGameService {
       // Check if user has already completed this mini game
       final miniGameId = 'minigame_${activeLanguage}_${completedCount ~/ 2}';
       final hasCompleted = await _hasCompletedMiniGame(user.id, miniGameId);
-      
+
       if (!hasCompleted) {
         return completedCount ~/ 2; // Return mini game number (1, 2, 3, etc.)
       }
@@ -86,7 +88,7 @@ class MiniGameService {
     // Get all lessons for the active language, sorted by order_index
     final lessons = await _lessonService.getLessons();
     final sortedLessons = lessons
-      ..sort((a, b) => (a.orderIndex ?? 0).compareTo(b.orderIndex ?? 0));
+      ..sort((a, b) => (a.orderIndex).compareTo(b.orderIndex));
 
     // Get all completed lessons
     final progressList = await _lessonService.getUserLessonProgressAll();
@@ -109,7 +111,7 @@ class MiniGameService {
     }
 
     final relevantLessons = completedLessons.sublist(startIndex, endIndex);
-    
+
     // Collect all word IDs from these lessons
     final wordIds = <String>{};
     for (final lesson in relevantLessons) {
@@ -117,13 +119,16 @@ class MiniGameService {
     }
 
     if (wordIds.isEmpty) {
-      debugPrint('MiniGameService: No words found for mini game $miniGameNumber');
+      debugPrint(
+        'MiniGameService: No words found for mini game $miniGameNumber',
+      );
       return [];
     }
 
     // Load the words
     final words = <Word>[];
-    for (final wordId in wordIds.take(20)) { // Limit to 20 words for the mini game
+    for (final wordId in wordIds.take(20)) {
+      // Limit to 20 words for the mini game
       try {
         final word = await _repository.getWordById(wordId);
         if (word != null) {
@@ -134,7 +139,9 @@ class MiniGameService {
       }
     }
 
-    debugPrint('MiniGameService: Loaded ${words.length} words for mini game $miniGameNumber');
+    debugPrint(
+      'MiniGameService: Loaded ${words.length} words for mini game $miniGameNumber',
+    );
     return words;
   }
 
@@ -174,4 +181,3 @@ class MiniGameService {
     }
   }
 }
-
