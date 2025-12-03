@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -82,7 +84,8 @@ class _SignupScreenState extends State<SignupScreen> {
           debugPrint('Error handler error: $e2');
         }
         setState(() {
-          _errorMessage = 'Signup failed. Please check your information and try again.';
+          _errorMessage =
+              'Signup failed. Please check your information and try again.';
         });
       }
     } finally {
@@ -106,9 +109,7 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.mainGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -118,7 +119,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
-                  
+
                   // Back Button
                   Align(
                     alignment: Alignment.centerLeft,
@@ -138,9 +139,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       onPressed: () => context.pop(),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Logo and Welcome Section
                   Column(
                     children: [
@@ -174,7 +175,8 @@ class _SignupScreenState extends State<SignupScreen> {
                       const SizedBox(height: 24),
                       Text(
                         'Create Account',
-                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: AppTheme.textPrimary,
                             ),
@@ -184,15 +186,15 @@ class _SignupScreenState extends State<SignupScreen> {
                       Text(
                         'Start your language learning journey today',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
+                          color: AppTheme.textSecondary,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 40),
-                  
+
                   // Signup Card
                   Container(
                     padding: const EdgeInsets.all(28),
@@ -248,7 +250,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               ],
                             ),
                           ),
-                        
+
                         // Email Field
                         _buildTextField(
                           controller: _emailController,
@@ -266,9 +268,9 @@ class _SignupScreenState extends State<SignupScreen> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         // Password Field
                         _buildTextField(
                           controller: _passwordController,
@@ -299,9 +301,9 @@ class _SignupScreenState extends State<SignupScreen> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         // Confirm Password Field
                         _buildTextField(
                           controller: _confirmPasswordController,
@@ -318,7 +320,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                             onPressed: () {
                               setState(() {
-                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
                               });
                             },
                           ),
@@ -332,9 +335,9 @@ class _SignupScreenState extends State<SignupScreen> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 8),
-                        
+
                         // Password Requirements
                         Container(
                           padding: const EdgeInsets.all(12),
@@ -367,9 +370,9 @@ class _SignupScreenState extends State<SignupScreen> {
                             ],
                           ),
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Sign Up Button
                         Container(
                           decoration: BoxDecoration(
@@ -382,7 +385,9 @@ class _SignupScreenState extends State<SignupScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.electricLavender.withOpacity(0.3),
+                                color: AppTheme.electricLavender.withOpacity(
+                                  0.3,
+                                ),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -404,7 +409,9 @@ class _SignupScreenState extends State<SignupScreen> {
                                     width: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
                                     ),
                                   )
                                 : const Text(
@@ -420,9 +427,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Login Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -437,7 +444,10 @@ class _SignupScreenState extends State<SignupScreen> {
                       TextButton(
                         onPressed: () => context.go('/login'),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 4,
+                          ),
                         ),
                         child: Text(
                           'Login',
@@ -450,7 +460,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 16),
                 ],
               ),
@@ -488,21 +498,14 @@ class _SignupScreenState extends State<SignupScreen> {
           obscureText: obscureText,
           keyboardType: keyboardType,
           validator: validator,
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppTheme.textPrimary,
-          ),
+          style: const TextStyle(fontSize: 16, color: AppTheme.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
               color: AppTheme.textSecondary.withOpacity(0.6),
               fontSize: 15,
             ),
-            prefixIcon: Icon(
-              icon,
-              color: AppTheme.textSecondary,
-              size: 22,
-            ),
+            prefixIcon: Icon(icon, color: AppTheme.textSecondary, size: 22),
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: AppTheme.textSecondary.withOpacity(0.05),
@@ -536,10 +539,7 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: Colors.red,
-                width: 2,
-              ),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
