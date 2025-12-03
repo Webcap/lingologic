@@ -20,6 +20,10 @@ abstract class LessonSection {
         return ExerciseSection.fromJson(json);
       case 'example':
         return ExampleSection.fromJson(json);
+      case 'matching':
+        return MatchingExerciseSection.fromJson(json);
+      case 'pronunciation':
+        return PronunciationExerciseSection.fromJson(json);
       default:
         throw Exception('Unknown lesson section type: $type');
     }
@@ -198,6 +202,168 @@ class LessonContent {
         .toList();
   }
 
-  int get totalExercises => exercises.length;
+  List<MatchingExerciseSection> get matchingExercises {
+    return sections
+        .whereType<MatchingExerciseSection>()
+        .toList();
+  }
+
+  List<PronunciationExerciseSection> get pronunciationExercises {
+    return sections
+        .whereType<PronunciationExerciseSection>()
+        .toList();
+  }
+
+  int get totalExercises => exercises.length + matchingExercises.length + pronunciationExercises.length;
+}
+
+// Pronunciation exercise section for practicing pronunciation
+class PronunciationExerciseSection extends LessonSection {
+  final String instruction;
+  final List<PronunciationWord> words; // Words to practice pronouncing
+  final String? explanation;
+  final String? languageCode; // Language code for TTS (e.g., 'es' for Spanish, 'en' for English)
+
+  PronunciationExerciseSection({
+    required String id,
+    required this.instruction,
+    required this.words,
+    this.explanation,
+    this.languageCode,
+  }) : super(type: 'pronunciation', id: id);
+
+  factory PronunciationExerciseSection.fromJson(Map<String, dynamic> json) {
+    return PronunciationExerciseSection(
+      id: json['id'] as String,
+      instruction: json['instruction'] as String? ?? 'Pronounce the following words',
+      words: (json['words'] as List)
+          .map((word) => PronunciationWord.fromJson(word as Map<String, dynamic>))
+          .toList(),
+      explanation: json['explanation'] as String?,
+      languageCode: json['language_code'] as String?,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type,
+      'id': id,
+      'instruction': instruction,
+      'words': words.map((word) => word.toJson()).toList(),
+      if (explanation != null) 'explanation': explanation,
+      if (languageCode != null) 'language_code': languageCode,
+    };
+  }
+}
+
+// Word to practice pronunciation
+class PronunciationWord {
+  final String word; // The word to pronounce
+  final String? phonetic; // Optional phonetic spelling (e.g., "ha-LOW")
+  final String? translation; // Optional translation
+  final String? wordId; // Optional: reference to word from lesson vocabulary
+  final double? similarityThreshold; // Optional: minimum similarity score (0.0-1.0)
+
+  PronunciationWord({
+    required this.word,
+    this.phonetic,
+    this.translation,
+    this.wordId,
+    this.similarityThreshold,
+  });
+
+  factory PronunciationWord.fromJson(Map<String, dynamic> json) {
+    return PronunciationWord(
+      word: json['word'] as String,
+      phonetic: json['phonetic'] as String?,
+      translation: json['translation'] as String?,
+      wordId: json['word_id'] as String?,
+      similarityThreshold: json['similarity_threshold'] != null
+          ? (json['similarity_threshold'] as num).toDouble()
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'word': word,
+      if (phonetic != null) 'phonetic': phonetic,
+      if (translation != null) 'translation': translation,
+      if (wordId != null) 'word_id': wordId,
+      if (similarityThreshold != null) 'similarity_threshold': similarityThreshold,
+    };
+  }
+}
+
+// Word pair for matching exercises
+class WordPair {
+  final String word;
+  final String translation;
+  final String? wordId; // Optional: reference to word from lesson vocabulary
+
+  WordPair({
+    required this.word,
+    required this.translation,
+    this.wordId,
+  });
+
+  factory WordPair.fromJson(Map<String, dynamic> json) {
+    return WordPair(
+      word: json['word'] as String,
+      translation: json['translation'] as String,
+      wordId: json['word_id'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'word': word,
+      'translation': translation,
+      if (wordId != null) 'word_id': wordId,
+    };
+  }
+}
+
+// Matching exercise section for word matching
+class MatchingExerciseSection extends LessonSection {
+  final String instruction;
+  final List<WordPair> pairs; // Correct word pairs to match
+  final List<String>? distractors; // Optional extra words to make it harder
+  final String? explanation;
+
+  MatchingExerciseSection({
+    required String id,
+    required this.instruction,
+    required this.pairs,
+    this.distractors,
+    this.explanation,
+  }) : super(type: 'matching', id: id);
+
+  factory MatchingExerciseSection.fromJson(Map<String, dynamic> json) {
+    return MatchingExerciseSection(
+      id: json['id'] as String,
+      instruction: json['instruction'] as String? ?? 'Match the words with their translations',
+      pairs: (json['pairs'] as List)
+          .map((pair) => WordPair.fromJson(pair as Map<String, dynamic>))
+          .toList(),
+      distractors: json['distractors'] != null
+          ? List<String>.from(json['distractors'] as List)
+          : null,
+      explanation: json['explanation'] as String?,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type,
+      'id': id,
+      'instruction': instruction,
+      'pairs': pairs.map((pair) => pair.toJson()).toList(),
+      if (distractors != null) 'distractors': distractors,
+      if (explanation != null) 'explanation': explanation,
+    };
+  }
 }
 

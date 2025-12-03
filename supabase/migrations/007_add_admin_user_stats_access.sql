@@ -14,7 +14,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to get active users (users with activity in last 30 days)
+-- Function to get active users (users with meaningful activity in last 30 days)
+-- Only counts users who have actually engaged with lessons, words, or games
+-- Excludes users who only signed up but haven't used the app
+-- Excludes admin users from the count
 CREATE OR REPLACE FUNCTION get_active_users()
 RETURNS INTEGER AS $$
 BEGIN
@@ -24,11 +27,27 @@ BEGIN
   RETURN (
     SELECT COUNT(DISTINCT user_id)
     FROM (
-      SELECT user_id FROM lesson_progress WHERE updated_at > NOW() - INTERVAL '30 days'
+      -- Users who have made meaningful progress on lessons
+      SELECT lp.user_id 
+      FROM lesson_progress lp
+      WHERE lp.updated_at > NOW() - INTERVAL '30 days'
+        AND (lp.progress_percentage > 10 OR lp.status = 'completed')
+        AND NOT EXISTS (SELECT 1 FROM user_profiles up WHERE up.id = lp.user_id AND up.is_admin = true)
       UNION
-      SELECT user_id FROM word_mastery WHERE updated_at > NOW() - INTERVAL '30 days'
+      -- Users who have reviewed words (actual reviews, not just created)
+      SELECT wm.user_id 
+      FROM word_mastery wm
+      WHERE wm.updated_at > NOW() - INTERVAL '30 days'
+        AND wm.last_reviewed IS NOT NULL
+        AND wm.last_reviewed > NOW() - INTERVAL '30 days'
+        AND NOT EXISTS (SELECT 1 FROM user_profiles up WHERE up.id = wm.user_id AND up.is_admin = true)
       UNION
-      SELECT user_id FROM game_sessions WHERE created_at > NOW() - INTERVAL '30 days'
+      -- Users who have played games (completed sessions with score)
+      SELECT gs.user_id 
+      FROM game_sessions gs
+      WHERE gs.created_at > NOW() - INTERVAL '30 days'
+        AND gs.score > 0
+        AND NOT EXISTS (SELECT 1 FROM user_profiles up WHERE up.id = gs.user_id AND up.is_admin = true)
     ) AS active_users
   );
 END;

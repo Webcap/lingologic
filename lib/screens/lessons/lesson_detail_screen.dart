@@ -14,6 +14,8 @@ import '../../utils/error_handler.dart';
 import 'widgets/text_section_widget.dart';
 import 'widgets/exercise_section_widget.dart';
 import 'widgets/example_section_widget.dart';
+import 'widgets/matching_exercise_widget.dart';
+import 'widgets/pronunciation_exercise_widget.dart';
 
 class LessonDetailScreen extends StatefulWidget {
   final String lessonId;
@@ -43,6 +45,10 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   final Map<int, ExerciseSection> _alternativeExercises = {}; // Track alternative exercises for retry
   final Map<int, List<String>> _usedExerciseIds = {}; // Track which exercise IDs have been used for each position
   final Map<int, String> _originalExerciseIds = {}; // Track original exercise ID for each slide position
+  final List<ExerciseSection> _retryExerciseQueue = []; // Queue for exercises answered incorrectly
+  final List<MatchingExerciseSection> _retryMatchingQueue = []; // Queue for matching exercises answered incorrectly
+  final List<PronunciationExerciseSection> _retryPronunciationQueue = []; // Queue for pronunciation exercises answered incorrectly
+  bool _isInRetryPhase = false; // Track if we're showing retry exercises
   DateTime? _startTime;
   int _timeSpentMinutes = 0;
 
@@ -118,9 +124,95 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       _exerciseAnswers[exerciseIndex] = isCorrect;
       if (isCorrect) {
         _completedExercises[exerciseIndex] = true;
+      } else {
+        // Add to retry queue if incorrect
+        final currentSection = _getCurrentSection(_currentSlideIndex);
+        if (currentSection is ExerciseSection) {
+          // Check if not already in queue
+          if (!_retryExerciseQueue.any((e) => e.id == currentSection.id)) {
+            _retryExerciseQueue.add(currentSection);
+          }
+        } else if (currentSection is MatchingExerciseSection) {
+          // Check if not already in queue
+          if (!_retryMatchingQueue.any((e) => e.id == currentSection.id)) {
+            _retryMatchingQueue.add(currentSection);
+          }
+        } else if (currentSection is PronunciationExerciseSection) {
+          // Check if not already in queue
+          if (!_retryPronunciationQueue.any((e) => e.id == currentSection.id)) {
+            _retryPronunciationQueue.add(currentSection);
+          }
+        }
       }
     });
     _updateProgress();
+    
+    // If incorrect, automatically move to next slide after a brief delay
+    if (!isCorrect) {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          _moveToNextSlide();
+        }
+      });
+    }
+  }
+  
+  void _moveToNextSlide() {
+    if (_pageController.hasClients) {
+      // Check if we've finished all slides and have retry exercises
+        if (_currentSlideIndex >= _getTotalSlides() - 1 && 
+            (_retryExerciseQueue.isNotEmpty || _retryMatchingQueue.isNotEmpty || _retryPronunciationQueue.isNotEmpty) &&
+            !_isInRetryPhase) {
+        // Start retry phase
+        setState(() {
+          _isInRetryPhase = true;
+          _currentSlideIndex = 0; // Reset to start showing retry exercises
+        });
+      } else if (_currentSlideIndex < _getTotalSlides() - 1) {
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+  }
+  
+  int _getTotalSlides() {
+    if (_lesson == null) return 0;
+    int count = _lesson!.content.sections.length;
+    if (_isInRetryPhase) {
+      count = _retryExerciseQueue.length + _retryMatchingQueue.length;
+    }
+    return count;
+  }
+  
+  // Get the current section (either from lesson or retry queue)
+  LessonSection? _getCurrentSection(int slideIndex) {
+    if (_lesson == null) return null;
+    
+    if (_isInRetryPhase) {
+      // In retry phase, get from retry queues
+      if (slideIndex < _retryExerciseQueue.length) {
+        return _retryExerciseQueue[slideIndex];
+      } else {
+        final matchingIndex = slideIndex - _retryExerciseQueue.length;
+        if (matchingIndex < _retryMatchingQueue.length) {
+          return _retryMatchingQueue[matchingIndex];
+        } else {
+          final pronunciationIndex = matchingIndex - _retryMatchingQueue.length;
+          if (pronunciationIndex < _retryPronunciationQueue.length) {
+            return _retryPronunciationQueue[pronunciationIndex];
+          }
+        }
+      }
+      return null;
+    } else {
+      // Normal phase, get from lesson sections
+      if (slideIndex < _lesson!.content.sections.length) {
+        return _lesson!.content.sections[slideIndex];
+      }
+      return null;
+    }
   }
 
   // Get an alternative exercise from the lesson for retry
@@ -441,19 +533,28 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
 
   bool _canGoToNextSlide() {
     if (_lesson == null) return false;
-    final currentSection = _lesson!.content.sections[_currentSlideIndex];
+    final currentSection = _getCurrentSection(_currentSlideIndex);
+    if (currentSection == null) return false;
     
     // If it's an exercise, allow proceeding if it's been answered (correct or incorrect)
-    // Users can retry or move on
-    if (currentSection is ExerciseSection) {
-      int exerciseIndex = 0;
-      for (int i = 0; i < _currentSlideIndex; i++) {
-        if (_lesson!.content.sections[i] is ExerciseSection) {
-          exerciseIndex++;
+    // In retry phase, always allow proceeding after answering
+    if (currentSection is ExerciseSection || 
+        currentSection is MatchingExerciseSection ||
+        currentSection is PronunciationExerciseSection) {
+      if (_isInRetryPhase) {
+        // In retry phase, always allow moving forward after answering
+        return true;
+      } else {
+        int exerciseIndex = 0;
+        for (int i = 0; i < _currentSlideIndex; i++) {
+          final section = _getCurrentSection(i);
+          if (section is ExerciseSection || section is MatchingExerciseSection) {
+            exerciseIndex++;
+          }
         }
+        // Allow proceeding if answered (either correct or incorrect)
+        return _exerciseAnswers[exerciseIndex] != null;
       }
-      // Allow proceeding if answered (either correct or incorrect)
-      return _exerciseAnswers[exerciseIndex] != null;
     }
     
     // For text and example sections, can always proceed
@@ -461,13 +562,22 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 
   void _goToNextSlide() {
-    if (_currentSlideIndex < _lesson!.content.sections.length - 1) {
+    final totalSlides = _getTotalSlides();
+    if (_currentSlideIndex < totalSlides - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     } else if (_canCompleteLesson) {
       _completeLesson();
+    } else if (!_isInRetryPhase && (_retryExerciseQueue.isNotEmpty || _retryMatchingQueue.isNotEmpty)) {
+      // Start retry phase
+      setState(() {
+        _isInRetryPhase = true;
+        _currentSlideIndex = 0;
+      });
+      // Reset page controller to show retry exercises
+      _pageController.jumpToPage(0);
     }
   }
 
@@ -481,10 +591,24 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 
   Widget _buildSlideContent(LessonSection section, int slideIndex) {
+    // Calculate exercise index for tracking
     int exerciseIndex = 0;
-    for (int i = 0; i < slideIndex; i++) {
-      if (_lesson!.content.sections[i] is ExerciseSection) {
-        exerciseIndex++;
+    if (_isInRetryPhase) {
+      // In retry phase, count exercises from retry queues
+      for (int i = 0; i < slideIndex; i++) {
+        final s = _getCurrentSection(i);
+        if (s is ExerciseSection || s is MatchingExerciseSection) {
+          exerciseIndex++;
+        }
+      }
+    } else {
+      // Normal phase, count from lesson sections
+      for (int i = 0; i < slideIndex; i++) {
+        if (_lesson!.content.sections[i] is ExerciseSection || 
+            _lesson!.content.sections[i] is MatchingExerciseSection ||
+            _lesson!.content.sections[i] is PronunciationExerciseSection) {
+          exerciseIndex++;
+        }
       }
     }
 
@@ -502,20 +626,39 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       // Use alternative exercise if available, otherwise use the original
       final exerciseToShow = _alternativeExercises[slideIndex] ?? section;
       
-      // Check if there are multiple exercises available for retry
-      final canRetry = _lesson!.content.exercises.length > 1;
-      
       return ExerciseSectionWidget(
         section: exerciseToShow,
         onAnswerSubmitted: (isCorrect) {
           _onExerciseAnswered(currentExerciseIndex, isCorrect);
         },
-        onRetry: () {
-          _retryExerciseWithDifferentQuestion(slideIndex);
+        onRetry: null, // Disable manual retry - wrong answers auto-advance and are added to retry queue
+        isAnswered: _exerciseAnswers[currentExerciseIndex] != null,
+        isCorrect: _exerciseAnswers[currentExerciseIndex] == true,
+        canRetry: false, // Disable retry button - wrong answers auto-advance
+      );
+    } else if (section is MatchingExerciseSection) {
+      final currentExerciseIndex = exerciseIndex;
+      
+      return MatchingExerciseWidget(
+        section: section,
+        onAnswerSubmitted: (isCorrect) {
+          _onExerciseAnswered(currentExerciseIndex, isCorrect);
         },
         isAnswered: _exerciseAnswers[currentExerciseIndex] != null,
         isCorrect: _exerciseAnswers[currentExerciseIndex] == true,
-        canRetry: _exerciseAnswers[currentExerciseIndex] == false && canRetry,
+        canRetry: false, // Matching exercises don't support retry with different question yet
+      );
+    } else if (section is PronunciationExerciseSection) {
+      final currentExerciseIndex = exerciseIndex;
+      
+      return PronunciationExerciseWidget(
+        section: section,
+        onAnswerSubmitted: (isCorrect) {
+          _onExerciseAnswered(currentExerciseIndex, isCorrect);
+        },
+        isAnswered: _exerciseAnswers[currentExerciseIndex] != null,
+        isCorrect: _exerciseAnswers[currentExerciseIndex] == true,
+        canRetry: false, // Pronunciation exercises don't support retry yet
       );
     }
     return const SizedBox.shrink();
@@ -584,7 +727,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       );
     }
 
-    final totalSlides = _lesson!.content.sections.length;
+    final totalSlides = _getTotalSlides();
     final isLastSlide = _currentSlideIndex == totalSlides - 1;
     final progressPercentage = totalSlides > 0 
         ? ((_currentSlideIndex + 1) / totalSlides) 
@@ -617,7 +760,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   },
                   itemCount: totalSlides,
                   itemBuilder: (context, index) {
-                    final section = _lesson!.content.sections[index];
+                    final section = _getCurrentSection(index);
+                    if (section == null) return const SizedBox.shrink();
                     return AnimatedBuilder(
                       animation: _pageController,
                       builder: (context, child) {

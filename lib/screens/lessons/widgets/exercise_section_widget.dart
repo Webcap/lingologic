@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../models/lesson_content.dart';
 import '../../../theme/app_theme.dart';
@@ -25,6 +26,7 @@ class ExerciseSectionWidget extends StatefulWidget {
 }
 
 class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
+  late List<ExerciseOption> _shuffledOptions;
   int? _selectedIndex;
   bool _showResult = false;
   bool? _isCorrect;
@@ -32,13 +34,17 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
   @override
   void initState() {
     super.initState();
+    // Shuffle options on initialization to randomize the order
+    _shuffledOptions = List<ExerciseOption>.from(widget.section.options);
+    _shuffledOptions.shuffle(Random());
+    
     // If already answered from parent, show result
     if (widget.isAnswered) {
       _showResult = true;
       _isCorrect = widget.isCorrect;
-      // Find the correct answer index
-      for (int i = 0; i < widget.section.options.length; i++) {
-        if (widget.section.options[i].isCorrect) {
+      // Find the correct answer index in shuffled options
+      for (int i = 0; i < _shuffledOptions.length; i++) {
+        if (_shuffledOptions[i].isCorrect) {
           _selectedIndex = i;
           break;
         }
@@ -53,9 +59,19 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
     if (widget.isAnswered && !oldWidget.isAnswered) {
       _showResult = true;
       _isCorrect = widget.isCorrect;
+      // Find the correct answer index in shuffled options
+      for (int i = 0; i < _shuffledOptions.length; i++) {
+        if (_shuffledOptions[i].isCorrect) {
+          _selectedIndex = i;
+          break;
+        }
+      }
     }
     // Reset if section changes (for retry)
     if (widget.section.id != oldWidget.section.id) {
+      // Reshuffle options when section changes
+      _shuffledOptions = List<ExerciseOption>.from(widget.section.options);
+      _shuffledOptions.shuffle(Random());
       _selectedIndex = null;
       _showResult = false;
       _isCorrect = null;
@@ -176,7 +192,7 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
             child: Column(
-              children: widget.section.options.asMap().entries.map((entry) {
+              children: _shuffledOptions.asMap().entries.map((entry) {
                 final index = entry.key;
                 final option = entry.value;
                 final isSelected = _selectedIndex == index;
@@ -416,7 +432,7 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  final isCorrect = widget.section.options[_selectedIndex!].isCorrect;
+                  final isCorrect = _shuffledOptions[_selectedIndex!].isCorrect;
                   setState(() {
                     _showResult = true;
                     _isCorrect = isCorrect;

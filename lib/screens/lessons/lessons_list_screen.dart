@@ -4,9 +4,12 @@ import '../../models/lesson.dart';
 import '../../models/lesson_progress.dart';
 import '../../services/lesson_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/mini_game_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/language_selector.dart';
+import 'widgets/mini_game_card.dart';
+import '../mini_games/vocabulary_review_mini_game.dart';
 
 class LessonsListScreen extends StatefulWidget {
   const LessonsListScreen({super.key});
@@ -18,12 +21,14 @@ class LessonsListScreen extends StatefulWidget {
 class _LessonsListScreenState extends State<LessonsListScreen> {
   final _lessonService = LessonService();
   final _authService = AuthService();
+  final _miniGameService = MiniGameService();
   
   List<Lesson> _lessons = [];
   Map<String, LessonProgress> _progressMap = {};
   bool _isLoading = true;
   String? _selectedCategory;
   bool _hasInitialLoad = false;
+  int? _availableMiniGame;
 
   @override
   void initState() {
@@ -68,10 +73,14 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
         progressMap[progress.lessonId] = progress;
       }
 
+      // Check if a mini game should be shown
+      final miniGameNumber = await _miniGameService.shouldShowMiniGame();
+
       if (mounted) {
         setState(() {
           _lessons = lessons;
           _progressMap = progressMap;
+          _availableMiniGame = miniGameNumber;
           _isLoading = false;
           _hasInitialLoad = true;
         });
@@ -428,6 +437,20 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                       ];
                     }).toList(),
                   
+                  // Mini Game Card (if available) - show before lessons
+                  if (_availableMiniGame != null)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                        child: MiniGameCard(
+                          miniGameNumber: _availableMiniGame!,
+                          onTap: () async {
+                            await _launchMiniGame(_availableMiniGame!);
+                          },
+                        ),
+                      ),
+                    ),
+                  
                   // Bottom padding
                   const SliverToBoxAdapter(
                     child: SizedBox(height: 24),
@@ -436,6 +459,44 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
               ),
       ),
     );
+  }
+
+  Future<void> _launchMiniGame(int miniGameNumber) async {
+    try {
+      // Load words for the mini game
+      final words = await _miniGameService.getMiniGameWords(miniGameNumber);
+      
+      if (!mounted) return;
+      
+      if (words.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No words available for this mini game yet.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Launch the mini game
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => VocabularyReviewMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          ),
+        ),
+      );
+
+      // Reload lessons after completing mini game
+      _loadLessons();
+    } catch (e) {
+      if (mounted) {
+        ErrorHandler.handleError(context, e, contextMessage: 'Error launching mini game');
+      }
+    }
   }
 
   Widget _buildStatCard({

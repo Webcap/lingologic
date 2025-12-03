@@ -54,6 +54,15 @@ dependencies:
   # Audio playback
   audioplayers: ^6.0.0
 
+  # Text to speech
+  flutter_tts: ^4.0.2
+
+  # Speech recognition
+  speech_to_text: ^7.0.0
+
+  # Permission handling
+  permission_handler: ^11.3.1
+
   # Image assets
   flutter_svg: ^2.0.10+1
 
