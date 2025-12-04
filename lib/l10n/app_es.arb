@@ -187,6 +187,128 @@
   "skipPronunciation": "Omitir Pronunciación",
   "skipPronunciationMessage": "¿Omitir ejercicios de pronunciación por 1 hora? Puedes continuar con el resto de la lección.",
   "pronunciationSkipped": "Ejercicios de pronunciación omitidos por 1 hora",
-  "pronunciationSkippedMessage": "Los ejercicios de pronunciación están omitidos actualmente. Puedes continuar con el resto de la lección."
+  "pronunciationSkippedMessage": "Los ejercicios de pronunciación están omitidos actualmente. Puedes continuar con el resto de la lección.",
+  
+  "noActiveLanguageSelected": "No hay idioma activo seleccionado",
+  "noLessonsFoundForLevel": "No se encontraron lecciones para este nivel",
+  "noVocabularyFoundForLevel": "No se encontró vocabulario para este nivel",
+  "notEnoughVocabularyForTest": "No hay suficiente vocabulario para la prueba. Completa más lecciones primero.",
+  "noQuestionsAvailable": "No hay preguntas disponibles",
+  "errorLoadingTest": "Error al cargar la prueba",
+  "errorSavingTestResult": "Error al guardar el resultado de la prueba",
+  "congratulations": "¡Felicidades!",
+  "testComplete": "Prueba Completa",
+  "youPassedLevelKnowledgeTest": "¡Pasaste la prueba de conocimiento de {level}!",
+  "@youPassedLevelKnowledgeTest": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "testScoreMessage": "Obtuviste {percentage}%. Necesitas 70% para aprobar.",
+  "@testScoreMessage": {
+    "placeholders": {
+      "percentage": {
+        "type": "int"
+      }
+    }
+  },
+  "score": "Puntuación: {correct} / {total}",
+  "@score": {
+    "placeholders": {
+      "correct": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "youCanNowAccessLevelLessons": "¡Ahora puedes acceder a las lecciones de {level}!",
+  "@youCanNowAccessLevelLessons": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "levelKnowledgeTest": "Prueba de Conocimiento de {level}",
+  "@levelKnowledgeTest": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "questionXOfY": "Pregunta {current} de {total}",
+  "@questionXOfY": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "whatIsTranslationOf": "¿Cuál es la traducción de:",
+  "nextLevel": "siguiente nivel",
+  
+  "practiceSection": "Practicar",
+  "correct": "¡Correcto!",
+  "tryAgain": "Inténtalo de nuevo",
+  "tryAgainButton": "Intentar de Nuevo",
+  "tryDifferentQuestion": "Prueba con una pregunta diferente",
+  "retryWithDifferentQuestion": "Reintentar con Pregunta Diferente",
+  "submitAnswer": "Enviar Respuesta",
+  "matchTheWords": "Emparejar las Palabras",
+  "tapToMatch": "Toca para emparejar",
+  "translation": "Traducción",
+  "selectTranslationFor": "Selecciona la traducción para \"{word}\"",
+  "@selectTranslationFor": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "clearMatch": "Limpiar Emparejamiento",
+  "microphonePermissionRequired": "Se requiere permiso de micrófono para practicar pronunciación.",
+  "microphonePermission": "Permiso de Micrófono",
+  "microphonePermissionExplanation": "Para practicar pronunciación, necesitamos acceso a tu micrófono para grabar y verificar tu pronunciación.\n\nAparecerá un diálogo del sistema pidiendo permiso.",
+  "notNow": "Ahora No",
+  "pleaseEnableInSettings": "Por favor, actívalo en la configuración de tu dispositivo.",
+  "speechRecognitionNotAvailable": "El reconocimiento de voz no está disponible en este dispositivo.",
+  "pronunciationPractice": "Práctica de Pronunciación",
+  "greatPronunciation": "¡Excelente pronunciación!",
+  "nextWord": "Siguiente Palabra",
+  "enableMicrophonePermission": "Activar Permiso de Micrófono",
+  "permissionRequired": "Permiso Requerido",
+  "openSettings": "Abrir Configuración",
+  "wordXOfY": "Palabra {current} de {total}",
+  "@wordXOfY": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "listenToPronunciation": "Escuchar Pronunciación",
+  "listening": "Escuchando...",
+  "initializing": "Inicializando...",
+  "recordYourPronunciation": "Grabar Tu Pronunciación",
+  "youSaid": "Dijiste:",
+  "confidence": "Confianza: {percentage}%",
+  "@confidence": {
+    "placeholders": {
+      "percentage": {
+        "type": "int"
+      }
+    }
+  }
 }
 

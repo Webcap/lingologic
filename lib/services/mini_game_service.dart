@@ -30,7 +30,7 @@ class MiniGameService {
       _languageService = LanguageService();
 
   /// Get the game type for a specific mini game number
-  /// Mini game 3 always uses word search, others rotate through different types
+  /// Reads from database configuration, with fallback to rotation logic
   Future<MiniGameType?> getMiniGameType(int miniGameNumber) async {
     final user = _authService.currentUser;
     if (user == null) return null;
@@ -38,17 +38,34 @@ class MiniGameService {
     final activeLanguage = await _languageService.getActiveLanguage();
     if (activeLanguage == null) return null;
 
-    // Mini game 3 is always word search
-    if (miniGameNumber == 3) {
-      return MiniGameType.wordSearch;
+    // Try to get game type from database first
+    try {
+      final gameId = 'minigame_${activeLanguage}_$miniGameNumber';
+      final game = await _repository.getGameByGameId(gameId);
+      
+      if (game != null && game.isActive) {
+        // Convert database game_type string to MiniGameType enum
+        // Database uses snake_case (e.g., "image_to_word"), enum uses camelCase (e.g., "imageToWord")
+        try {
+          final enumName = _dbGameTypeToEnumName(game.gameType);
+          final gameType = MiniGameType.values.firstWhere(
+            (type) => type.name == enumName,
+          );
+          return gameType;
+        } catch (e) {
+          debugPrint('MiniGameService: Unknown game type "${game.gameType}" (enum name: "${_dbGameTypeToEnumName(game.gameType)}") for mini game $miniGameNumber, using fallback');
+        }
+      }
+    } catch (e) {
+      debugPrint('MiniGameService: Error fetching game type from database for mini game $miniGameNumber: $e');
     }
 
-    // For other mini games, rotate through different types
+    // Fallback: For other mini games, rotate through different types
     final playedTypes = await _getPlayedGameTypes(user.id, activeLanguage, miniGameNumber);
 
-    // Available game types (excluding word search for now, except for mini game 3)
+    // Available game types (excluding pictionary as it's disabled)
     final availableTypes = MiniGameType.values
-        .where((type) => type != MiniGameType.wordSearch || miniGameNumber == 3)
+        .where((type) => type != MiniGameType.pictionary)
         .toList();
 
     // Find a type that hasn't been played yet
@@ -68,6 +85,21 @@ class MiniGameService {
 
     // Default to vocabulary review if nothing else selected
     return selectedType ?? MiniGameType.vocabularyReview;
+  }
+
+  /// Map database game type (snake_case) to enum name (camelCase)
+  String _dbGameTypeToEnumName(String dbGameType) {
+    // Direct mapping from database format to enum names
+    const typeMap = {
+      'vocabulary_review': 'vocabularyReview',
+      'neuro_match': 'neuroMatch',
+      'syntax_constructor': 'syntaxConstructor',
+      'word_search': 'wordSearch',
+      'pictionary': 'pictionary',
+      'image_to_word': 'imageToWord',
+    };
+    
+    return typeMap[dbGameType] ?? dbGameType;
   }
 
   /// Get all game types that have been played for a specific mini game

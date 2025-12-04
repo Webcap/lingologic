@@ -20,6 +20,7 @@ import 'widgets/exercise_section_widget.dart';
 import 'widgets/example_section_widget.dart';
 import 'widgets/matching_exercise_widget.dart';
 import 'widgets/pronunciation_exercise_widget.dart';
+import 'widgets/translation_exercise_widget.dart';
 
 class LessonDetailScreen extends StatefulWidget {
   final String lessonId;
@@ -500,6 +501,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     if (section is ExerciseSection) return section.id;
     if (section is MatchingExerciseSection) return section.id;
     if (section is PronunciationExerciseSection) return section.id;
+    if (section is TranslationExerciseSection) return section.id;
     return null;
   }
 
@@ -542,18 +544,14 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       } else {
         // Handle incorrect answers
         if (isInRetrySection && isRetryExercise) {
-          // In retry phase - track attempts (already calculated above)
+          // In retry phase - track attempts
           _retryAttemptCounts[exerciseId] = retryAttemptCountAfterIncrement!;
-
-          // If they've had 2 wrong attempts in retry (after first wrong = 1 attempt, after second wrong = 2 attempts, can proceed)
-          if (retryAttemptCountAfterIncrement >= 2) {
-            // Mark as "failed but can proceed" - count it as completed so lesson can progress
-            _completedExerciseIds[exerciseId] = true;
-            _exercisesToRetry.remove(exerciseId);
-          } else {
-            // Still have attempts remaining - reset answer state so they can try again
-            _exerciseAnswersById[exerciseId] = null;
-          }
+          
+          // Keep the answer stored (even if wrong) so widget shows:
+          // - Correct answer highlighted
+          // - Explanation displayed
+          // This allows user to learn from the mistake and proceed to next retry
+          // Answer state is kept (not reset) so result remains visible
         } else if (!isInRetrySection) {
           // Normal section - add to retry set if not already there
           if (!_exercisesToRetry.contains(exerciseId)) {
@@ -619,7 +617,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     for (final section in sections) {
       if (section is ExerciseSection ||
           section is MatchingExerciseSection ||
-          section is PronunciationExerciseSection) {
+          section is PronunciationExerciseSection ||
+          section is TranslationExerciseSection) {
         exercises.add(section);
       }
     }
@@ -632,7 +631,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     for (final section in sections) {
       if (section is ExerciseSection ||
           section is MatchingExerciseSection ||
-          section is PronunciationExerciseSection) {
+          section is PronunciationExerciseSection ||
+          section is TranslationExerciseSection) {
         // Replace with shuffled exercise
         result.add(exercises[exerciseIndex]);
         exerciseIndex++;
@@ -903,21 +903,19 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     // If it's an exercise, allow proceeding if it's been answered
     if (currentSection is ExerciseSection ||
         currentSection is MatchingExerciseSection ||
-        currentSection is PronunciationExerciseSection) {
+        currentSection is PronunciationExerciseSection ||
+        currentSection is TranslationExerciseSection) {
       final exerciseId = _getExerciseId(currentSection);
       if (exerciseId != null) {
         final isInRetrySection = _currentSlideIndex >= _normalSectionCount;
         final isRetryExercise = _exercisesToRetry.contains(exerciseId);
 
-        // For retry exercises, check if they've answered or attempted
+        // For retry exercises, allow proceeding if they've answered
+        // This shows the result (correct answer + explanation) and allows moving to next retry
         if (isInRetrySection && isRetryExercise) {
-          final attemptCount = _retryAttemptCounts[exerciseId] ?? 0;
           final isAnswered = _exerciseAnswersById[exerciseId] != null;
-          // Allow proceeding if:
-          // 1. They've answered it (correct answer, or wrong answer after max attempts)
-          // 2. OR they've attempted it at least once (so they can move to next retry question)
-          // This allows them to go through all retries once, then come back for final attempts
-          return isAnswered || attemptCount > 0;
+          // Once answered (even if wrong), they can see the result and proceed to next retry
+          return isAnswered;
         }
 
         // For normal exercises, allow proceeding if answered
@@ -1106,6 +1104,24 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             canRetry: false,
           );
         },
+      );
+    } else if (section is TranslationExerciseSection) {
+      final exerciseId = section.id;
+      final isAnswered = _exerciseAnswersById[exerciseId] != null;
+      final isCorrect = _exerciseAnswersById[exerciseId] == true;
+
+      return TranslationExerciseWidget(
+        section: section,
+        onAnswerSubmitted: (isCorrect) {
+          _onExerciseAnswered(
+            0, // Not used in new system
+            isCorrect,
+            exerciseId: exerciseId,
+          );
+        },
+        isAnswered: isAnswered,
+        isCorrect: isCorrect,
+        canRetry: false,
       );
     }
     return const SizedBox.shrink();

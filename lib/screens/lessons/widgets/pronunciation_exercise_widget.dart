@@ -124,11 +124,12 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
       debugPrint('Microphone permission denied');
       // Permission was denied, show a message
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Microphone permission is required to practice pronunciation.'),
+          SnackBar(
+            content: Text(l10n.microphonePermissionRequired),
             backgroundColor: Colors.orange,
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -137,6 +138,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
 
   Future<bool> _showPermissionRequestDialog() async {
     if (!mounted) return false;
+    final l10n = AppLocalizations.of(context)!;
     
     final result = await showDialog<bool>(
       context: context,
@@ -160,26 +162,26 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
               ),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Microphone Permission',
-                style: TextStyle(
+                l10n.microphonePermission,
+                style: const TextStyle(
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ),
           ],
         ),
-        content: const Text(
-          'To practice pronunciation, we need access to your microphone to record and check your pronunciation.\n\nA system dialog will appear asking for permission.',
-          style: TextStyle(height: 1.5),
+        content: Text(
+          l10n.microphonePermissionExplanation,
+          style: const TextStyle(height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(
-              'Not Now',
-              style: TextStyle(
+            child: Text(
+              l10n.notNow,
+              style: const TextStyle(
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -215,6 +217,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
   }
 
   void _showPermissionDeniedDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -236,20 +239,19 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
               ),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Permission Required',
-                style: TextStyle(
+                l10n.permissionRequired,
+                style: const TextStyle(
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ),
           ],
         ),
-        content: const Text(
-          'Microphone permission is required to practice pronunciation. '
-          'Please enable it in your device settings.',
-          style: TextStyle(height: 1.5),
+        content: Text(
+          '${l10n.microphonePermissionRequired} ${l10n.pleaseEnableInSettings}',
+          style: const TextStyle(height: 1.5),
         ),
         actions: [
           TextButton(
@@ -271,9 +273,9 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            child: const Text(
-              'Open Settings',
-              style: TextStyle(
+            child: Text(
+              l10n.openSettings,
+              style: const TextStyle(
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -364,9 +366,10 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
 
     if (!_speechAvailable || !_initialized) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Speech recognition is not available on this device.'),
+          SnackBar(
+            content: Text(l10n.speechRecognitionNotAvailable),
             backgroundColor: Colors.orange,
           ),
         );
@@ -556,6 +559,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (widget.section.words.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -616,7 +620,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Pronunciation Practice',
+                        l10n.pronunciationPractice,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               color: AppTheme.primaryMintGreen,
                               fontWeight: FontWeight.w700,
@@ -647,7 +651,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                _isCorrect == true ? 'Great pronunciation!' : 'Try again',
+                                _isCorrect == true ? l10n.greatPronunciation : l10n.tryAgain,
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: _isCorrect == true
                                           ? AppTheme.successGreen
@@ -693,7 +697,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Word ${_currentWordIndex + 1} of ${widget.section.words.length}',
+                      l10n.wordXOfY(_currentWordIndex + 1, widget.section.words.length),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppTheme.textSecondary,
                           ),
@@ -769,7 +773,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                       _isSpeaking ? Icons.volume_up_rounded : Icons.play_arrow_rounded,
                       size: 24,
                     ),
-                    label: Text(_isSpeaking ? 'Playing...' : 'Listen to Pronunciation'),
+                    label: Text(_isSpeaking ? l10n.playing : l10n.listenToPronunciation),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.electricLavender,
                       foregroundColor: Colors.white,
@@ -804,12 +808,12 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                     ),
                     label: Text(
                       _isListening
-                          ? 'Listening...'
+                          ? l10n.listening
                           : (!_permissionGranted)
-                              ? 'Enable Microphone Permission'
+                              ? l10n.enableMicrophonePermission
                               : (!_speechAvailable || !_initialized)
-                                  ? 'Initializing...'
-                                  : 'Record Your Pronunciation',
+                                  ? l10n.initializing
+                                  : l10n.recordYourPronunciation,
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _isListening
@@ -844,7 +848,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'You said:',
+                          l10n.youSaid,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppTheme.textSecondary,
                               ),
@@ -860,7 +864,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                         if (_confidence > 0) ...[
                           const SizedBox(height: 4),
                           Text(
-                            'Confidence: ${(_confidence * 100).toStringAsFixed(0)}%',
+                            l10n.confidence((_confidence * 100).round()),
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: AppTheme.textSecondary,
                                 ),
@@ -941,7 +945,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                       child: OutlinedButton.icon(
                         onPressed: widget.onRetry,
                         icon: const Icon(Icons.refresh_rounded, size: 20),
-                        label: const Text('Try Again'),
+                        label: Text(l10n.tryAgainButton),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppTheme.goldenOrange,
                           padding: const EdgeInsets.symmetric(vertical: 18),
@@ -962,7 +966,7 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                       child: ElevatedButton.icon(
                         onPressed: _moveToNextWord,
                         icon: const Icon(Icons.arrow_forward_rounded, size: 20),
-                        label: const Text('Next Word'),
+                        label: Text(l10n.nextWord),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryMintGreen,
                           foregroundColor: Colors.white,

@@ -456,7 +456,7 @@ INSERT INTO lessons (
         ]
       }
     ]
-  }$lesson_json$,
+  }$lesson_json$::jsonb,
   ARRAY[
     'spanish_buenos_dias', 'spanish_buenas_tardes', 'spanish_buenas_noches', 'spanish_hola', 'spanish_adios',
     'spanish_hasta_luego', 'spanish_hasta_mañana', 'spanish_nos_vemos',
@@ -469,8 +469,8 @@ INSERT INTO lessons (
     'spanish_te_ayudo', 'spanish_quieres', 'spanish_te_gustaria', 'spanish_puedo_ayudarte',
     'spanish_que_tal', 'spanish_por_que_no', 'spanish_te_parece', 'spanish_sugiero',
     'spanish_con_permiso', 'spanish_perdone', 'spanish_por_supuesto', 'spanish_claro'
-  ],
-  ARRAY['social_language', 'polite_expressions', 'functional_language', 'everyday_interactions', 'conversational_phrases']
+  ]::TEXT[],
+  ARRAY['social_language', 'polite_expressions', 'functional_language', 'everyday_interactions', 'conversational_phrases']::TEXT[]
 )
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,

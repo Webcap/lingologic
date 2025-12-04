@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../models/lesson_content.dart';
 import '../../../theme/app_theme.dart';
+import '../../../l10n/app_localizations.dart';
 
 class MatchingExerciseWidget extends StatefulWidget {
   final MatchingExerciseSection section;
@@ -40,7 +41,7 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
       _matches[pair.word] = null;
       _reverseMatches[pair.translation] = null;
     }
-    
+
     if (widget.isAnswered) {
       _showResult = true;
       _isCorrect = widget.isCorrect;
@@ -134,7 +135,9 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
   }
 
   List<String> _getAllTranslations() {
-    final translations = widget.section.pairs.map((p) => p.translation).toList();
+    final translations = widget.section.pairs
+        .map((p) => p.translation)
+        .toList();
     if (widget.section.distractors != null) {
       translations.addAll(widget.section.distractors!);
     }
@@ -144,12 +147,13 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final allTranslations = _getAllTranslations();
-    final allMatched = _matches.values.every((translation) => translation != null);
+    final allMatched = _matches.values.every(
+      (translation) => translation != null,
+    );
     final borderColor = _showResult
-        ? (_isCorrect == true
-            ? AppTheme.successGreen
-            : Colors.red)
+        ? (_isCorrect == true ? AppTheme.successGreen : Colors.red)
         : AppTheme.goldenOrange;
 
     return Container(
@@ -201,11 +205,11 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Match the Words',
+                        l10n.matchTheWords,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppTheme.goldenOrange,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          color: AppTheme.goldenOrange,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       if (_showResult)
                         Padding(
@@ -223,8 +227,11 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                _isCorrect == true ? 'Correct!' : 'Try again',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                _isCorrect == true
+                                    ? l10n.correct
+                                    : l10n.tryAgain,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
                                       color: _isCorrect == true
                                           ? AppTheme.successGreen
                                           : Colors.red,
@@ -247,9 +254,9 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
             child: Text(
               widget.section.instruction,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondary,
-                    height: 1.5,
-                  ),
+                color: AppTheme.textSecondary,
+                height: 1.5,
+              ),
             ),
           ),
 
@@ -267,9 +274,13 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
                   matchedTranslation: matchedTranslation,
                   availableTranslations: allTranslations,
                   isCorrect: _showResult && isCorrectMatch,
-                  isIncorrect: _showResult && matchedTranslation != null && !isCorrectMatch,
+                  isIncorrect:
+                      _showResult &&
+                      matchedTranslation != null &&
+                      !isCorrectMatch,
                   correctTranslation: _showResult ? pair.translation : null,
-                  onSelect: (translation) => _selectMatch(pair.word, translation),
+                  onSelect: (translation) =>
+                      _selectMatch(pair.word, translation),
                   onClear: () => _clearMatch(pair.word),
                   disabled: _showResult,
                 );
@@ -295,44 +306,48 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
                   spacing: 8,
                   runSpacing: 8,
                   children: allTranslations
-                      .where((translation) =>
-                          !_reverseMatches.containsKey(translation) ||
-                          _reverseMatches[translation] == null)
+                      .where(
+                        (translation) =>
+                            !_reverseMatches.containsKey(translation) ||
+                            _reverseMatches[translation] == null,
+                      )
                       .map((translation) {
-                    return GestureDetector(
-                      onTap: () {
-                        // Find an unmatched word to match
-                        final unmatchedWord = widget.section.pairs
-                            .firstWhere(
-                              (p) => _matches[p.word] == null,
-                              orElse: () => widget.section.pairs.first,
-                            )
-                            .word;
-                        _selectMatch(unmatchedWord, translation);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: AppTheme.softCyan,
-                            width: 2,
-                          ),
-                        ),
-                        child: Text(
-                          translation,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.textPrimary,
+                        return GestureDetector(
+                          onTap: () {
+                            // Find an unmatched word to match
+                            final unmatchedWord = widget.section.pairs
+                                .firstWhere(
+                                  (p) => _matches[p.word] == null,
+                                  orElse: () => widget.section.pairs.first,
+                                )
+                                .word;
+                            _selectMatch(unmatchedWord, translation);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppTheme.softCyan,
+                                width: 2,
                               ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                            ),
+                            child: Text(
+                              translation,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                            ),
+                          ),
+                        );
+                      })
+                      .toList(),
                 ),
               ),
             ),
@@ -343,16 +358,13 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
               margin: const EdgeInsets.fromLTRB(24, 0, 24, 20),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: (_isCorrect == true
-                        ? AppTheme.successGreen
-                        : Colors.red)
+                color: (_isCorrect == true ? AppTheme.successGreen : Colors.red)
                     .withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: (_isCorrect == true
-                          ? AppTheme.successGreen
-                          : Colors.red)
-                      .withOpacity(0.3),
+                  color:
+                      (_isCorrect == true ? AppTheme.successGreen : Colors.red)
+                          .withOpacity(0.3),
                   width: 2,
                 ),
               ),
@@ -362,10 +374,11 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: (_isCorrect == true
-                              ? AppTheme.successGreen
-                              : Colors.red)
-                          .withOpacity(0.2),
+                      color:
+                          (_isCorrect == true
+                                  ? AppTheme.successGreen
+                                  : Colors.red)
+                              .withOpacity(0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -383,9 +396,9 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
                     child: Text(
                       widget.section.explanation!,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textPrimary,
-                            height: 1.5,
-                          ),
+                        color: AppTheme.textPrimary,
+                        height: 1.5,
+                      ),
                     ),
                   ),
                 ],
@@ -394,7 +407,10 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
           ],
 
           // Retry button
-          if (_showResult && _isCorrect == false && widget.canRetry && widget.onRetry != null) ...[
+          if (_showResult &&
+              _isCorrect == false &&
+              widget.canRetry &&
+              widget.onRetry != null) ...[
             Container(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
               child: SizedBox(
@@ -402,7 +418,7 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
                 child: OutlinedButton.icon(
                   onPressed: widget.onRetry,
                   icon: const Icon(Icons.refresh_rounded, size: 20),
-                  label: const Text('Retry with Different Question'),
+                  label: Text(l10n.retryWithDifferentQuestion),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.goldenOrange,
                     padding: const EdgeInsets.symmetric(vertical: 18),
@@ -442,9 +458,9 @@ class _MatchingExerciseWidgetState extends State<MatchingExerciseWidget> {
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'Submit Answer',
-                  style: TextStyle(
+                child: Text(
+                  l10n.submitAnswer,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -485,6 +501,7 @@ class _MatchRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -494,7 +511,10 @@ class _MatchRow extends StatelessWidget {
             child: GestureDetector(
               onTap: () => _showWordTranslation(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 20,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -516,7 +536,8 @@ class _MatchRow extends StatelessWidget {
                     Expanded(
                       child: Text(
                         word,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textPrimary,
                             ),
@@ -544,10 +565,10 @@ class _MatchRow extends StatelessWidget {
               shape: BoxShape.circle,
               color: matchedTranslation != null
                   ? (isCorrect
-                      ? AppTheme.successGreen
-                      : isIncorrect
-                          ? Colors.red
-                          : AppTheme.goldenOrange)
+                        ? AppTheme.successGreen
+                        : isIncorrect
+                        ? Colors.red
+                        : AppTheme.goldenOrange)
                   : Colors.grey.shade300,
             ),
             child: matchedTranslation != null
@@ -555,8 +576,8 @@ class _MatchRow extends StatelessWidget {
                     isCorrect
                         ? Icons.check_rounded
                         : isIncorrect
-                            ? Icons.close_rounded
-                            : Icons.link_rounded,
+                        ? Icons.close_rounded
+                        : Icons.link_rounded,
                     color: Colors.white,
                     size: 24,
                   )
@@ -581,28 +602,28 @@ class _MatchRow extends StatelessWidget {
                       }
                     },
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 20,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: matchedTranslation != null
                         ? (isCorrect
-                            ? [
-                                AppTheme.successGreen.withOpacity(0.15),
-                                AppTheme.successGreen.withOpacity(0.1),
-                              ]
-                            : isIncorrect
-                                ? [
-                                    Colors.red.withOpacity(0.15),
-                                    Colors.red.withOpacity(0.1),
-                                  ]
-                                : [
-                                    AppTheme.goldenOrange.withOpacity(0.15),
-                                    AppTheme.goldenOrange.withOpacity(0.1),
-                                  ])
-                        : [
-                            Colors.grey.shade100,
-                            Colors.grey.shade50,
-                          ],
+                              ? [
+                                  AppTheme.successGreen.withOpacity(0.15),
+                                  AppTheme.successGreen.withOpacity(0.1),
+                                ]
+                              : isIncorrect
+                              ? [
+                                  Colors.red.withOpacity(0.15),
+                                  Colors.red.withOpacity(0.1),
+                                ]
+                              : [
+                                  AppTheme.goldenOrange.withOpacity(0.15),
+                                  AppTheme.goldenOrange.withOpacity(0.1),
+                                ])
+                        : [Colors.grey.shade100, Colors.grey.shade50],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -610,27 +631,27 @@ class _MatchRow extends StatelessWidget {
                   border: Border.all(
                     color: matchedTranslation != null
                         ? (isCorrect
-                            ? AppTheme.successGreen
-                            : isIncorrect
-                                ? Colors.red
-                                : AppTheme.goldenOrange)
+                              ? AppTheme.successGreen
+                              : isIncorrect
+                              ? Colors.red
+                              : AppTheme.goldenOrange)
                         : Colors.grey.shade300,
                     width: 2,
                   ),
                 ),
                 child: Text(
-                  matchedTranslation ?? 'Tap to match',
+                  matchedTranslation ?? l10n.tapToMatch,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: matchedTranslation != null
-                            ? FontWeight.w700
-                            : FontWeight.w400,
-                        color: matchedTranslation != null
-                            ? AppTheme.textPrimary
-                            : AppTheme.textSecondary,
-                        fontStyle: matchedTranslation == null
-                            ? FontStyle.italic
-                            : FontStyle.normal,
-                      ),
+                    fontWeight: matchedTranslation != null
+                        ? FontWeight.w700
+                        : FontWeight.w400,
+                    color: matchedTranslation != null
+                        ? AppTheme.textPrimary
+                        : AppTheme.textSecondary,
+                    fontStyle: matchedTranslation == null
+                        ? FontStyle.italic
+                        : FontStyle.normal,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -642,12 +663,11 @@ class _MatchRow extends StatelessWidget {
   }
 
   void _showWordTranslation(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: [
             Container(
@@ -665,11 +685,11 @@ class _MatchRow extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Translation',
+                l10n.translation,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
               ),
             ),
           ],
@@ -696,9 +716,9 @@ class _MatchRow extends StatelessWidget {
               child: Text(
                 word,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -731,9 +751,9 @@ class _MatchRow extends StatelessWidget {
               child: Text(
                 wordTranslation,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -746,11 +766,9 @@ class _MatchRow extends StatelessWidget {
               foregroundColor: AppTheme.primaryMintGreen,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            child: const Text(
-              'Close',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
+            child: Text(
+              l10n.close,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -759,6 +777,7 @@ class _MatchRow extends StatelessWidget {
   }
 
   void _showTranslationSelector(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final unmatchedTranslations = availableTranslations
         .where((t) => t != matchedTranslation)
         .toList();
@@ -777,11 +796,11 @@ class _MatchRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Select translation for "$word"',
+              l10n.selectTranslationFor(word),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                  ),
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary,
+              ),
             ),
             const SizedBox(height: 16),
             Flexible(
@@ -800,8 +819,8 @@ class _MatchRow extends StatelessWidget {
                     title: Text(
                       translation,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     onTap: () {
                       Navigator.pop(context);
@@ -820,7 +839,7 @@ class _MatchRow extends StatelessWidget {
                     Navigator.pop(context);
                     onClear();
                   },
-                  child: const Text('Clear Match'),
+                  child: Text(l10n.clearMatch),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -833,4 +852,3 @@ class _MatchRow extends StatelessWidget {
     );
   }
 }
-

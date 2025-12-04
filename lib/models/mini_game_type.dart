@@ -6,7 +6,9 @@ enum MiniGameType {
   vocabularyReview,
   neuroMatch,
   syntaxConstructor,
-  wordSearch;
+  wordSearch,
+  pictionary,
+  imageToWord;
 
   String get displayName {
     switch (this) {
@@ -18,6 +20,10 @@ enum MiniGameType {
         return 'Syntax Constructor';
       case MiniGameType.wordSearch:
         return 'Word Search';
+      case MiniGameType.pictionary:
+        return 'Pictionary';
+      case MiniGameType.imageToWord:
+        return 'Image to Word';
     }
   }
 
@@ -95,6 +101,40 @@ enum MiniGameType {
           'Syntax Sage',
         ];
         return names[random.nextInt(names.length)];
+        
+      case MiniGameType.pictionary:
+        final names = [
+          'Draw & Learn',
+          'Sketch Master',
+          'Artistic Words',
+          'Draw Quest',
+          'Creative Canvas',
+          'Picture Perfect',
+          'Drawing Dash',
+          'Sketch Sprint',
+          'Art Adventure',
+          'Draw Delight',
+          'Creative Challenge',
+          'Picture Power',
+        ];
+        return names[random.nextInt(names.length)];
+        
+      case MiniGameType.imageToWord:
+        final names = [
+          'Visual Vocab',
+          'Picture Puzzle',
+          'Image Quest',
+          'Visual Match',
+          'Picture Power',
+          'Image Insight',
+          'Visual Victory',
+          'Picture Perfect',
+          'Image Intel',
+          'Visual Venture',
+          'Picture Pro',
+          'Image Impact',
+        ];
+        return names[random.nextInt(names.length)];
     }
   }
 
@@ -108,6 +148,10 @@ enum MiniGameType {
         return 'Build sentences by dragging and dropping words';
       case MiniGameType.wordSearch:
         return 'Find hidden words in a letter grid';
+      case MiniGameType.pictionary:
+        return 'Draw words to reinforce visual memory';
+      case MiniGameType.imageToWord:
+        return 'Type the word shown in the image';
     }
   }
 
@@ -121,6 +165,10 @@ enum MiniGameType {
         return Icons.construction_rounded;
       case MiniGameType.wordSearch:
         return Icons.grid_view_rounded;
+      case MiniGameType.pictionary:
+        return Icons.draw_rounded;
+      case MiniGameType.imageToWord:
+        return Icons.image_rounded;
     }
   }
 }

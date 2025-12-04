@@ -14,6 +14,7 @@ import '../services/language_service.dart';
 import '../models/mini_game_type.dart';
 import '../screens/mini_games/vocabulary_review_mini_game.dart';
 import '../screens/mini_games/word_search_mini_game.dart';
+import '../screens/mini_games/image_to_word_mini_game.dart';
 
 class MainTabsScreen extends StatefulWidget {
   const MainTabsScreen({super.key});
@@ -22,7 +23,8 @@ class MainTabsScreen extends StatefulWidget {
   State<MainTabsScreen> createState() => _MainTabsScreenState();
 }
 
-class _MainTabsScreenState extends State<MainTabsScreen> with SingleTickerProviderStateMixin {
+class _MainTabsScreenState extends State<MainTabsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _currentIndex = 0;
   final GlobalKey<_GamesTabState> _gamesTabKey = GlobalKey<_GamesTabState>();
@@ -57,9 +59,7 @@ class _MainTabsScreenState extends State<MainTabsScreen> with SingleTickerProvid
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.mainGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
         child: TabBarView(
           controller: _tabController,
           children: [
@@ -132,7 +132,7 @@ class _MainTabsScreenState extends State<MainTabsScreen> with SingleTickerProvid
     required VoidCallback onTap,
   }) {
     final isSelected = _currentIndex == index;
-    
+
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -194,14 +194,17 @@ class _GamesTab extends StatefulWidget {
   State<_GamesTab> createState() => _GamesTabState();
 }
 
-class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin {
+class _GamesTabState extends State<_GamesTab>
+    with AutomaticKeepAliveClientMixin {
   final _gameService = GameService();
   final _miniGameService = MiniGameService();
   final _languageService = LanguageService();
   bool _areGamesUnlocked = false;
   bool _isLoading = true;
-  List<({int miniGameNumber, MiniGameType gameType, bool isCompleted})> _unlockedMiniGames = [];
-  Map<String, Map<String, String>> _gameInfoCache = {}; // Cache: gameId -> {name, description}
+  List<({int miniGameNumber, MiniGameType gameType, bool isCompleted})>
+  _unlockedMiniGames = [];
+  Map<String, Map<String, String>> _gameInfoCache =
+      {}; // Cache: gameId -> {name, description}
 
   @override
   bool get wantKeepAlive => true;
@@ -225,14 +228,15 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
     try {
       final unlocked = await _gameService.areGamesUnlocked();
       final miniGames = await _miniGameService.getUnlockedMiniGames();
-      
+
       // Pre-load game info (name and description) from database
       final gameInfoCache = <String, Map<String, String>>{};
       final activeLanguage = await _languageService.getActiveLanguage();
-      
+
       if (activeLanguage != null) {
         for (final miniGame in miniGames) {
-          final gameId = 'minigame_${activeLanguage}_${miniGame.miniGameNumber}';
+          final gameId =
+              'minigame_${activeLanguage}_${miniGame.miniGameNumber}';
           try {
             final gameInfo = await _miniGameService.getGameInfo(
               gameId,
@@ -245,7 +249,7 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
           }
         }
       }
-      
+
       if (mounted) {
         setState(() {
           _areGamesUnlocked = unlocked;
@@ -270,9 +274,7 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Container(
-      decoration: const BoxDecoration(
-        gradient: AppTheme.mainGradient,
-      ),
+      decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
       child: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -301,16 +303,16 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                     Text(
                       AppLocalizations.of(context)!.games,
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
-                          ),
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       AppLocalizations.of(context)!.practiceWithGames,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 32),
                     if (_isLoading)
@@ -327,7 +329,8 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                       if (_unlockedMiniGames.isNotEmpty) ...[
                         Text(
                           'Mini Games',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 color: AppTheme.textPrimary,
                               ),
@@ -347,7 +350,8 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                         const SizedBox(height: 32),
                         Text(
                           'Practice Games',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 color: AppTheme.textPrimary,
                               ),
@@ -357,7 +361,9 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                       _buildGameCard(
                         context: context,
                         title: AppLocalizations.of(context)!.neuroMatch,
-                        description: AppLocalizations.of(context)!.fastPacedWordMatching,
+                        description: AppLocalizations.of(
+                          context,
+                        )!.fastPacedWordMatching,
                         icon: Icons.psychology_rounded,
                         gradient: const LinearGradient(
                           colors: [AppTheme.salmonPink, Color(0xFFFF6B9D)],
@@ -376,7 +382,9 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                       _buildGameCard(
                         context: context,
                         title: AppLocalizations.of(context)!.syntaxConstructor,
-                        description: AppLocalizations.of(context)!.buildSentencesWithDragDrop,
+                        description: AppLocalizations.of(
+                          context,
+                        )!.buildSentencesWithDragDrop,
                         icon: Icons.construction_rounded,
                         gradient: const LinearGradient(
                           colors: [AppTheme.softCyan, Color(0xFF22D3EE)],
@@ -386,7 +394,8 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const SyntaxConstructorGame(),
+                              builder: (context) =>
+                                  const SyntaxConstructorGame(),
                             ),
                           );
                         },
@@ -439,19 +448,19 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
           Text(
             AppLocalizations.of(context)!.gamesLocked,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
-                  fontSize: 24,
-                ),
+              fontWeight: FontWeight.w800,
+              color: AppTheme.textPrimary,
+              fontSize: 24,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
             AppLocalizations.of(context)!.completeFirstLessonToUnlock,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
-                  fontSize: 15,
-                  height: 1.5,
-                ),
+              color: AppTheme.textSecondary,
+              fontSize: 15,
+              height: 1.5,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -491,7 +500,10 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                 },
                 borderRadius: BorderRadius.circular(20),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -623,26 +635,29 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
     required bool isCompleted,
   }) {
     final difficulty = MiniGameDifficulty.fromMiniGameNumber(miniGameNumber);
-    
+
     // Try to get game info from cache, otherwise use fallbacks
     String gameName;
     String gameDescription;
-    
+
     // Find the game ID from cache
     final gameId = _gameInfoCache.keys.firstWhere(
       (id) => id.contains('_$miniGameNumber'),
       orElse: () => '',
     );
-    
+
     if (gameId.isNotEmpty && _gameInfoCache.containsKey(gameId)) {
-      gameName = _gameInfoCache[gameId]!['name'] ?? gameType.getFunName(miniGameNumber);
-      gameDescription = _gameInfoCache[gameId]!['description'] ?? gameType.description;
+      gameName =
+          _gameInfoCache[gameId]!['name'] ??
+          gameType.getFunName(miniGameNumber);
+      gameDescription =
+          _gameInfoCache[gameId]!['description'] ?? gameType.description;
     } else {
       // Use fallback values
       gameName = gameType.getFunName(miniGameNumber);
       gameDescription = gameType.description;
     }
-    
+
     Gradient gradient;
     switch (gameType) {
       case MiniGameType.vocabularyReview:
@@ -663,6 +678,16 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
       case MiniGameType.syntaxConstructor:
         gradient = LinearGradient(
           colors: [AppTheme.softCyan, Color(0xFF22D3EE)],
+        );
+        break;
+      case MiniGameType.imageToWord:
+        gradient = LinearGradient(
+          colors: [AppTheme.electricLavender, Color(0xFFB794F6)],
+        );
+        break;
+      case MiniGameType.pictionary:
+        gradient = LinearGradient(
+          colors: [AppTheme.electricLavender, Color(0xFFB794F6)],
         );
         break;
     }
@@ -688,7 +713,8 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _launchMiniGame(context, miniGameNumber, gameType, difficulty),
+          onTap: () =>
+              _launchMiniGame(context, miniGameNumber, gameType, difficulty),
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -708,11 +734,7 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                       ),
                     ],
                   ),
-                  child: Icon(
-                    gameType.icon,
-                    size: 32,
-                    color: Colors.white,
-                  ),
+                  child: Icon(gameType.icon, size: 32, color: Colors.white),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -844,10 +866,17 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
             difficulty: difficulty,
           );
           break;
+        case MiniGameType.imageToWord:
+          gameWidget = ImageToWordMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
         case MiniGameType.vocabularyReview:
         case MiniGameType.neuroMatch:
         case MiniGameType.syntaxConstructor:
-          // Default to vocabulary review for other types
+        case MiniGameType.pictionary:
+          // Default to vocabulary review for other types (pictionary is disabled)
           gameWidget = VocabularyReviewMiniGame(
             miniGameNumber: miniGameNumber,
             words: words,
@@ -855,11 +884,9 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
           break;
       }
 
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => gameWidget,
-        ),
-      );
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => gameWidget));
 
       // Reload mini games after completing
       if (mounted) {
@@ -869,9 +896,7 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.errorLaunchingMiniGame,
-            ),
+            content: Text(AppLocalizations.of(context)!.errorLaunchingMiniGame),
             backgroundColor: Colors.red,
           ),
         );
@@ -879,4 +904,3 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
     }
   }
 }
-

@@ -14,6 +14,7 @@ import '../../l10n/app_localizations.dart';
 import 'widgets/mini_game_card.dart';
 import '../mini_games/vocabulary_review_mini_game.dart';
 import '../mini_games/word_search_mini_game.dart';
+import '../mini_games/image_to_word_mini_game.dart';
 import '../../models/mini_game_type.dart';
 import '../level_tests/level_knowledge_test_screen.dart';
 import 'widgets/knowledge_test_card.dart';
@@ -317,9 +318,22 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
       grouped.putIfAbsent(level, () => []).add(lesson);
     }
 
-    // Sort lessons within each level by orderIndex
+    // Sort lessons within each level: incomplete first (by orderIndex), then completed (by orderIndex)
     for (final level in grouped.keys) {
-      grouped[level]!.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+      grouped[level]!.sort((a, b) {
+        final progressA = _getProgress(a.id);
+        final progressB = _getProgress(b.id);
+        final isCompletedA = progressA?.isCompleted ?? false;
+        final isCompletedB = progressB?.isCompleted ?? false;
+        
+        // If one is completed and the other isn't, incomplete comes first
+        if (isCompletedA != isCompletedB) {
+          return isCompletedA ? 1 : -1; // Completed goes to the end
+        }
+        
+        // If both have same completion status, sort by orderIndex
+        return a.orderIndex.compareTo(b.orderIndex);
+      });
     }
 
     return grouped;
@@ -344,9 +358,12 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
     final accessibleLevels = cefrOrder.sublist(0, currentLevelIndex + 1);
 
     // Filter to only include levels that have lessons in _lessonsByLevel
-    return accessibleLevels
+    final filteredLevels = accessibleLevels
         .where((level) => _lessonsByLevel.containsKey(level))
         .toList();
+    
+    // Reverse the order so current level appears first, then previous levels
+    return filteredLevels.reversed.toList();
   }
 
   List<String> get _categories {
@@ -785,10 +802,17 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
             difficulty: difficulty,
           );
           break;
+        case MiniGameType.imageToWord:
+          gameWidget = ImageToWordMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
         case MiniGameType.vocabularyReview:
         case MiniGameType.neuroMatch:
         case MiniGameType.syntaxConstructor:
-          // Default to vocabulary review for other types
+        case MiniGameType.pictionary:
+          // Default to vocabulary review for other types (pictionary is disabled)
           gameWidget = VocabularyReviewMiniGame(
             miniGameNumber: miniGameNumber,
             words: words,

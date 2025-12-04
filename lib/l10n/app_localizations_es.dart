@@ -546,4 +546,174 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get pronunciationSkippedMessage =>
       'Los ejercicios de pronunciación están omitidos actualmente. Puedes continuar con el resto de la lección.';
+
+  @override
+  String get noActiveLanguageSelected => 'No hay idioma activo seleccionado';
+
+  @override
+  String get noLessonsFoundForLevel =>
+      'No se encontraron lecciones para este nivel';
+
+  @override
+  String get noVocabularyFoundForLevel =>
+      'No se encontró vocabulario para este nivel';
+
+  @override
+  String get notEnoughVocabularyForTest =>
+      'No hay suficiente vocabulario para la prueba. Completa más lecciones primero.';
+
+  @override
+  String get noQuestionsAvailable => 'No hay preguntas disponibles';
+
+  @override
+  String get errorLoadingTest => 'Error al cargar la prueba';
+
+  @override
+  String get errorSavingTestResult =>
+      'Error al guardar el resultado de la prueba';
+
+  @override
+  String get congratulations => '¡Felicidades!';
+
+  @override
+  String get testComplete => 'Prueba Completa';
+
+  @override
+  String youPassedLevelKnowledgeTest(String level) {
+    return '¡Pasaste la prueba de conocimiento de $level!';
+  }
+
+  @override
+  String testScoreMessage(int percentage) {
+    return 'Obtuviste $percentage%. Necesitas 70% para aprobar.';
+  }
+
+  @override
+  String score(int correct, int total) {
+    return 'Puntuación: $correct / $total';
+  }
+
+  @override
+  String youCanNowAccessLevelLessons(String level) {
+    return '¡Ahora puedes acceder a las lecciones de $level!';
+  }
+
+  @override
+  String levelKnowledgeTest(String level) {
+    return 'Prueba de Conocimiento de $level';
+  }
+
+  @override
+  String questionXOfY(int current, int total) {
+    return 'Pregunta $current de $total';
+  }
+
+  @override
+  String get whatIsTranslationOf => '¿Cuál es la traducción de:';
+
+  @override
+  String get nextLevel => 'siguiente nivel';
+
+  @override
+  String get practiceSection => 'Practicar';
+
+  @override
+  String get correct => '¡Correcto!';
+
+  @override
+  String get tryAgain => 'Inténtalo de nuevo';
+
+  @override
+  String get tryAgainButton => 'Intentar de Nuevo';
+
+  @override
+  String get tryDifferentQuestion => 'Prueba con una pregunta diferente';
+
+  @override
+  String get retryWithDifferentQuestion => 'Reintentar con Pregunta Diferente';
+
+  @override
+  String get submitAnswer => 'Enviar Respuesta';
+
+  @override
+  String get matchTheWords => 'Emparejar las Palabras';
+
+  @override
+  String get tapToMatch => 'Toca para emparejar';
+
+  @override
+  String get translation => 'Traducción';
+
+  @override
+  String selectTranslationFor(String word) {
+    return 'Selecciona la traducción para \"$word\"';
+  }
+
+  @override
+  String get clearMatch => 'Limpiar Emparejamiento';
+
+  @override
+  String get microphonePermissionRequired =>
+      'Se requiere permiso de micrófono para practicar pronunciación.';
+
+  @override
+  String get microphonePermission => 'Permiso de Micrófono';
+
+  @override
+  String get microphonePermissionExplanation =>
+      'Para practicar pronunciación, necesitamos acceso a tu micrófono para grabar y verificar tu pronunciación.\n\nAparecerá un diálogo del sistema pidiendo permiso.';
+
+  @override
+  String get notNow => 'Ahora No';
+
+  @override
+  String get pleaseEnableInSettings =>
+      'Por favor, actívalo en la configuración de tu dispositivo.';
+
+  @override
+  String get speechRecognitionNotAvailable =>
+      'El reconocimiento de voz no está disponible en este dispositivo.';
+
+  @override
+  String get pronunciationPractice => 'Práctica de Pronunciación';
+
+  @override
+  String get greatPronunciation => '¡Excelente pronunciación!';
+
+  @override
+  String get nextWord => 'Siguiente Palabra';
+
+  @override
+  String get enableMicrophonePermission => 'Activar Permiso de Micrófono';
+
+  @override
+  String get permissionRequired => 'Permiso Requerido';
+
+  @override
+  String get openSettings => 'Abrir Configuración';
+
+  @override
+  String wordXOfY(int current, int total) {
+    return 'Palabra $current de $total';
+  }
+
+  @override
+  String get listenToPronunciation => 'Escuchar Pronunciación';
+
+  @override
+  String get listening => 'Escuchando...';
+
+  @override
+  String get initializing => 'Inicializando...';
+
+  @override
+  String get recordYourPronunciation => 'Grabar Tu Pronunciación';
+
+  @override
+  String get youSaid => 'Dijiste:';
+
+  @override
+  String confidence(int percentage) {
+    return 'Confianza: $percentage%';
+  }
 }

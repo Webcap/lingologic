@@ -179,6 +179,7 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final borderColor = _showResult
         ? (_isCorrect == true
             ? AppTheme.successGreen
@@ -234,7 +235,7 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Practice',
+                        l10n.practiceSection,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               color: AppTheme.goldenOrange,
                               fontWeight: FontWeight.w700,
@@ -256,7 +257,7 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                _isCorrect == true ? 'Correct!' : 'Try again',
+                                _isCorrect == true ? l10n.correct : l10n.tryAgain,
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: _isCorrect == true
                                           ? AppTheme.successGreen
@@ -572,7 +573,7 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Try a different question',
+                          l10n.tryDifferentQuestion,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: AppTheme.goldenOrange,
                                 fontWeight: FontWeight.w600,
@@ -587,7 +588,7 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
                     child: OutlinedButton.icon(
                       onPressed: widget.onRetry,
                       icon: const Icon(Icons.refresh_rounded, size: 20),
-                      label: const Text('Retry with Different Question'),
+                      label: Text(l10n.retryWithDifferentQuestion),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.goldenOrange,
                         padding: const EdgeInsets.symmetric(vertical: 18),
@@ -629,9 +630,9 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'Submit Answer',
-                  style: TextStyle(
+                child: Text(
+                  l10n.submitAnswer,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
