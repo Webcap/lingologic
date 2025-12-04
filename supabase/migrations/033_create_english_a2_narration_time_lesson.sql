@@ -229,3 +229,4 @@ ON CONFLICT (id) DO UPDATE SET
 
 COMMENT ON TABLE words IS 'Vocabulary words unlocked by this lesson include time expressions, narrative connectors, and past tense verbs';
 
+

@@ -10,7 +10,7 @@ import 'services/asset_preloader.dart';
 import 'services/app_language_service.dart';
 import 'theme/app_theme.dart';
 import 'widgets/offline_indicator.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:lingologic/l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -134,12 +134,8 @@ class _LingoLogicAppState extends State<LingoLogicApp> {
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
       locale: _locale,
-      supportedLocales: AppLanguageService.supportedLanguages.map((lang) => lang.locale),
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       builder: (context, child) {
         try {
           // Only wrap with gradient and offline indicator if services are ready

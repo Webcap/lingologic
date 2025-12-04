@@ -5,6 +5,7 @@ import '../services/sync_service.dart';
 import '../services/app_language_service.dart';
 import '../utils/error_handler.dart';
 import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -80,19 +81,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: const Icon(Icons.logout_rounded, color: Colors.white, size: 24),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Sign Out',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                AppLocalizations.of(context)!.signOut,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
             ),
           ],
         ),
-        content: const Text('Are you sure you want to sign out?'),
+        content: Text(AppLocalizations.of(context)!.areYouSureSignOut),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -103,7 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Sign Out'),
+            child: Text(AppLocalizations.of(context)!.signOut),
           ),
         ],
       ),
@@ -165,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Settings',
+                        AppLocalizations.of(context)!.settings,
                         style: Theme.of(context).textTheme.displaySmall?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: AppTheme.textPrimary,
@@ -173,7 +174,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Manage your preferences',
+                        AppLocalizations.of(context)!.managePreferences,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: AppTheme.textSecondary,
                             ),
@@ -278,7 +279,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Account',
+                AppLocalizations.of(context)!.account,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -318,7 +319,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _authService.currentUser?.email ?? 'Guest User',
+                      _authService.currentUser?.email ?? AppLocalizations.of(context)!.guestUser,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -336,8 +337,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       child: Text(
                         _authService.isAnonymous
-                            ? 'Anonymous Account'
-                            : 'Registered Account',
+                            ? AppLocalizations.of(context)!.anonymousAccount
+                            : AppLocalizations.of(context)!.registeredAccount,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -385,7 +386,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'App Language',
+                AppLocalizations.of(context)!.appLanguage,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -418,9 +419,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Language',
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.of(context)!.language,
+                          style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: AppTheme.textPrimary,
@@ -472,10 +473,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: const Icon(Icons.language_rounded, color: Colors.white, size: 24),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Select Language',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                AppLocalizations.of(context)!.selectLanguage,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -544,7 +545,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Language changed successfully!'),
+              content: Text(AppLocalizations.of(context)!.languageChangedSuccessfully),
               backgroundColor: AppTheme.softCyan,
               duration: const Duration(seconds: 2),
             ),
@@ -586,7 +587,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Audio Settings',
+                AppLocalizations.of(context)!.audioSettings,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -610,9 +611,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     size: 24,
                   ),
                   const SizedBox(width: 12),
-                  const Text(
-                    'Volume',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.volume,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimary,
@@ -695,7 +696,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Notifications',
+                AppLocalizations.of(context)!.notifications,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -707,9 +708,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Enable Notifications',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.enableNotifications,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textPrimary,
@@ -760,7 +761,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Sync Status',
+                AppLocalizations.of(context)!.syncStatus,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -799,7 +800,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _isOffline ? 'Offline' : 'Online',
+                        _isOffline 
+                            ? AppLocalizations.of(context)!.offline 
+                            : AppLocalizations.of(context)!.online,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -809,8 +812,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 2),
                       Text(
                         _isOffline
-                            ? 'Data will sync when online'
-                            : 'All data synced',
+                            ? AppLocalizations.of(context)!.dataWillSyncWhenOnline
+                            : AppLocalizations.of(context)!.allDataSynced,
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppTheme.textSecondary,
@@ -836,7 +839,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           )
                         : const Icon(Icons.sync_rounded, size: 18),
                     label: Text(
-                      _isSyncing ? 'Syncing...' : 'Sync Now',
+                      _isSyncing 
+                          ? AppLocalizations.of(context)!.syncing 
+                          : AppLocalizations.of(context)!.syncNow,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -887,7 +892,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'About',
+                AppLocalizations.of(context)!.about,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -898,14 +903,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 20),
           _buildAboutItem(
             icon: Icons.description_rounded,
-            title: 'Version',
+            title: AppLocalizations.of(context)!.version,
             value: '1.0.0',
           ),
           const SizedBox(height: 16),
           _buildAboutItem(
             icon: Icons.privacy_tip_rounded,
-            title: 'Privacy Policy',
-            value: 'View',
+            title: AppLocalizations.of(context)!.privacyPolicy,
+            value: AppLocalizations.of(context)!.view,
             onTap: () {
               // TODO: Navigate to privacy policy
             },
@@ -913,8 +918,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
           _buildAboutItem(
             icon: Icons.description_rounded,
-            title: 'Terms of Service',
-            value: 'View',
+            title: AppLocalizations.of(context)!.termsOfService,
+            value: AppLocalizations.of(context)!.view,
             onTap: () {
               // TODO: Navigate to terms
             },
@@ -1006,9 +1011,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             size: 24,
           ),
         ),
-        title: const Text(
-          'Sign Out',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.signOut,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
             color: AppTheme.salmonPink,

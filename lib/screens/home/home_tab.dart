@@ -8,6 +8,7 @@ import '../../models/lesson.dart';
 import '../../theme/app_theme.dart';
 import '../../config/supported_languages.dart';
 import '../../widgets/language_selector.dart';
+import '../../l10n/app_localizations.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -130,29 +131,31 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
-  String _getGreeting() {
+  String _getGreeting(BuildContext context) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    final l10n = AppLocalizations.of(context)!;
+    if (hour < 12) return l10n.goodMorning;
+    if (hour < 17) return l10n.goodAfternoon;
+    return l10n.goodEvening;
   }
 
-  String _getLevelDescription(String level) {
+  String _getLevelDescription(BuildContext context, String level) {
+    final l10n = AppLocalizations.of(context)!;
     switch (level) {
       case 'A1':
-        return 'Beginner';
+        return l10n.beginner;
       case 'A2':
-        return 'Elementary';
+        return l10n.elementary;
       case 'B1':
-        return 'Intermediate';
+        return l10n.intermediate;
       case 'B2':
-        return 'Upper Intermediate';
+        return l10n.upperIntermediate;
       case 'C1':
-        return 'Advanced';
+        return l10n.advanced;
       case 'C2':
-        return 'Proficient';
+        return l10n.proficient;
       default:
-        return 'Learning';
+        return l10n.learning;
     }
   }
 
@@ -231,7 +234,7 @@ class _HomeTabState extends State<HomeTab> {
                   children: [
                     // Greeting
                     Text(
-                      _getGreeting(),
+                      _getGreeting(context),
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             color: AppTheme.textSecondary,
                             fontWeight: FontWeight.w500,
@@ -242,7 +245,7 @@ class _HomeTabState extends State<HomeTab> {
                       children: [
                         Expanded(
                           child: Text(
-                            'Ready to learn?',
+                            AppLocalizations.of(context)!.readyToLearn,
                             style: Theme.of(context).textTheme.displaySmall?.copyWith(
                                   fontWeight: FontWeight.w800,
                                   color: AppTheme.textPrimary,
@@ -285,24 +288,24 @@ class _HomeTabState extends State<HomeTab> {
 
                     // Current Level Card
                     if (_currentLevel != null) ...[
-                      _buildCurrentLevelCard(),
+                      _buildCurrentLevelCard(context),
                       const SizedBox(height: 24),
                     ],
 
                     // Streak Card
                     if (_streakDays > 0) ...[
-                      _buildStreakCard(),
+                      _buildStreakCard(context),
                       const SizedBox(height: 24),
                     ],
 
                     // Next Lesson Card
                     if (_nextLesson != null) ...[
-                      _buildNextLessonCard(),
+                      _buildNextLessonCard(context),
                       const SizedBox(height: 24),
                     ],
 
                     // Progress Overview
-                    _buildProgressOverview(),
+                    _buildProgressOverview(context),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -314,9 +317,9 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildCurrentLevelCard() {
+  Widget _buildCurrentLevelCard(BuildContext context) {
     final levelColor = _getLevelColor(_currentLevel!);
-    final levelDesc = _getLevelDescription(_currentLevel!);
+    final levelDesc = _getLevelDescription(context, _currentLevel!);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -373,7 +376,7 @@ class _HomeTabState extends State<HomeTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Current Level',
+                  AppLocalizations.of(context)!.currentLevel,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppTheme.textSecondary,
                         fontWeight: FontWeight.w600,
@@ -395,7 +398,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildStreakCard() {
+  Widget _buildStreakCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -445,9 +448,9 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Day Streak',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.dayStreak,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
@@ -466,14 +469,14 @@ class _HomeTabState extends State<HomeTab> {
               children: [
                 const Icon(Icons.timer_outlined, size: 16, color: Colors.white),
                 const SizedBox(width: 6),
-                Text(
-                  '${_totalTimeMinutes}m',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
+                          Text(
+                            '$_totalTimeMinutes${AppLocalizations.of(context)!.min}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
               ],
             ),
           ),
@@ -482,7 +485,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildNextLessonCard() {
+  Widget _buildNextLessonCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.cardWhite,
@@ -536,7 +539,7 @@ class _HomeTabState extends State<HomeTab> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Next Lesson',
+                            AppLocalizations.of(context)!.nextLesson,
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: AppTheme.textSecondary,
                                   fontWeight: FontWeight.w600,
@@ -604,7 +607,7 @@ class _HomeTabState extends State<HomeTab> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${_nextLesson!.estimatedMinutes} min',
+                            '${_nextLesson!.estimatedMinutes} ${AppLocalizations.of(context)!.min}',
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 12,
@@ -626,9 +629,9 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        'Start',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context)!.start,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
@@ -645,7 +648,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildProgressOverview() {
+  Widget _buildProgressOverview(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -678,7 +681,7 @@ class _HomeTabState extends State<HomeTab> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Progress Overview',
+                AppLocalizations.of(context)!.progressOverview,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -691,27 +694,30 @@ class _HomeTabState extends State<HomeTab> {
             children: [
               Expanded(
                 child: _buildProgressStat(
+                  context: context,
                   icon: Icons.check_circle_rounded,
                   value: '$_lessonsCompleted',
-                  label: 'Completed',
+                  labelKey: 'completed',
                   color: AppTheme.successGreen,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildProgressStat(
+                  context: context,
                   icon: Icons.book_rounded,
                   value: '$_lessonsInProgress',
-                  label: 'In Progress',
+                  labelKey: 'inProgress',
                   color: AppTheme.goldenOrange,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildProgressStat(
+                  context: context,
                   icon: Icons.timer_rounded,
                   value: '${(_totalTimeMinutes / 60).toStringAsFixed(1)}h',
-                  label: 'Total Time',
+                  labelKey: 'totalTime',
                   color: AppTheme.softCyan,
                 ),
               ),
@@ -723,11 +729,28 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildProgressStat({
+    required BuildContext context,
     required IconData icon,
     required String value,
-    required String label,
+    required String labelKey,
     required Color color,
   }) {
+    final l10n = AppLocalizations.of(context)!;
+    String label;
+    switch (labelKey) {
+      case 'completed':
+        label = l10n.completed;
+        break;
+      case 'inProgress':
+        label = l10n.inProgress;
+        break;
+      case 'totalTime':
+        label = l10n.totalTime;
+        break;
+      default:
+        label = '';
+    }
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

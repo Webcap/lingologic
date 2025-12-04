@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../models/lesson_content.dart';
 import '../../../theme/app_theme.dart';
+import '../../../l10n/app_localizations.dart';
 
 class ExerciseSectionWidget extends StatefulWidget {
   final ExerciseSection section;
@@ -30,6 +31,7 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
   int? _selectedIndex;
   bool _showResult = false;
   bool? _isCorrect;
+  bool _showHint = false;
 
   @override
   void initState() {
@@ -66,6 +68,10 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
           break;
         }
       }
+      // Show hint automatically if answer is incorrect (to help them learn)
+      if (widget.isCorrect == false && widget.section.hint != null) {
+        _showHint = true;
+      }
     }
     // Reset if section changes (for retry)
     if (widget.section.id != oldWidget.section.id) {
@@ -75,6 +81,7 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
       _selectedIndex = null;
       _showResult = false;
       _isCorrect = null;
+      _showHint = false;
     }
   }
 
@@ -178,13 +185,100 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
           // Question
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-            child: Text(
-              widget.section.question,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
-                    height: 1.4,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.section.question,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                        height: 1.4,
+                      ),
+                ),
+                // Hint button (show before answer is submitted)
+                if (widget.section.hint != null && !_showResult) ...[
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _showHint = !_showHint;
+                      });
+                    },
+                    icon: Icon(
+                      _showHint ? Icons.visibility_off_rounded : Icons.lightbulb_outline_rounded,
+                      size: 18,
+                    ),
+                    label: Text(
+                      _showHint
+                          ? AppLocalizations.of(context)!.close
+                          : AppLocalizations.of(context)!.showHint,
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.electricLavender,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      side: BorderSide(
+                        color: AppTheme.electricLavender,
+                        width: 1.5,
+                      ),
+                    ),
                   ),
+                ],
+                // Hint display
+                if (_showHint && widget.section.hint != null && !_showResult) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.electricLavender.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppTheme.electricLavender.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.lightbulb_rounded,
+                          color: AppTheme.electricLavender,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                AppLocalizations.of(context)!.hint,
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                      color: AppTheme.electricLavender,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                widget.section.hint!,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: AppTheme.textPrimary,
+                                      height: 1.5,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           
@@ -309,6 +403,55 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
             ),
           ),
           
+          // Hint shown after wrong answer (to help them learn)
+          if (_showResult && _isCorrect == false && widget.section.hint != null) ...[
+            Container(
+              margin: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.electricLavender.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppTheme.electricLavender.withOpacity(0.3),
+                  width: 2,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.lightbulb_rounded,
+                    color: AppTheme.electricLavender,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.hint,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                color: AppTheme.electricLavender,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          widget.section.hint!,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.textPrimary,
+                                height: 1.5,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           // Explanation
           if (_showResult && widget.section.explanation != null) ...[
             Container(
@@ -436,6 +579,10 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
                   setState(() {
                     _showResult = true;
                     _isCorrect = isCorrect;
+                    // Show hint automatically if answer is wrong (to help them learn)
+                    if (!isCorrect && widget.section.hint != null) {
+                      _showHint = true;
+                    }
                   });
                   widget.onAnswerSubmitted?.call(isCorrect);
                 },

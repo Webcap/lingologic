@@ -161,7 +161,28 @@ class LessonService {
     // Get lessons for the active language
     final activeLanguage = await _languageService.getActiveLanguage();
     final lessons = await _repository.getLessons(language: activeLanguage);
-    lessons.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    
+    // CEFR level order for sorting
+    const cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+    
+    // Sort lessons by level first (CEFR order), then by orderIndex within each level
+    lessons.sort((a, b) {
+      // Get level indices (handle null/unknown levels)
+      final aLevelIndex = a.level != null ? cefrOrder.indexOf(a.level!) : -1;
+      final bLevelIndex = b.level != null ? cefrOrder.indexOf(b.level!) : -1;
+      
+      // If levels are the same or both null/unknown, sort by orderIndex
+      if (aLevelIndex == bLevelIndex) {
+        return a.orderIndex.compareTo(b.orderIndex);
+      }
+      
+      // If one has a valid level and the other doesn't, prioritize the one with level
+      if (aLevelIndex == -1) return 1;
+      if (bLevelIndex == -1) return -1;
+      
+      // Sort by CEFR level order
+      return aLevelIndex.compareTo(bLevelIndex);
+    });
 
     // Find first lesson that's not completed
     for (final lesson in lessons) {
@@ -197,6 +218,11 @@ class LessonService {
     // For now, we'll check if the word is in any unlocked list
     final unlockedWordIds = await getUnlockedWordIds(userId);
     return unlockedWordIds.contains(wordId);
+  }
+
+  /// Reset a lesson (delete progress and start from beginning)
+  Future<void> resetLesson(String userId, String lessonId) async {
+    await _repository.deleteLessonProgress(userId, lessonId);
   }
 }
 

@@ -71,6 +71,13 @@ class LevelProgressionService {
       if (response == null) return null;
       return LevelProgressionTest.fromJson(response);
     } catch (e) {
+      // Table doesn't exist yet - this is expected if the feature isn't fully set up
+      // Silently return null instead of logging error to avoid noise
+      if (e.toString().contains('Could not find the table') ||
+          e.toString().contains('PGRST205')) {
+        debugPrint('Level progression tests table not available');
+        return null;
+      }
       debugPrint('Error getting level test: $e');
       return null;
     }
@@ -101,6 +108,13 @@ class LevelProgressionService {
         'completed_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
+      // Table doesn't exist yet - this is expected if the feature isn't fully set up
+      if (e.toString().contains('Could not find the table') ||
+          e.toString().contains('PGRST205')) {
+        debugPrint('Level progression tests table not available - test result not saved');
+        // Don't throw error - allow app to continue working
+        return;
+      }
       debugPrint('Error saving test result: $e');
       rethrow;
     }

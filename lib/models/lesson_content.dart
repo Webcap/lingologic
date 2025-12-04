@@ -96,12 +96,14 @@ class ExerciseSection extends LessonSection {
   final String question;
   final List<ExerciseOption> options;
   final String? explanation;
+  final String? hint;
 
   ExerciseSection({
     required String id,
     required this.question,
     required this.options,
     this.explanation,
+    this.hint,
   }) : super(type: 'exercise', id: id);
 
   factory ExerciseSection.fromJson(Map<String, dynamic> json) {
@@ -112,6 +114,7 @@ class ExerciseSection extends LessonSection {
           .map((opt) => ExerciseOption.fromJson(opt as Map<String, dynamic>))
           .toList(),
       explanation: json['explanation'] as String?,
+      hint: json['hint'] as String?,
     );
   }
 
@@ -122,7 +125,8 @@ class ExerciseSection extends LessonSection {
       'id': id,
       'question': question,
       'options': options.map((opt) => opt.toJson()).toList(),
-      'explanation': explanation,
+      if (explanation != null) 'explanation': explanation,
+      if (hint != null) 'hint': hint,
     };
   }
 

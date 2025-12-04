@@ -7,11 +7,13 @@ import 'example_section_widget.dart';
 class LessonContentWidget extends StatelessWidget {
   final LessonContent content;
   final ValueChanged<int>? onExerciseCompleted;
+  final String languageCode;
 
   const LessonContentWidget({
     super.key,
     required this.content,
     this.onExerciseCompleted,
+    this.languageCode = 'es', // Default to Spanish if not provided
   });
 
   @override
@@ -23,7 +25,10 @@ class LessonContentWidget extends StatelessWidget {
         if (section is TextSection) {
           return TextSectionWidget(section: section);
         } else if (section is ExampleSection) {
-          return ExampleSectionWidget(section: section);
+          return ExampleSectionWidget(
+            section: section,
+            languageCode: languageCode,
+          );
         } else if (section is ExerciseSection) {
           final currentIndex = exerciseIndex++;
           return ExerciseSectionWidget(
@@ -38,4 +43,3 @@ class LessonContentWidget extends StatelessWidget {
     );
   }
 }
-

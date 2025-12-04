@@ -9,7 +9,7 @@ class GameService {
   final LanguageService _languageService = LanguageService();
 
   /// Check if games are unlocked by verifying if the first lesson is completed
-  /// Games unlock when the user completes the first lesson (order_index = 1, the first section)
+  /// Games unlock when the user completes the first lesson (sorted by CEFR level first, then orderIndex)
   Future<bool> areGamesUnlocked() async {
     final user = _authService.currentUser;
     if (user == null) {
@@ -45,14 +45,32 @@ class GameService {
       
       debugPrint('GameService: User has ${completedLessonIds.length} completed lessons: $completedLessonIds');
 
-      // Find the first lesson (order_index = 1) - this is the "first section"
-      lessons.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
-      final firstLesson = lessons.firstWhere(
-        (l) => l.orderIndex == 1,
-        orElse: () => lessons.first, // Fallback to lowest order_index
-      );
+      // CEFR level order for sorting
+      const cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+      
+      // Sort lessons by level first (CEFR order), then by orderIndex within each level
+      lessons.sort((a, b) {
+        // Get level indices (handle null/unknown levels)
+        final aLevelIndex = a.level != null ? cefrOrder.indexOf(a.level!) : -1;
+        final bLevelIndex = b.level != null ? cefrOrder.indexOf(b.level!) : -1;
+        
+        // If levels are the same or both null/unknown, sort by orderIndex
+        if (aLevelIndex == bLevelIndex) {
+          return a.orderIndex.compareTo(b.orderIndex);
+        }
+        
+        // If one has a valid level and the other doesn't, prioritize the one with level
+        if (aLevelIndex == -1) return 1;
+        if (bLevelIndex == -1) return -1;
+        
+        // Sort by CEFR level order
+        return aLevelIndex.compareTo(bLevelIndex);
+      });
+      
+      // Find the first lesson (first A1 lesson, or first lesson at lowest level)
+      final firstLesson = lessons.first;
 
-      debugPrint('GameService: First lesson is ${firstLesson.id} with order_index ${firstLesson.orderIndex}');
+      debugPrint('GameService: First lesson is ${firstLesson.id} with level ${firstLesson.level} and order_index ${firstLesson.orderIndex}');
 
       // Check if the first lesson is completed
       final progress = await _lessonService.getUserLessonProgress(

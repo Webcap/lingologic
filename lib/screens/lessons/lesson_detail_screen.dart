@@ -3,6 +3,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/lesson.dart';
 import '../../models/lesson_progress.dart';
 import '../../models/lesson_content.dart';
@@ -12,6 +13,7 @@ import '../../services/user_service.dart';
 import '../../services/language_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
+import '../../l10n/app_localizations.dart';
 import 'widgets/text_section_widget.dart';
 import 'widgets/exercise_section_widget.dart';
 import 'widgets/example_section_widget.dart';
@@ -38,26 +40,24 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   LessonProgress? _progress;
   bool _isLoading = true;
   int _currentSlideIndex = 0;
-  final Map<int, bool> _completedExercises = {};
-  final Map<int, bool?> _exerciseAnswers =
-      {}; // null = not answered, true = correct, false = incorrect
-  final Map<int, ExerciseSection> _alternativeExercises =
-      {}; // Track alternative exercises for retry
-  final Map<int, List<String>> _usedExerciseIds =
-      {}; // Track which exercise IDs have been used for each position
-  final Map<int, String> _originalExerciseIds =
-      {}; // Track original exercise ID for each slide position
-  final List<ExerciseSection> _retryExerciseQueue =
-      []; // Queue for exercises answered incorrectly
-  final List<MatchingExerciseSection> _retryMatchingQueue =
-      []; // Queue for matching exercises answered incorrectly
-  final List<PronunciationExerciseSection> _retryPronunciationQueue =
-      []; // Queue for pronunciation exercises answered incorrectly
-  bool _isInRetryPhase = false; // Track if we're showing retry exercises
+
+  // Unified section list: normal sections + retry exercises appended at end
+  List<LessonSection> _allSections = [];
+  int _normalSectionCount =
+      0; // Track where normal sections end and retry begins
+
+  // Track exercise completion by exercise ID (works for all phases)
+  final Map<String, bool> _completedExerciseIds = {};
+  // Track answers by exercise ID (null = not answered, true = correct, false = incorrect)
+  final Map<String, bool?> _exerciseAnswersById = {};
+
+  // Track which exercises need to be retried (by ID to avoid duplicates)
+  final Set<String> _exercisesToRetry = {};
+  // Track retry attempt counts (how many times they got it wrong in retry phase)
+  final Map<String, int> _retryAttemptCounts = {};
+
   DateTime? _startTime;
   int _timeSpentMinutes = 0;
-  List<LessonSection> _shuffledSections =
-      []; // Store shuffled sections for this lesson session
 
   @override
   void initState() {
@@ -69,6 +69,324 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  // Save current slide position
+  Future<void> _saveSlidePosition(int slideIndex) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(
+        'lesson_${widget.lessonId}_slide_position',
+        slideIndex,
+      );
+    } catch (e) {
+      debugPrint('Error saving slide position: $e');
+    }
+  }
+
+  // Load saved slide position
+  Future<int?> _loadSavedSlidePosition() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getInt('lesson_${widget.lessonId}_slide_position');
+    } catch (e) {
+      debugPrint('Error loading slide position: $e');
+      return null;
+    }
+  }
+
+  // Clear saved slide position
+  Future<void> _clearSavedSlidePosition() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('lesson_${widget.lessonId}_slide_position');
+    } catch (e) {
+      debugPrint('Error clearing slide position: $e');
+    }
+  }
+
+  // Save current progress when exiting
+  Future<void> _saveCurrentProgress() async {
+    if (_lesson == null) return;
+    final user = _authService.currentUser;
+    if (user == null) return;
+
+    try {
+      final totalSlides = _getTotalSlides();
+      final progressPercentage = totalSlides > 0
+          ? ((_currentSlideIndex + 1) / totalSlides * 100).round()
+          : 0;
+
+      // Calculate time spent
+      if (_startTime != null) {
+        _timeSpentMinutes = DateTime.now().difference(_startTime!).inMinutes;
+      }
+
+      await _lessonService.updateLessonProgress(
+        user.id,
+        widget.lessonId,
+        progressPercentage,
+      );
+    } catch (e) {
+      debugPrint('Error saving progress: $e');
+    }
+  }
+
+  // Show exit dialog with reset/save options
+  Future<void> _showExitDialog() async {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.6),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: AppTheme.cardWhite,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 32),
+              // Icon
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppTheme.goldenOrange.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.exit_to_app_rounded,
+                  color: AppTheme.goldenOrange,
+                  size: 36,
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  AppLocalizations.of(context)!.exitLesson,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Message
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  AppLocalizations.of(context)!.exitLessonMessage,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppTheme.textSecondary,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Reset button
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 32),
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    Navigator.pop(context); // Close dialog
+                    await _confirmAndResetLesson();
+                  },
+                  icon: const Icon(Icons.refresh_rounded, size: 20),
+                  label: Text(AppLocalizations.of(context)!.reset),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.goldenOrange,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    side: BorderSide(color: AppTheme.goldenOrange, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Save and Close button
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 32),
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    Navigator.pop(context); // Close dialog
+                    await _saveCurrentProgress();
+                    if (mounted) {
+                      context.pop();
+                    }
+                  },
+                  icon: const Icon(Icons.check_rounded, size: 20),
+                  label: Text(AppLocalizations.of(context)!.saveAndClose),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryMintGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Cancel button
+              Container(
+                margin: const EdgeInsets.only(left: 32, right: 32, bottom: 32),
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.textSecondary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Confirm and reset lesson
+  Future<void> _confirmAndResetLesson() async {
+    if (!mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.6),
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardWhite,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          AppLocalizations.of(context)!.reset,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        content: Text(
+          AppLocalizations.of(context)!.resetLessonConfirmation,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.goldenOrange,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(AppLocalizations.of(context)!.reset),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _resetLesson();
+    }
+  }
+
+  // Reset lesson
+  Future<void> _resetLesson() async {
+    final user = _authService.currentUser;
+    if (user == null) return;
+
+    if (mounted) {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          content: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppTheme.primaryMintGreen,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  AppLocalizations.of(context)!.resettingLesson,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    try {
+      // Reset lesson progress
+      await _lessonService.resetLesson(user.id, widget.lessonId);
+
+      // Clear saved slide position
+      await _clearSavedSlidePosition();
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+
+        // Reset local state
+        setState(() {
+          _currentSlideIndex = 0;
+          _completedExerciseIds.clear();
+          _exerciseAnswersById.clear();
+          _exercisesToRetry.clear();
+          _retryAttemptCounts.clear();
+          _progress = null;
+        });
+
+        // Reset to first slide
+        if (_pageController.hasClients) {
+          _pageController.jumpToPage(0);
+        }
+
+        // Reload lesson to get fresh state
+        await _loadLesson();
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ErrorHandler.handleError(
+          context,
+          e,
+          contextMessage: AppLocalizations.of(context)!.errorResettingLesson,
+        );
+      }
+    }
   }
 
   Future<void> _loadLesson() async {
@@ -88,9 +406,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       final lesson = await _lessonService.getLessonById(widget.lessonId);
       if (lesson == null) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Lesson not found')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.lessonNotFound),
+            ),
+          );
           context.pop();
         }
         return;
@@ -110,20 +430,49 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       }
 
       if (mounted) {
+        // Randomize all exercises in the lesson
+        final shuffledSections = _randomizeExercises(lesson.content.sections);
+
+        // Load saved slide position if lesson is not 100% complete
+        int savedSlideIndex = 0;
+        if (progress != null && !progress.isCompleted) {
+          final savedPosition = await _loadSavedSlidePosition();
+          if (savedPosition != null && savedPosition >= 0) {
+            // Validate saved position is within bounds
+            final maxIndex = shuffledSections.length - 1;
+            savedSlideIndex = savedPosition > maxIndex
+                ? maxIndex
+                : savedPosition;
+          }
+        }
+
         setState(() {
           _lesson = lesson;
           _progress = progress;
-          // Randomize all exercises in the lesson
-          _shuffledSections = _randomizeExercises(lesson.content.sections);
+          _allSections = List.from(shuffledSections);
+          _normalSectionCount = shuffledSections.length;
+          _currentSlideIndex = savedSlideIndex;
           _isLoading = false;
         });
+
+        // Restore to saved position after PageView is built
+        if (savedSlideIndex > 0) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _pageController.hasClients) {
+              final totalSlides = _getTotalSlides();
+              if (savedSlideIndex < totalSlides) {
+                _pageController.jumpToPage(savedSlideIndex);
+              }
+            }
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
         ErrorHandler.handleError(
           context,
           e,
-          contextMessage: 'Error loading lesson',
+          contextMessage: AppLocalizations.of(context)!.errorLoadingLesson,
         );
         setState(() {
           _isLoading = false;
@@ -132,64 +481,118 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     }
   }
 
-  void _onExerciseAnswered(int exerciseIndex, bool isCorrect) {
+  // Get exercise ID from a section
+  String? _getExerciseId(LessonSection section) {
+    if (section is ExerciseSection) return section.id;
+    if (section is MatchingExerciseSection) return section.id;
+    if (section is PronunciationExerciseSection) return section.id;
+    return null;
+  }
+
+  // Unified exercise answered handler - uses ID-based tracking throughout
+  void _onExerciseAnswered(
+    int exerciseIndex, // Not used in new system, kept for compatibility
+    bool isCorrect, {
+    String? exerciseId,
+  }) {
+    if (exerciseId == null) {
+      // Fallback: try to get ID from current section
+      final currentSection = _getCurrentSection(_currentSlideIndex);
+      exerciseId = currentSection != null
+          ? _getExerciseId(currentSection)
+          : null;
+      if (exerciseId == null) return;
+    }
+
+    final isInRetrySection = _currentSlideIndex >= _normalSectionCount;
+    final isRetryExercise = _exercisesToRetry.contains(exerciseId);
+
+    // Track retry attempt count before setState for navigation logic
+    int? retryAttemptCountAfterIncrement;
+    if (!isCorrect && isInRetrySection && isRetryExercise) {
+      final currentAttemptCount = _retryAttemptCounts[exerciseId] ?? 0;
+      retryAttemptCountAfterIncrement = currentAttemptCount + 1;
+    }
+
     setState(() {
-      _exerciseAnswers[exerciseIndex] = isCorrect;
+      // Track answer by exercise ID (works for both normal and retry)
+      _exerciseAnswersById[exerciseId!] = isCorrect;
+
       if (isCorrect) {
-        _completedExercises[exerciseIndex] = true;
+        // Mark exercise as completed
+        _completedExerciseIds[exerciseId] = true;
+        // Remove from retry set if it was there
+        _exercisesToRetry.remove(exerciseId);
+        // Clear retry attempt count
+        _retryAttemptCounts.remove(exerciseId);
       } else {
-        // Add to retry queue if incorrect
-        final currentSection = _getCurrentSection(_currentSlideIndex);
-        if (currentSection is ExerciseSection) {
-          // Check if not already in queue
-          if (!_retryExerciseQueue.any((e) => e.id == currentSection.id)) {
-            _retryExerciseQueue.add(currentSection);
+        // Handle incorrect answers
+        if (isInRetrySection && isRetryExercise) {
+          // In retry phase - track attempts (already calculated above)
+          _retryAttemptCounts[exerciseId] = retryAttemptCountAfterIncrement!;
+
+          // If they've had 2 wrong attempts in retry (after first wrong = 1 attempt, after second wrong = 2 attempts, can proceed)
+          if (retryAttemptCountAfterIncrement >= 2) {
+            // Mark as "failed but can proceed" - count it as completed so lesson can progress
+            _completedExerciseIds[exerciseId] = true;
+            _exercisesToRetry.remove(exerciseId);
+          } else {
+            // Still have attempts remaining - reset answer state so they can try again
+            _exerciseAnswersById[exerciseId] = null;
           }
-        } else if (currentSection is MatchingExerciseSection) {
-          // Check if not already in queue
-          if (!_retryMatchingQueue.any((e) => e.id == currentSection.id)) {
-            _retryMatchingQueue.add(currentSection);
-          }
-        } else if (currentSection is PronunciationExerciseSection) {
-          // Check if not already in queue
-          if (!_retryPronunciationQueue.any((e) => e.id == currentSection.id)) {
-            _retryPronunciationQueue.add(currentSection);
+        } else if (!isInRetrySection) {
+          // Normal section - add to retry set if not already there
+          if (!_exercisesToRetry.contains(exerciseId)) {
+            _exercisesToRetry.add(exerciseId);
           }
         }
       }
     });
+
     _updateProgress();
 
-    // If incorrect, automatically move to next slide after a brief delay
-    if (!isCorrect) {
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) {
-          _moveToNextSlide();
+    // No automatic navigation - user must click Next button to proceed
+  }
+
+  // Append retry exercises to _allSections when finishing normal sections
+  void _appendRetryExercises() {
+    if (_lesson == null || _exercisesToRetry.isEmpty) return;
+
+    // Collect all sections from the lesson that match exercises to retry
+    // We need to find the original sections from the lesson content
+    final retrySections = <LessonSection>[];
+
+    for (final exerciseId in _exercisesToRetry) {
+      // Find the section from the original lesson sections
+      for (final section in _lesson!.content.sections) {
+        final sectionId = _getExerciseId(section);
+        if (sectionId == exerciseId) {
+          retrySections.add(section);
+          break; // Found it, move to next exercise ID
         }
+      }
+    }
+
+    // Only append if we have retry exercises and they're not already added
+    if (retrySections.isNotEmpty &&
+        _allSections.length == _normalSectionCount) {
+      setState(() {
+        _allSections.addAll(retrySections);
+        // Clear answer state for retry exercises so they start fresh
+        // Exercises in _exercisesToRetry were answered incorrectly, so they need fresh state
+        for (final exerciseId in _exercisesToRetry) {
+          _exerciseAnswersById[exerciseId] = null;
+          // Initialize retry attempt count to 0 for each retry exercise
+          _retryAttemptCounts[exerciseId] = 0;
+        }
+        // PageView will automatically rebuild with new itemCount
       });
     }
   }
 
   void _moveToNextSlide() {
-    if (_pageController.hasClients) {
-      // Check if we've finished all slides and have retry exercises
-      if (_currentSlideIndex >= _getTotalSlides() - 1 &&
-          (_retryExerciseQueue.isNotEmpty ||
-              _retryMatchingQueue.isNotEmpty ||
-              _retryPronunciationQueue.isNotEmpty) &&
-          !_isInRetryPhase) {
-        // Start retry phase
-        setState(() {
-          _isInRetryPhase = true;
-          _currentSlideIndex = 0; // Reset to start showing retry exercises
-        });
-      } else if (_currentSlideIndex < _getTotalSlides() - 1) {
-        _pageController.nextPage(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
-    }
+    // Delegate to _goToNextSlide which handles retry appending logic
+    _goToNextSlide();
   }
 
   // Randomize all exercises within the lesson
@@ -229,160 +632,13 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 
   int _getTotalSlides() {
-    if (_lesson == null) return 0;
-    int count = _shuffledSections.isNotEmpty
-        ? _shuffledSections.length
-        : _lesson!.content.sections.length;
-    if (_isInRetryPhase) {
-      count =
-          _retryExerciseQueue.length +
-          _retryMatchingQueue.length +
-          _retryPronunciationQueue.length;
-    }
-    return count;
+    return _allSections.length;
   }
 
-  // Get the current section (either from lesson or retry queue)
+  // Get the current section from unified list
   LessonSection? _getCurrentSection(int slideIndex) {
-    if (_lesson == null) return null;
-
-    if (_isInRetryPhase) {
-      // In retry phase, get from retry queues
-      if (slideIndex < _retryExerciseQueue.length) {
-        return _retryExerciseQueue[slideIndex];
-      } else {
-        final matchingIndex = slideIndex - _retryExerciseQueue.length;
-        if (matchingIndex < _retryMatchingQueue.length) {
-          return _retryMatchingQueue[matchingIndex];
-        } else {
-          final pronunciationIndex = matchingIndex - _retryMatchingQueue.length;
-          if (pronunciationIndex < _retryPronunciationQueue.length) {
-            return _retryPronunciationQueue[pronunciationIndex];
-          }
-        }
-      }
-      return null;
-    } else {
-      // Normal phase, get from shuffled sections
-      final sectionsToUse = _shuffledSections.isNotEmpty
-          ? _shuffledSections
-          : _lesson!.content.sections;
-      if (slideIndex < sectionsToUse.length) {
-        return sectionsToUse[slideIndex];
-      }
-      return null;
-    }
-  }
-
-  // Get an alternative exercise from the lesson for retry
-  ExerciseSection? _getAlternativeExercise(
-    int slideIndex,
-    String currentExerciseId,
-  ) {
-    if (_lesson == null) return null;
-
-    final allExercises = _lesson!.content.exercises;
-    if (allExercises.isEmpty || allExercises.length == 1) return null;
-
-    // Initialize used IDs list if needed
-    if (!_usedExerciseIds.containsKey(slideIndex)) {
-      final originalId = _originalExerciseIds[slideIndex];
-      _usedExerciseIds[slideIndex] = originalId != null
-          ? [originalId]
-          : [currentExerciseId];
-    }
-
-    // Add current exercise ID to used list
-    if (!_usedExerciseIds[slideIndex]!.contains(currentExerciseId)) {
-      _usedExerciseIds[slideIndex]!.add(currentExerciseId);
-    }
-
-    // Find exercises that haven't been used yet
-    final usedIds = _usedExerciseIds[slideIndex]!;
-    final availableExercises = allExercises
-        .where((exercise) => !usedIds.contains(exercise.id))
-        .toList();
-
-    // If all exercises have been used, reset and pick a different one
-    if (availableExercises.isEmpty) {
-      // Reset to just the original
-      final originalId = _originalExerciseIds[slideIndex] ?? currentExerciseId;
-      _usedExerciseIds[slideIndex] = [originalId];
-
-      // Pick a random exercise that's different from current
-      final differentExercises = allExercises
-          .where(
-            (exercise) =>
-                exercise.id != currentExerciseId && exercise.id != originalId,
-          )
-          .toList();
-
-      if (differentExercises.isEmpty) {
-        // If only one exercise exists or all are the same, return null
-        return null;
-      }
-
-      final random =
-          differentExercises[DateTime.now().millisecondsSinceEpoch %
-              differentExercises.length];
-      _usedExerciseIds[slideIndex]!.add(random.id);
-      return random;
-    }
-
-    // Pick a random exercise from available ones
-    final randomIndex =
-        DateTime.now().millisecondsSinceEpoch % availableExercises.length;
-    final randomExercise = availableExercises[randomIndex];
-    _usedExerciseIds[slideIndex]!.add(randomExercise.id);
-    return randomExercise;
-  }
-
-  // Handle retry with a different exercise
-  void _retryExerciseWithDifferentQuestion(int slideIndex) {
-    if (_lesson == null) return;
-
-    final sectionsToUse = _shuffledSections.isNotEmpty
-        ? _shuffledSections
-        : _lesson!.content.sections;
-
-    // Get the current exercise being shown (either original or alternative)
-    final currentExercise =
-        _alternativeExercises[slideIndex] ??
-        (sectionsToUse[slideIndex] as ExerciseSection?);
-    if (currentExercise == null) return;
-
-    // Get the original exercise ID for this position
-    final originalExerciseId =
-        _originalExerciseIds[slideIndex] ??
-        (sectionsToUse[slideIndex] as ExerciseSection?)?.id;
-    if (originalExerciseId == null) return;
-
-    // Get exercise index for tracking
-    int exerciseIndex = 0;
-    for (int i = 0; i < slideIndex; i++) {
-      if (sectionsToUse[i] is ExerciseSection) {
-        exerciseIndex++;
-      }
-    }
-
-    // Store original exercise ID if not already stored
-    if (!_originalExerciseIds.containsKey(slideIndex)) {
-      _originalExerciseIds[slideIndex] = originalExerciseId;
-    }
-
-    // Get alternative exercise using the original ID as reference
-    final alternativeExercise = _getAlternativeExercise(
-      slideIndex,
-      currentExercise.id,
-    );
-    if (alternativeExercise == null) return;
-
-    // Reset answer state for this exercise
-    setState(() {
-      _exerciseAnswers[exerciseIndex] = null;
-      _completedExercises[exerciseIndex] = false;
-      _alternativeExercises[slideIndex] = alternativeExercise;
-    });
+    if (slideIndex < 0 || slideIndex >= _allSections.length) return null;
+    return _allSections[slideIndex];
   }
 
   Future<void> _updateProgress() async {
@@ -392,7 +648,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     if (user == null) return;
 
     final totalExercises = _lesson!.content.totalExercises;
-    final completedCount = _completedExercises.values.where((v) => v).length;
+    final completedCount = _completedExerciseIds.length;
     final progressPercentage = totalExercises > 0
         ? ((completedCount / totalExercises) * 100).round()
         : 0;
@@ -441,6 +697,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         await _languageService.updateLanguageStreak(activeLanguage);
       }
 
+      // Clear saved slide position when lesson is completed
+      await _clearSavedSlidePosition();
+
       if (mounted) {
         // Show modern completion dialog
         showDialog(
@@ -486,7 +745,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Text(
-                      'Lesson Complete!',
+                      AppLocalizations.of(context)!.lessonComplete,
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             fontWeight: FontWeight.w800,
@@ -500,7 +759,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Text(
-                      'Great job! You\'ve completed "${_lesson!.title}"',
+                      AppLocalizations.of(
+                        context,
+                      )!.greatJobCompletedLesson(_lesson!.title),
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: AppTheme.textSecondary,
                         height: 1.5,
@@ -537,7 +798,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                         const SizedBox(width: 12),
                         Flexible(
                           child: Text(
-                            'New content unlocked!',
+                            AppLocalizations.of(context)!.newContentUnlocked,
                             style: Theme.of(context).textTheme.titleSmall
                                 ?.copyWith(
                                   color: AppTheme.successGreen,
@@ -560,10 +821,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context);
-                        context.pop(
-                          true,
-                        ); // Return true to indicate lesson was completed
+                        Navigator.pop(context); // Close dialog
+                        context.go('/'); // Navigate to home screen
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryMintGreen,
@@ -574,9 +833,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Continue',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context)!.done,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
@@ -604,7 +863,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         ErrorHandler.handleError(
           context,
           e,
-          contextMessage: 'Error completing lesson',
+          contextMessage: AppLocalizations.of(context)!.errorCompletingLesson,
         );
       }
     }
@@ -615,7 +874,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     final totalExercises = _lesson!.content.totalExercises;
     if (totalExercises == 0)
       return true; // No exercises, can complete immediately
-    final completedCount = _completedExercises.values.where((v) => v).length;
+    final completedCount = _completedExerciseIds.length;
     return completedCount >= totalExercises;
   }
 
@@ -624,26 +883,16 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     final currentSection = _getCurrentSection(_currentSlideIndex);
     if (currentSection == null) return false;
 
-    // If it's an exercise, allow proceeding if it's been answered (correct or incorrect)
-    // In retry phase, always allow proceeding after answering
+    // If it's an exercise, allow proceeding if it's been answered
     if (currentSection is ExerciseSection ||
         currentSection is MatchingExerciseSection ||
         currentSection is PronunciationExerciseSection) {
-      if (_isInRetryPhase) {
-        // In retry phase, always allow moving forward after answering
-        return true;
-      } else {
-        int exerciseIndex = 0;
-        for (int i = 0; i < _currentSlideIndex; i++) {
-          final section = _getCurrentSection(i);
-          if (section is ExerciseSection ||
-              section is MatchingExerciseSection) {
-            exerciseIndex++;
-          }
-        }
+      final exerciseId = _getExerciseId(currentSection);
+      if (exerciseId != null) {
         // Allow proceeding if answered (either correct or incorrect)
-        return _exerciseAnswers[exerciseIndex] != null;
+        return _exerciseAnswersById[exerciseId] != null;
       }
+      return false;
     }
 
     // For text and example sections, can always proceed
@@ -652,22 +901,40 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
 
   void _goToNextSlide() {
     final totalSlides = _getTotalSlides();
+
+    // Check if we just finished the last normal section and need to append retries
+    if (_currentSlideIndex == _normalSectionCount - 1 &&
+        _allSections.length == _normalSectionCount &&
+        _exercisesToRetry.isNotEmpty) {
+      // Append retry exercises first
+      _appendRetryExercises();
+      // Then navigate to first retry exercise after a brief delay to allow rebuild
+      Future.delayed(const Duration(milliseconds: 150), () {
+        if (mounted && _pageController.hasClients) {
+          final newTotalSlides = _getTotalSlides();
+          if (newTotalSlides > _normalSectionCount) {
+            // Jump to first retry exercise
+            _pageController.jumpToPage(_normalSectionCount);
+          } else if (_canCompleteLesson) {
+            // No retries needed or all completed - complete lesson
+            _completeLesson();
+          }
+        }
+      });
+      return;
+    }
+
+    // Normal navigation
     if (_currentSlideIndex < totalSlides - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-    } else if (_canCompleteLesson) {
-      _completeLesson();
-    } else if (!_isInRetryPhase &&
-        (_retryExerciseQueue.isNotEmpty || _retryMatchingQueue.isNotEmpty)) {
-      // Start retry phase
-      setState(() {
-        _isInRetryPhase = true;
-        _currentSlideIndex = 0;
-      });
-      // Reset page controller to show retry exercises
-      _pageController.jumpToPage(0);
+    } else {
+      // We're on the last slide - check if we can complete
+      if (_canCompleteLesson) {
+        _completeLesson();
+      }
     }
   }
 
@@ -681,79 +948,67 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 
   Widget _buildSlideContent(LessonSection section, int slideIndex) {
-    // Calculate exercise index for tracking
-    int exerciseIndex = 0;
-    if (_isInRetryPhase) {
-      // In retry phase, count exercises from retry queues
-      for (int i = 0; i < slideIndex; i++) {
-        final s = _getCurrentSection(i);
-        if (s is ExerciseSection || s is MatchingExerciseSection) {
-          exerciseIndex++;
-        }
-      }
-    } else {
-      // Normal phase, count from shuffled sections
-      final sectionsToUse = _shuffledSections.isNotEmpty
-          ? _shuffledSections
-          : _lesson!.content.sections;
-      for (int i = 0; i < slideIndex; i++) {
-        if (sectionsToUse[i] is ExerciseSection ||
-            sectionsToUse[i] is MatchingExerciseSection ||
-            sectionsToUse[i] is PronunciationExerciseSection) {
-          exerciseIndex++;
-        }
-      }
-    }
-
     if (section is TextSection) {
       return TextSectionWidget(section: section);
     } else if (section is ExampleSection) {
-      return ExampleSectionWidget(section: section);
+      return ExampleSectionWidget(
+        section: section,
+        languageCode: _lesson?.language ?? 'es',
+      );
     } else if (section is ExerciseSection) {
-      final currentExerciseIndex = exerciseIndex;
-      // Store original exercise ID if not already stored
-      if (!_originalExerciseIds.containsKey(slideIndex)) {
-        _originalExerciseIds[slideIndex] = section.id;
-      }
-
-      // Use alternative exercise if available, otherwise use the original
-      final exerciseToShow = _alternativeExercises[slideIndex] ?? section;
+      final exerciseId = section.id;
+      final isAnswered = _exerciseAnswersById[exerciseId] != null;
+      final isCorrect = _exerciseAnswersById[exerciseId] == true;
 
       return ExerciseSectionWidget(
-        section: exerciseToShow,
+        section: section,
         onAnswerSubmitted: (isCorrect) {
-          _onExerciseAnswered(currentExerciseIndex, isCorrect);
+          _onExerciseAnswered(
+            0, // Not used in new system
+            isCorrect,
+            exerciseId: exerciseId,
+          );
         },
-        onRetry:
-            null, // Disable manual retry - wrong answers auto-advance and are added to retry queue
-        isAnswered: _exerciseAnswers[currentExerciseIndex] != null,
-        isCorrect: _exerciseAnswers[currentExerciseIndex] == true,
-        canRetry: false, // Disable retry button - wrong answers auto-advance
+        onRetry: null, // Manual retry disabled - user must use Next button
+        isAnswered: isAnswered,
+        isCorrect: isCorrect,
+        canRetry: false,
       );
     } else if (section is MatchingExerciseSection) {
-      final currentExerciseIndex = exerciseIndex;
+      final exerciseId = section.id;
+      final isAnswered = _exerciseAnswersById[exerciseId] != null;
+      final isCorrect = _exerciseAnswersById[exerciseId] == true;
 
       return MatchingExerciseWidget(
         section: section,
         onAnswerSubmitted: (isCorrect) {
-          _onExerciseAnswered(currentExerciseIndex, isCorrect);
+          _onExerciseAnswered(
+            0, // Not used in new system
+            isCorrect,
+            exerciseId: exerciseId,
+          );
         },
-        isAnswered: _exerciseAnswers[currentExerciseIndex] != null,
-        isCorrect: _exerciseAnswers[currentExerciseIndex] == true,
-        canRetry:
-            false, // Matching exercises don't support retry with different question yet
+        isAnswered: isAnswered,
+        isCorrect: isCorrect,
+        canRetry: false,
       );
     } else if (section is PronunciationExerciseSection) {
-      final currentExerciseIndex = exerciseIndex;
+      final exerciseId = section.id;
+      final isAnswered = _exerciseAnswersById[exerciseId] != null;
+      final isCorrect = _exerciseAnswersById[exerciseId] == true;
 
       return PronunciationExerciseWidget(
         section: section,
         onAnswerSubmitted: (isCorrect) {
-          _onExerciseAnswered(currentExerciseIndex, isCorrect);
+          _onExerciseAnswered(
+            0, // Not used in new system
+            isCorrect,
+            exerciseId: exerciseId,
+          );
         },
-        isAnswered: _exerciseAnswers[currentExerciseIndex] != null,
-        isCorrect: _exerciseAnswers[currentExerciseIndex] == true,
-        canRetry: false, // Pronunciation exercises don't support retry yet
+        isAnswered: isAnswered,
+        isCorrect: isCorrect,
+        canRetry: false,
       );
     }
     return const SizedBox.shrink();
@@ -776,7 +1031,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Loading lesson...',
+                  AppLocalizations.of(context)!.loadingLesson,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: AppTheme.textSecondary,
                   ),
@@ -803,7 +1058,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Lesson not found',
+                  AppLocalizations.of(context)!.lessonNotFound,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(color: AppTheme.textPrimary),
@@ -811,7 +1066,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () => context.pop(),
-                  child: const Text('Go Back'),
+                  child: Text(AppLocalizations.of(context)!.goBack),
                 ),
               ],
             ),
@@ -848,6 +1103,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     setState(() {
                       _currentSlideIndex = index;
                     });
+                    // Save slide position whenever user navigates
+                    _saveSlidePosition(index);
                   },
                   itemCount: totalSlides,
                   itemBuilder: (context, index) {
@@ -909,7 +1166,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             ),
             child: IconButton(
               icon: const Icon(Icons.close_rounded),
-              onPressed: () => context.pop(),
+              onPressed: () => _showExitDialog(),
               color: AppTheme.textPrimary,
               iconSize: 24,
             ),
@@ -997,8 +1254,13 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             children: [
               // Section type indicator
               _buildSectionTypeBadge(
+                context,
                 _getCurrentSection(_currentSlideIndex) ??
-                    _lesson!.content.sections[_currentSlideIndex],
+                    (_lesson!.content.sections.isNotEmpty &&
+                            _currentSlideIndex <
+                                _lesson!.content.sections.length
+                        ? _lesson!.content.sections[_currentSlideIndex]
+                        : _lesson!.content.sections.first),
               ),
               const SizedBox(width: 12),
               // Slide counter
@@ -1042,23 +1304,24 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     );
   }
 
-  Widget _buildSectionTypeBadge(LessonSection section) {
+  Widget _buildSectionTypeBadge(BuildContext context, LessonSection section) {
     IconData icon;
     Color color;
     String label;
 
+    final l10n = AppLocalizations.of(context)!;
     if (section is TextSection) {
       icon = Icons.menu_book_rounded;
       color = AppTheme.electricLavender;
-      label = 'Learn';
+      label = l10n.learn;
     } else if (section is ExampleSection) {
       icon = Icons.translate_rounded;
       color = AppTheme.softCyan;
-      label = 'Example';
+      label = l10n.example;
     } else {
       icon = Icons.quiz_rounded;
       color = AppTheme.goldenOrange;
-      label = 'Practice';
+      label = l10n.practice;
     }
 
     return Container(
@@ -1113,7 +1376,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _goToPreviousSlide,
                   icon: const Icon(Icons.arrow_back_rounded, size: 20),
-                  label: const Text('Previous'),
+                  label: Text(AppLocalizations.of(context)!.previous),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -1141,10 +1404,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 ),
                 label: Text(
                   isLastSlide && _canCompleteLesson
-                      ? 'Complete'
-                      : isLastSlide
-                      ? 'Complete'
-                      : 'Continue',
+                      ? AppLocalizations.of(context)!.completeButton
+                      : AppLocalizations.of(context)!.continueButton,
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isLastSlide && _canCompleteLesson

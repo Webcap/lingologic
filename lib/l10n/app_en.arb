@@ -1,0 +1,675 @@
+{
+  "@@locale": "en",
+  
+  "appTitle": "LingoLogic",
+  "@appTitle": {
+    "description": "Application title"
+  },
+  
+  "welcomeBack": "Welcome Back!",
+  "@welcomeBack": {
+    "description": "Welcome message on login screen"
+  },
+  
+  "continueLanguageJourney": "Continue your language learning journey",
+  "@continueLanguageJourney": {
+    "description": "Subtitle on login screen"
+  },
+  
+  "email": "Email",
+  "@email": {
+    "description": "Email field label"
+  },
+  
+  "enterYourEmail": "Enter your email",
+  "@enterYourEmail": {
+    "description": "Email field hint"
+  },
+  
+  "password": "Password",
+  "@password": {
+    "description": "Password field label"
+  },
+  
+  "enterYourPassword": "Enter your password",
+  "@enterYourPassword": {
+    "description": "Password field hint"
+  },
+  
+  "login": "Login",
+  "@login": {
+    "description": "Login button text"
+  },
+  
+  "or": "OR",
+  "@or": {
+    "description": "Divider text between login options"
+  },
+  
+  "continueAsGuest": "Continue as Guest",
+  "@continueAsGuest": {
+    "description": "Anonymous login button"
+  },
+  
+  "dontHaveAccount": "Don't have an account? ",
+  "@dontHaveAccount": {
+    "description": "Sign up prompt"
+  },
+  
+  "signUp": "Sign Up",
+  "@signUp": {
+    "description": "Sign up button/link"
+  },
+  
+  "forgotPassword": "Forgot Password?",
+  "@forgotPassword": {
+    "description": "Forgot password link"
+  },
+  
+  "loginFailed": "Login failed. Please check your credentials and try again.",
+  "@loginFailed": {
+    "description": "Login error message"
+  },
+  
+  "anonymousLoginFailed": "Anonymous login failed. Please try again.",
+  "@anonymousLoginFailed": {
+    "description": "Anonymous login error message"
+  },
+  
+  "pleaseEnterEmail": "Please enter your email",
+  "@pleaseEnterEmail": {
+    "description": "Email validation error"
+  },
+  
+  "pleaseEnterValidEmail": "Please enter a valid email",
+  "@pleaseEnterValidEmail": {
+    "description": "Email format validation error"
+  },
+  
+  "pleaseEnterPassword": "Please enter your password",
+  "@pleaseEnterPassword": {
+    "description": "Password validation error"
+  },
+  
+  "passwordMinLength": "Password must be at least 6 characters",
+  "@passwordMinLength": {
+    "description": "Password length validation error"
+  },
+  
+  "home": "Home",
+  "@home": {
+    "description": "Home tab label"
+  },
+  
+  "lessons": "Lessons",
+  "@lessons": {
+    "description": "Lessons tab label"
+  },
+  
+  "games": "Games",
+  "@games": {
+    "description": "Games tab label"
+  },
+  
+  "progress": "Progress",
+  "@progress": {
+    "description": "Progress tab label"
+  },
+  
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings screen title"
+  },
+  
+  "managePreferences": "Manage your preferences",
+  "@managePreferences": {
+    "description": "Settings screen subtitle"
+  },
+  
+  "account": "Account",
+  "@account": {
+    "description": "Account section title"
+  },
+  
+  "guestUser": "Guest User",
+  "@guestUser": {
+    "description": "Guest account label"
+  },
+  
+  "anonymousAccount": "Anonymous Account",
+  "@anonymousAccount": {
+    "description": "Anonymous account type label"
+  },
+  
+  "registeredAccount": "Registered Account",
+  "@registeredAccount": {
+    "description": "Registered account type label"
+  },
+  
+  "appLanguage": "App Language",
+  "@appLanguage": {
+    "description": "App language section title"
+  },
+  
+  "language": "Language",
+  "@language": {
+    "description": "Language selection label"
+  },
+  
+  "selectLanguage": "Select Language",
+  "@selectLanguage": {
+    "description": "Language picker dialog title"
+  },
+  
+  "languageChangedSuccessfully": "Language changed successfully!",
+  "@languageChangedSuccessfully": {
+    "description": "Language change success message"
+  },
+  
+  "audioSettings": "Audio Settings",
+  "@audioSettings": {
+    "description": "Audio settings section title"
+  },
+  
+  "volume": "Volume",
+  "@volume": {
+    "description": "Volume control label"
+  },
+  
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications section title"
+  },
+  
+  "enableNotifications": "Enable Notifications",
+  "@enableNotifications": {
+    "description": "Notifications toggle label"
+  },
+  
+  "syncStatus": "Sync Status",
+  "@syncStatus": {
+    "description": "Sync status section title"
+  },
+  
+  "offline": "Offline",
+  "@offline": {
+    "description": "Offline status label"
+  },
+  
+  "online": "Online",
+  "@online": {
+    "description": "Online status label"
+  },
+  
+  "dataWillSyncWhenOnline": "Data will sync when online",
+  "@dataWillSyncWhenOnline": {
+    "description": "Offline status description"
+  },
+  
+  "allDataSynced": "All data synced",
+  "@allDataSynced": {
+    "description": "Online status description"
+  },
+  
+  "syncNow": "Sync Now",
+  "@syncNow": {
+    "description": "Sync button text"
+  },
+  
+  "syncing": "Syncing...",
+  "@syncing": {
+    "description": "Sync in progress text"
+  },
+  
+  "about": "About",
+  "@about": {
+    "description": "About section title"
+  },
+  
+  "version": "Version",
+  "@version": {
+    "description": "Version label"
+  },
+  
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy policy link"
+  },
+  
+  "termsOfService": "Terms of Service",
+  "@termsOfService": {
+    "description": "Terms of service link"
+  },
+  
+  "view": "View",
+  "@view": {
+    "description": "View link text"
+  },
+  
+  "signOut": "Sign Out",
+  "@signOut": {
+    "description": "Sign out button text"
+  },
+  
+  "areYouSureSignOut": "Are you sure you want to sign out?",
+  "@areYouSureSignOut": {
+    "description": "Sign out confirmation message"
+  },
+  
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+  
+  "practiceWithGames": "Practice with interactive games",
+  "@practiceWithGames": {
+    "description": "Games screen subtitle"
+  },
+  
+  "gamesLocked": "Games Locked",
+  "@gamesLocked": {
+    "description": "Games locked message title"
+  },
+  
+  "completeFirstLessonToUnlock": "Complete your first lesson to unlock games and practice what you've learned!",
+  "@completeFirstLessonToUnlock": {
+    "description": "Games locked message"
+  },
+  
+  "goToLessons": "Go to Lessons",
+  "@goToLessons": {
+    "description": "Button to navigate to lessons"
+  },
+  
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Refresh button text"
+  },
+  
+  "neuroMatch": "Neuro-Match",
+  "@neuroMatch": {
+    "description": "Neuro-Match game title"
+  },
+  
+  "fastPacedWordMatching": "Fast-paced word matching game",
+  "@fastPacedWordMatching": {
+    "description": "Neuro-Match game description"
+  },
+  
+  "syntaxConstructor": "Syntax Constructor",
+  "@syntaxConstructor": {
+    "description": "Syntax Constructor game title"
+  },
+  
+  "buildSentencesWithDragDrop": "Build sentences with drag & drop",
+  "@buildSentencesWithDragDrop": {
+    "description": "Syntax Constructor game description"
+  },
+  
+  "goodMorning": "Good Morning",
+  "@goodMorning": {
+    "description": "Morning greeting"
+  },
+  
+  "goodAfternoon": "Good Afternoon",
+  "@goodAfternoon": {
+    "description": "Afternoon greeting"
+  },
+  
+  "goodEvening": "Good Evening",
+  "@goodEvening": {
+    "description": "Evening greeting"
+  },
+  
+  "readyToLearn": "Ready to learn?",
+  "@readyToLearn": {
+    "description": "Home tab main question"
+  },
+  
+  "currentLevel": "Current Level",
+  "@currentLevel": {
+    "description": "Current level label"
+  },
+  
+  "beginner": "Beginner",
+  "@beginner": {
+    "description": "A1 level description"
+  },
+  
+  "elementary": "Elementary",
+  "@elementary": {
+    "description": "A2 level description"
+  },
+  
+  "intermediate": "Intermediate",
+  "@intermediate": {
+    "description": "B1 level description"
+  },
+  
+  "upperIntermediate": "Upper Intermediate",
+  "@upperIntermediate": {
+    "description": "B2 level description"
+  },
+  
+  "advanced": "Advanced",
+  "@advanced": {
+    "description": "C1 level description"
+  },
+  
+  "proficient": "Proficient",
+  "@proficient": {
+    "description": "C2 level description"
+  },
+  
+  "learning": "Learning",
+  "@learning": {
+    "description": "Default level description"
+  },
+  
+  "dayStreak": "Day Streak",
+  "@dayStreak": {
+    "description": "Day streak label"
+  },
+  
+  "nextLesson": "Next Lesson",
+  "@nextLesson": {
+    "description": "Next lesson label"
+  },
+  
+  "start": "Start",
+  "@start": {
+    "description": "Start button text"
+  },
+  
+  "progressOverview": "Progress Overview",
+  "@progressOverview": {
+    "description": "Progress overview section title"
+  },
+  
+  "completed": "Completed",
+  "@completed": {
+    "description": "Completed lessons label"
+  },
+  
+  "inProgress": "In Progress",
+  "@inProgress": {
+    "description": "In progress lessons label"
+  },
+  
+  "totalTime": "Total Time",
+  "@totalTime": {
+    "description": "Total time label"
+  },
+  
+  "min": "min",
+  "@min": {
+    "description": "Minutes abbreviation"
+  },
+  
+  "masterGrammarVocabulary": "Master grammar and vocabulary",
+  "@masterGrammarVocabulary": {
+    "description": "Lessons screen subtitle"
+  },
+  
+  "available": "Available",
+  "@available": {
+    "description": "Available lessons label"
+  },
+  
+  "categories": "Categories",
+  "@categories": {
+    "description": "Categories section title"
+  },
+  
+  "all": "All",
+  "@all": {
+    "description": "All categories filter option"
+  },
+  
+  "noLessonsAvailable": "No lessons available",
+  "@noLessonsAvailable": {
+    "description": "Empty lessons list message"
+  },
+  
+  "errorLoadingLessons": "Error loading lessons",
+  "@errorLoadingLessons": {
+    "description": "Error message when loading lessons fails"
+  },
+  
+  "errorLaunchingKnowledgeTest": "Error launching knowledge test",
+  "@errorLaunchingKnowledgeTest": {
+    "description": "Error message when launching knowledge test fails"
+  },
+  
+  "noWordsAvailableForMiniGame": "No words available for this mini game yet.",
+  "@noWordsAvailableForMiniGame": {
+    "description": "Message when mini game has no words"
+  },
+  
+  "errorLaunchingMiniGame": "Error launching mini game",
+  "@errorLaunchingMiniGame": {
+    "description": "Error message when launching mini game fails"
+  },
+  
+  "done": "Done",
+  "@done": {
+    "description": "Lesson completed status"
+  },
+  
+  "active": "Active",
+  "@active": {
+    "description": "Lesson in progress status"
+  },
+  
+  "newLesson": "New",
+  "@newLesson": {
+    "description": "Lesson not started status"
+  },
+  
+  "locked": "Locked",
+  "@locked": {
+    "description": "Label for locked lessons"
+  },
+  
+  "progress": "Progress",
+  "@progress": {
+    "description": "Progress label"
+  },
+  
+  "lesson": "lesson",
+  "@lesson": {
+    "description": "Singular lesson"
+  },
+  
+  "lessonsPlural": "lessons",
+  "@lessonsPlural": {
+    "description": "Plural lessons"
+  },
+  
+  "complete": "complete",
+  "@complete": {
+    "description": "Completion status (as in X% complete)"
+  },
+  
+  "mixedLevel": "Mixed Level",
+  "@mixedLevel": {
+    "description": "Mixed level description"
+  },
+  
+  "lessonNotFound": "Lesson not found",
+  "@lessonNotFound": {
+    "description": "Error message when lesson cannot be found"
+  },
+  
+  "errorLoadingLesson": "Error loading lesson",
+  "@errorLoadingLesson": {
+    "description": "Error message when loading lesson fails"
+  },
+  
+  "lessonComplete": "Lesson Complete!",
+  "@lessonComplete": {
+    "description": "Lesson completion screen title"
+  },
+  
+  "greatJobCompletedLesson": "Great job! You've completed \"{title}\"",
+  "@greatJobCompletedLesson": {
+    "description": "Lesson completion message",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Greetings and Introductions"
+      }
+    }
+  },
+  
+  "newContentUnlocked": "New content unlocked!",
+  "@newContentUnlocked": {
+    "description": "Message shown when new content is unlocked"
+  },
+  
+  "errorCompletingLesson": "Error completing lesson",
+  "@errorCompletingLesson": {
+    "description": "Error message when completing lesson fails"
+  },
+  
+  "loadingLesson": "Loading lesson...",
+  "@loadingLesson": {
+    "description": "Loading state message for lesson"
+  },
+  
+  "goBack": "Go Back",
+  "@goBack": {
+    "description": "Go back button text"
+  },
+  
+  "learn": "Learn",
+  "@learn": {
+    "description": "Learn section type badge"
+  },
+  
+  "example": "Example",
+  "@example": {
+    "description": "Example section type badge"
+  },
+  
+  "practice": "Practice",
+  "@practice": {
+    "description": "Practice section type badge"
+  },
+  
+  "previous": "Previous",
+  "@previous": {
+    "description": "Previous button text"
+  },
+  
+  "continueButton": "Continue",
+  "@continueButton": {
+    "description": "Continue button text"
+  },
+  
+  "completeButton": "Complete",
+  "@completeButton": {
+    "description": "Complete lesson button text"
+  },
+  
+  "pleaseSelectLanguageToContinue": "Please select a language to continue",
+  "@pleaseSelectLanguageToContinue": {
+    "description": "Error message when no language is selected in onboarding"
+  },
+  
+  "errorSettingUpLanguage": "Error setting up your language",
+  "@errorSettingUpLanguage": {
+    "description": "Error message when language setup fails"
+  },
+  
+  "welcomeToLingologic": "Welcome to\nLingoLogic! 🌍",
+  "@welcomeToLingologic": {
+    "description": "Welcome message in onboarding screen"
+  },
+  
+  "chooseFirstLanguageToStart": "Choose your first language to start learning",
+  "@chooseFirstLanguageToStart": {
+    "description": "Instructions in language onboarding screen"
+  },
+  
+  "canAddMoreLanguagesAnytime": "You can add more languages anytime",
+  "@canAddMoreLanguagesAnytime": {
+    "description": "Information message about adding languages later"
+  },
+  
+  "continueLearning": "Continue Learning",
+  "@continueLearning": {
+    "description": "Continue button in onboarding screen"
+  },
+  
+  "noLanguagesAvailable": "No languages available",
+  "@noLanguagesAvailable": {
+    "description": "Message when no languages are available in onboarding"
+  },
+  
+  "contactSupportIfSeeThis": "Please contact support if you see this message",
+  "@contactSupportIfSeeThis": {
+    "description": "Error message asking user to contact support"
+  },
+  
+  "exitLesson": "Exit Lesson",
+  "@exitLesson": {
+    "description": "Dialog title when exiting lesson"
+  },
+  
+  "exitLessonMessage": "What would you like to do?",
+  "@exitLessonMessage": {
+    "description": "Dialog message when exiting lesson"
+  },
+  
+  "reset": "Reset",
+  "@reset": {
+    "description": "Reset button text to restart lesson"
+  },
+  
+  "saveAndClose": "Save and Close",
+  "@saveAndClose": {
+    "description": "Save progress and close button text"
+  },
+  
+  "resetLessonConfirmation": "Are you sure you want to reset this lesson? All your progress will be lost.",
+  "@resetLessonConfirmation": {
+    "description": "Confirmation message when resetting lesson"
+  },
+  
+  "resettingLesson": "Resetting lesson...",
+  "@resettingLesson": {
+    "description": "Loading message when resetting lesson"
+  },
+  
+  "errorResettingLesson": "Error resetting lesson",
+  "@errorResettingLesson": {
+    "description": "Error message when resetting lesson fails"
+  },
+  
+  "playing": "Playing...",
+  "@playing": {
+    "description": "Label shown when audio is playing"
+  },
+  
+  "hearPronunciation": "Hear Pronunciation",
+  "@hearPronunciation": {
+    "description": "Button text to play word pronunciation"
+  },
+  
+  "close": "Close",
+  "@close": {
+    "description": "Close button text"
+  },
+  
+  "showHint": "Show Hint",
+  "@showHint": {
+    "description": "Button text to show a hint for the exercise"
+  },
+  
+  "hint": "Hint",
+  "@hint": {
+    "description": "Hint label"
+  }
+}
+

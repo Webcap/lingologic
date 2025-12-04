@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../models/lesson_content.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/clickable_text_widget.dart';
 
 class ExampleSectionWidget extends StatelessWidget {
   final ExampleSection section;
+  final String languageCode;
 
   const ExampleSectionWidget({
     super.key,
     required this.section,
+    required this.languageCode,
   });
 
   @override
@@ -113,8 +116,9 @@ class ExampleSectionWidget extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Text(
-                    section.spanishExample,
+                  child: ClickableTextWidget(
+                    text: section.spanishExample,
+                    languageCode: languageCode,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: AppTheme.textPrimary,

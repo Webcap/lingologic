@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 import 'home/home_tab.dart';
 import 'lessons/lessons_list_screen.dart';
 import 'progress_screen.dart';
@@ -83,26 +84,30 @@ class _MainTabsScreenState extends State<MainTabsScreen> with SingleTickerProvid
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildTabItem(
+                  context: context,
                   icon: Icons.home_rounded,
-                  label: 'Home',
+                  label: AppLocalizations.of(context)!.home,
                   index: 0,
                   onTap: () => _tabController.animateTo(0),
                 ),
                 _buildTabItem(
+                  context: context,
                   icon: Icons.school_rounded,
-                  label: 'Lessons',
+                  label: AppLocalizations.of(context)!.lessons,
                   index: 1,
                   onTap: () => _tabController.animateTo(1),
                 ),
                 _buildTabItem(
+                  context: context,
                   icon: Icons.sports_esports_rounded,
-                  label: 'Games',
+                  label: AppLocalizations.of(context)!.games,
                   index: 2,
                   onTap: () => _tabController.animateTo(2),
                 ),
                 _buildTabItem(
+                  context: context,
                   icon: Icons.bar_chart_rounded,
-                  label: 'Progress',
+                  label: AppLocalizations.of(context)!.progress,
                   index: 3,
                   onTap: () => _tabController.animateTo(3),
                 ),
@@ -115,6 +120,7 @@ class _MainTabsScreenState extends State<MainTabsScreen> with SingleTickerProvid
   }
 
   Widget _buildTabItem({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required int index,
@@ -258,7 +264,7 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Games',
+                      AppLocalizations.of(context)!.games,
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.w800,
                             color: AppTheme.textPrimary,
@@ -266,7 +272,7 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Practice with interactive games',
+                      AppLocalizations.of(context)!.practiceWithGames,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: AppTheme.textSecondary,
                           ),
@@ -284,8 +290,8 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                     else ...[
                       _buildGameCard(
                         context: context,
-                        title: 'Neuro-Match',
-                        description: 'Fast-paced word matching game',
+                        title: AppLocalizations.of(context)!.neuroMatch,
+                        description: AppLocalizations.of(context)!.fastPacedWordMatching,
                         icon: Icons.psychology_rounded,
                         gradient: const LinearGradient(
                           colors: [AppTheme.salmonPink, Color(0xFFFF6B9D)],
@@ -303,8 +309,8 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                       const SizedBox(height: 16),
                       _buildGameCard(
                         context: context,
-                        title: 'Syntax Constructor',
-                        description: 'Build sentences with drag & drop',
+                        title: AppLocalizations.of(context)!.syntaxConstructor,
+                        description: AppLocalizations.of(context)!.buildSentencesWithDragDrop,
                         icon: Icons.construction_rounded,
                         gradient: const LinearGradient(
                           colors: [AppTheme.softCyan, Color(0xFF22D3EE)],
@@ -365,7 +371,7 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
           ),
           const SizedBox(height: 24),
           Text(
-            'Games Locked',
+            AppLocalizations.of(context)!.gamesLocked,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textPrimary,
@@ -374,7 +380,7 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
           ),
           const SizedBox(height: 12),
           Text(
-            'Complete your first lesson to unlock games and practice what you\'ve learned!',
+            AppLocalizations.of(context)!.completeFirstLessonToUnlock,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.textSecondary,
                   fontSize: 15,
@@ -387,7 +393,7 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
           TextButton.icon(
             onPressed: () => refresh(),
             icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Refresh'),
+            label: Text(AppLocalizations.of(context)!.refresh),
             style: TextButton.styleFrom(
               foregroundColor: AppTheme.primaryMintGreen,
             ),
@@ -430,8 +436,8 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Go to Lessons',
-                        style: TextStyle(
+                        AppLocalizations.of(context)!.goToLessons,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,

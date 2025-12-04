@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../services/auth_service.dart';
 import '../../utils/error_handler.dart';
 import '../../theme/app_theme.dart';
+import '../../l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -41,12 +42,12 @@ class _LoginScreenState extends State<LoginScreen> {
       debugPrint('Login error: $e');
       if (mounted) {
         try {
-          ErrorHandler.handleError(context, e, contextMessage: 'Login failed');
+          ErrorHandler.handleError(context, e, contextMessage: AppLocalizations.of(context)!.loginFailed);
         } catch (e2) {
           debugPrint('Error handler error: $e2');
         }
         setState(() {
-          _errorMessage = 'Login failed. Please check your credentials and try again.';
+          _errorMessage = AppLocalizations.of(context)!.loginFailed;
         });
       }
     } finally {
@@ -73,12 +74,12 @@ class _LoginScreenState extends State<LoginScreen> {
       debugPrint('Anonymous login error: $e');
       if (mounted) {
         try {
-          ErrorHandler.handleError(context, e, contextMessage: 'Anonymous login failed');
+          ErrorHandler.handleError(context, e, contextMessage: AppLocalizations.of(context)!.anonymousLoginFailed);
         } catch (e2) {
           debugPrint('Error handler error: $e2');
         }
         setState(() {
-          _errorMessage = 'Anonymous login failed. Please try again.';
+          _errorMessage = AppLocalizations.of(context)!.anonymousLoginFailed;
         });
       }
     } finally {
@@ -146,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'Welcome Back!',
+                        AppLocalizations.of(context)!.welcomeBack,
                         style: Theme.of(context).textTheme.displaySmall?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: AppTheme.textPrimary,
@@ -155,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Continue your language learning journey',
+                        AppLocalizations.of(context)!.continueLanguageJourney,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: AppTheme.textSecondary,
                             ),
@@ -225,16 +226,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Email Field
                         _buildTextField(
                           controller: _emailController,
-                          label: 'Email',
-                          hint: 'Enter your email',
+                          label: AppLocalizations.of(context)!.email,
+                          hint: AppLocalizations.of(context)!.enterYourEmail,
                           icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your email';
+                              return AppLocalizations.of(context)!.pleaseEnterEmail;
                             }
                             if (!value.contains('@')) {
-                              return 'Please enter a valid email';
+                              return AppLocalizations.of(context)!.pleaseEnterValidEmail;
                             }
                             return null;
                           },
@@ -245,8 +246,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Password Field
                         _buildTextField(
                           controller: _passwordController,
-                          label: 'Password',
-                          hint: 'Enter your password',
+                          label: AppLocalizations.of(context)!.password,
+                          hint: AppLocalizations.of(context)!.enterYourPassword,
                           icon: Icons.lock_outline_rounded,
                           obscureText: _obscurePassword,
                           suffixIcon: IconButton(
@@ -264,10 +265,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your password';
+                              return AppLocalizations.of(context)!.pleaseEnterPassword;
                             }
                             if (value.length < 6) {
-                              return 'Password must be at least 6 characters';
+                              return AppLocalizations.of(context)!.passwordMinLength;
                             }
                             return null;
                           },
@@ -286,7 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             ),
                             child: Text(
-                              'Forgot Password?',
+                              AppLocalizations.of(context)!.forgotPassword,
                               style: TextStyle(
                                 color: AppTheme.primaryMintGreen,
                                 fontSize: 13,
@@ -335,9 +336,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                     ),
                                   )
-                                : const Text(
-                                    'Login',
-                                    style: TextStyle(
+                                : Text(
+                                    AppLocalizations.of(context)!.login,
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
                                       color: Colors.white,
@@ -363,7 +364,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          'OR',
+                          AppLocalizations.of(context)!.or,
                           style: TextStyle(
                             color: AppTheme.textSecondary,
                             fontSize: 12,
@@ -410,9 +411,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             size: 20,
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            'Continue as Guest',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.continueAsGuest,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: AppTheme.textPrimary,
@@ -430,7 +431,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Don\'t have an account? ',
+                        AppLocalizations.of(context)!.dontHaveAccount,
                         style: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 14,
@@ -442,7 +443,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                         ),
                         child: Text(
-                          'Sign Up',
+                          AppLocalizations.of(context)!.signUp,
                           style: TextStyle(
                             color: AppTheme.primaryMintGreen,
                             fontSize: 14,

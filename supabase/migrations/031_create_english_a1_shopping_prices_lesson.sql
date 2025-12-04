@@ -225,3 +225,4 @@ ON CONFLICT (id) DO UPDATE SET
 
 COMMENT ON TABLE words IS 'Vocabulary words unlocked by this lesson include shopping places, items, prices, and shopping phrases';
 
+

@@ -6,6 +6,7 @@ import '../../services/language_service.dart';
 import '../../services/user_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
+import '../../l10n/app_localizations.dart';
 
 class LanguageOnboardingScreen extends StatefulWidget {
   const LanguageOnboardingScreen({super.key});
@@ -81,7 +82,7 @@ class _LanguageOnboardingScreenState extends State<LanguageOnboardingScreen>
     if (_selectedLanguage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please select a language to continue'),
+          content: Text(AppLocalizations.of(context)!.pleaseSelectLanguageToContinue),
           backgroundColor: Colors.red.shade400,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -110,7 +111,7 @@ class _LanguageOnboardingScreenState extends State<LanguageOnboardingScreen>
       }
     } catch (e) {
       if (mounted) {
-        ErrorHandler.handleError(context, e, contextMessage: 'Error setting up your language');
+        ErrorHandler.handleError(context, e, contextMessage: AppLocalizations.of(context)!.errorSettingUpLanguage);
         setState(() {
           _isSubmitting = false;
         });
@@ -239,7 +240,7 @@ class _LanguageOnboardingScreenState extends State<LanguageOnboardingScreen>
     return Column(
       children: [
         Text(
-          'Welcome to\nLingoLogic! 🌍',
+          AppLocalizations.of(context)!.welcomeToLingologic,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.w900,
@@ -261,7 +262,7 @@ class _LanguageOnboardingScreenState extends State<LanguageOnboardingScreen>
             ),
           ),
           child: Text(
-            'Choose your first language to start learning',
+            AppLocalizations.of(context)!.chooseFirstLanguageToStart,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: AppTheme.textPrimary,
@@ -272,7 +273,7 @@ class _LanguageOnboardingScreenState extends State<LanguageOnboardingScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          'You can add more languages anytime',
+          AppLocalizations.of(context)!.canAddMoreLanguagesAnytime,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppTheme.textSecondary,
@@ -539,7 +540,7 @@ class _LanguageOnboardingScreenState extends State<LanguageOnboardingScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Continue Learning',
+                                AppLocalizations.of(context)!.continueLearning,
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
@@ -591,7 +592,7 @@ class _LanguageOnboardingScreenState extends State<LanguageOnboardingScreen>
           ),
           const SizedBox(height: 20),
           Text(
-            'No languages available',
+            AppLocalizations.of(context)!.noLanguagesAvailable,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppTheme.textPrimary,
                   fontWeight: FontWeight.w700,
@@ -599,7 +600,7 @@ class _LanguageOnboardingScreenState extends State<LanguageOnboardingScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Please contact support if you see this message',
+            AppLocalizations.of(context)!.contactSupportIfSeeThis,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.textSecondary,
                 ),

@@ -64,3 +64,4 @@ COMMENT ON COLUMN level_progression_tests.level IS 'CEFR level (A1, A2, B1, B2, 
 COMMENT ON COLUMN level_progression_tests.passed IS 'Whether the user passed the test (typically requires 70% or higher score)';
 COMMENT ON COLUMN level_progression_tests.score IS 'Test score as a percentage (0-100)';
 
+

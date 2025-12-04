@@ -69,6 +69,27 @@ class SupabaseRepository {
     return Word.fromJson(response);
   }
 
+  Future<Word?> getWordByText(String wordText, {String? language}) async {
+    final client = _supabaseClient;
+    if (client == null) {
+      throw Exception('Supabase not initialized');
+    }
+    
+    var query = client
+        .from('words')
+        .select()
+        .eq('word_text', wordText.toLowerCase().trim());
+    
+    if (language != null) {
+      query = query.eq('language', language);
+    }
+    
+    final response = await query.maybeSingle();
+
+    if (response == null) return null;
+    return Word.fromJson(response);
+  }
+
   // Word Mastery
   Future<List<WordMastery>> getWordMasteries(String userId) async {
     final client = _supabaseClient;
@@ -214,6 +235,15 @@ class SupabaseRepository {
   Future<void> upsertLessonProgress(LessonProgress progress) async {
     final client = _getClient();
     await client.from('lesson_progress').upsert(progress.toJson());
+  }
+
+  Future<void> deleteLessonProgress(String userId, String lessonId) async {
+    final client = _getClient();
+    await client
+        .from('lesson_progress')
+        .delete()
+        .eq('user_id', userId)
+        .eq('lesson_id', lessonId);
   }
 
   // User Languages
