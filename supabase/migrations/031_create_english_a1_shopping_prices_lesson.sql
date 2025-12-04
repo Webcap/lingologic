@@ -68,6 +68,12 @@ INSERT INTO lessons (
   10,
   35,
   $lesson_json${
+    "translations": {
+      "es": {
+        "title": "Compras y Precios",
+        "description": "¡Aprende vocabulario esencial para compras y hablar sobre precios en inglés!"
+      }
+    },
     "sections": [
       {
         "type": "text",
@@ -80,13 +86,31 @@ INSERT INTO lessons (
           "market",
           "mall",
           "pharmacy"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Lugares de Compras",
+            "content": "¡Las compras son parte de la vida diaria! Aprendamos dónde comprar en inglés. Diferentes lugares venden diferentes cosas.",
+            "examples": [
+              "store/shop",
+              "supermarket",
+              "market",
+              "mall",
+              "pharmacy"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "shopping_places_example",
         "english_example": "I go to the supermarket to buy food. My sister goes to the clothing store.",
-        "explanation": "Use 'go to' with shopping places: 'I go to...' or 'I'm going to...'. 'To buy' explains the purpose of going: 'I go to the store to buy shoes'."
+        "explanation": "Use 'go to' with shopping places: 'I go to...' or 'I'm going to...'. 'To buy' explains the purpose of going: 'I go to the store to buy shoes'.",
+        "translations": {
+          "es": {
+            "explanation": "Usa 'go to' con lugares de compras: 'I go to...' o 'I'm going to...'. 'To buy' explica el propósito de ir: 'I go to the store to buy shoes'."
+          }
+        }
       },
       {
         "type": "text",
@@ -99,13 +123,31 @@ INSERT INTO lessons (
           "pants",
           "shoes",
           "product"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Artículos de Compras Comunes",
+            "content": "¡Aprende vocabulario para artículos que comúnmente compras al hacer compras!",
+            "examples": [
+              "clothing",
+              "shirt",
+              "pants",
+              "shoes",
+              "product"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "shopping_items_example",
         "english_example": "I need to buy a shirt and new shoes. I'm going to look for clothing.",
-        "explanation": "'I need' means you require something. 'I'm going to look for' means you will search for something. Use 'a' before singular nouns: 'a shirt'."
+        "explanation": "'I need' means you require something. 'I'm going to look for' means you will search for something. Use 'a' before singular nouns: 'a shirt'.",
+        "translations": {
+          "es": {
+            "explanation": "'I need' significa que necesitas algo. 'I'm going to look for' significa que vas a buscar algo. Usa 'a' antes de sustantivos singulares: 'a shirt'."
+          }
+        }
       },
       {
         "type": "text",
@@ -118,13 +160,31 @@ INSERT INTO lessons (
           "dollar",
           "cheap",
           "expensive"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Dinero y Precios",
+            "content": "¡Hablar sobre precios es esencial al hacer compras! Aprende cómo preguntar sobre costos y describir precios.",
+            "examples": [
+              "money",
+              "price",
+              "dollar",
+              "cheap",
+              "expensive"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "prices_example",
         "english_example": "- How much does this shirt cost? - It costs twenty dollars. - It's cheap. - Yes, it's very cheap.",
-        "explanation": "'How much does... cost?' is the most common way to ask about price. You can also say 'How much is...?' Both mean the same thing. 'Cheap' means low price, 'expensive' means high price."
+        "explanation": "'How much does... cost?' is the most common way to ask about price. You can also say 'How much is...?' Both mean the same thing. 'Cheap' means low price, 'expensive' means high price.",
+        "translations": {
+          "es": {
+            "explanation": "'How much does... cost?' es la forma más común de preguntar sobre el precio. También puedes decir 'How much is...?' Ambos significan lo mismo. 'Cheap' significa precio bajo, 'expensive' significa precio alto."
+          }
+        }
       },
       {
         "type": "text",
@@ -137,13 +197,31 @@ INSERT INTO lessons (
           "look for (to search)",
           "find (to discover)",
           "take (to carry away)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Acciones de Compras",
+            "content": "¡Aprende los verbos que necesitas al hacer compras!",
+            "examples": [
+              "buy (comprar)",
+              "sell (vender)",
+              "look for (buscar)",
+              "find (encontrar)",
+              "take (llevar)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "shopping_actions_example",
         "english_example": "I'm looking for a bag. Do you have bags? Yes, here they are. I'll buy this one.",
-        "explanation": "'I'm looking for' means you're searching for something. 'Do you have...?' is a question to ask if the store has something. 'I'll buy' means 'I will buy' - future tense."
+        "explanation": "'I'm looking for' means you're searching for something. 'Do you have...?' is a question to ask if the store has something. 'I'll buy' means 'I will buy' - future tense.",
+        "translations": {
+          "es": {
+            "explanation": "'I'm looking for' significa que estás buscando algo. 'Do you have...?' es una pregunta para saber si la tienda tiene algo. 'I'll buy' significa 'I will buy' - tiempo futuro."
+          }
+        }
       },
       {
         "type": "text",
@@ -155,13 +233,30 @@ INSERT INTO lessons (
           "Do you have...?",
           "I need...",
           "What are you looking for?"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Frases Útiles para Compras",
+            "content": "¡Domina estas frases para hacer compras exitosas!",
+            "examples": [
+              "How much does it cost?",
+              "Do you have...?",
+              "I need...",
+              "What are you looking for?"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "shopping_phrases_example",
         "english_example": "- Hello, what are you looking for? - I need shoes. - What size? - Size ten. - And what color? - Black, please.",
-        "explanation": "When shopping for clothes, you'll need to know your size and preferred color. Common sizes in the US use numbers (like 8, 10, 12) or letters (S, M, L, XL) depending on the item."
+        "explanation": "When shopping for clothes, you'll need to know your size and preferred color. Common sizes in the US use numbers (like 8, 10, 12) or letters (S, M, L, XL) depending on the item.",
+        "translations": {
+          "es": {
+            "explanation": "Al comprar ropa, necesitarás saber tu talla y color preferido. Las tallas comunes en los EE. UU. usan números (como 8, 10, 12) o letras (S, M, L, XL) dependiendo del artículo."
+          }
+        }
       },
       {
         "type": "matching",
@@ -176,7 +271,13 @@ INSERT INTO lessons (
           {"word": "clothing", "translation": "things you wear"}
         ],
         "distractors": ["money", "product"],
-        "explanation": "Excellent! These are essential shopping words. Remember that 'expensive' is the opposite of 'cheap'. You can say 'It's expensive' or 'It costs a lot'."
+        "explanation": "Excellent! These are essential shopping words. Remember that 'expensive' is the opposite of 'cheap'. You can say 'It's expensive' or 'It costs a lot'.",
+        "translations": {
+          "es": {
+            "instruction": "Empareja las palabras en inglés con sus significados",
+            "explanation": "¡Excelente! Estas son palabras esenciales para compras. Recuerda que 'expensive' es lo opuesto de 'cheap'. Puedes decir 'It's expensive' o 'It costs a lot'."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -188,7 +289,19 @@ INSERT INTO lessons (
           {"text": "How long does it cost?", "is_correct": false},
           {"text": "How big does it cost?", "is_correct": false}
         ],
-        "explanation": "Perfect! 'How much does it cost?' is the correct way to ask about price. You can also say 'How much is it?' Both questions are common and mean the same thing."
+        "explanation": "Perfect! 'How much does it cost?' is the correct way to ask about price. You can also say 'How much is it?' Both questions are common and mean the same thing.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo preguntas sobre el precio de algo?",
+            "options": [
+              {"text": "How much does it cost?", "is_correct": true},
+              {"text": "How many does it cost?", "is_correct": false},
+              {"text": "How long does it cost?", "is_correct": false},
+              {"text": "How big does it cost?", "is_correct": false}
+            ],
+            "explanation": "¡Perfecto! 'How much does it cost?' es la forma correcta de preguntar sobre el precio. También puedes decir 'How much is it?' Ambas preguntas son comunes y significan lo mismo."
+          }
+        }
       },
       {
         "type": "text",
@@ -201,10 +314,23 @@ INSERT INTO lessons (
           "To ask for a discount, say: 'Do you have any discounts?' or 'Is there a sale?'",
           "Many stores have sales on weekends and holidays",
           "Remember to say 'thank you' when leaving!"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Consejos Prácticos",
+            "content": "Aquí hay algunos consejos útiles para comprar en países de habla inglesa:",
+            "examples": [
+              "Siempre pregunta 'How much does it cost?' antes de comprar",
+              "Si algo es demasiado caro, di: 'It's too expensive' o 'It's too much'",
+              "Para pedir un descuento, di: 'Do you have any discounts?' o 'Is there a sale?'",
+              "Muchas tiendas tienen rebajas los fines de semana y días festivos",
+              "¡Recuerda decir 'thank you' al salir!"
+            ]
+          }
+        }
       }
     ]
-  }$lesson_json$,
+  }$lesson_json$::jsonb,
   ARRAY[
     'english_store', 'english_shop', 'english_supermarket', 'english_market', 'english_mall', 'english_pharmacy',
     'english_product', 'english_clothing', 'english_shirt', 'english_pants', 'english_shoes', 'english_bag',
@@ -212,8 +338,8 @@ INSERT INTO lessons (
     'english_cheap', 'english_expensive',
     'english_buy', 'english_sell', 'english_look_for', 'english_find', 'english_take',
     'english_what_looking_for', 'english_i_need', 'english_do_you_have', 'english_size', 'english_color_shopping'
-  ],
-  ARRAY['present_tense_verbs', 'question_formation', 'numbers', 'going_to_future']
+  ]::TEXT[],
+  ARRAY['present_tense_verbs', 'question_formation', 'numbers', 'going_to_future']::TEXT[]
 )
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,

@@ -66,6 +66,12 @@ INSERT INTO lessons (
   4,
   30,
   $lesson_json${
+    "translations": {
+      "es": {
+        "title": "Gustos, Disgustos y Preferencias",
+        "description": "Aprende a expresar lo que te gusta, lo que no te gusta y lo que prefieres en inglés. ¡Esencial para conversaciones cotidianas!"
+      }
+    },
     "sections": [
       {
         "type": "text",
@@ -76,21 +82,42 @@ INSERT INTO lessons (
           "'I like pizza' - simple statement about preference",
           "'I love chocolate' - stronger feeling than 'like'",
           "'I really like music' - emphasizes the degree of liking"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Expresar Gustos",
+            "content": "Para expresar lo que te gusta en inglés, usa 'I like' seguido de un sustantivo o gerundio (verbo + -ing). Para sentimientos más fuertes, usa 'I love' o 'I really like'. Estas son muy comunes en conversaciones cotidianas.",
+            "examples": [
+              "'I like pizza' - declaración simple sobre preferencia",
+              "'I love chocolate' - sentimiento más fuerte que 'like'",
+              "'I really like music' - enfatiza el grado de agrado"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "likes_example_1",
-        "spanish_example": "A: What do you like to do? / B: I like reading and listening to music.",
+        "spanish_example": "A: ¿Qué te gusta hacer? / B: Me gusta leer y escuchar música.",
         "english_translation": "A: What do you like to do? / B: I like reading and listening to music.",
-        "explanation": "When talking about activities, use 'I like' followed by the gerund form (verb + -ing): 'reading', 'listening', etc. You can list multiple activities with 'and'."
+        "explanation": "When talking about activities, use 'I like' followed by the gerund form (verb + -ing): 'reading', 'listening', etc. You can list multiple activities with 'and'.",
+        "translations": {
+          "es": {
+            "explanation": "Cuando hablas de actividades, usa 'I like' seguido de la forma de gerundio (verbo + -ing): 'reading', 'listening', etc. Puedes enumerar múltiples actividades con 'and'."
+          }
+        }
       },
       {
         "type": "example",
         "id": "likes_example_2",
-        "spanish_example": "I love pizza. / I really like ice cream.",
+        "spanish_example": "Me encanta la pizza. / Me gusta mucho el helado.",
         "english_translation": "I love pizza. / I really like ice cream.",
-        "explanation": "'Love' expresses strong liking, while 'really like' means you like something a lot. Both show strong positive feelings."
+        "explanation": "'Love' expresses strong liking, while 'really like' means you like something a lot. Both show strong positive feelings.",
+        "translations": {
+          "es": {
+            "explanation": "'Love' expresa un gusto fuerte, mientras que 'really like' significa que te gusta algo mucho. Ambos muestran sentimientos positivos fuertes."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -102,7 +129,19 @@ INSERT INTO lessons (
           {"text": "I liking chocolate", "is_correct": false},
           {"text": "Me like chocolate", "is_correct": false}
         ],
-        "explanation": "Use 'I like' followed by the thing you like. 'Like' is a verb that means 'to enjoy' or 'to be fond of'."
+        "explanation": "Use 'I like' followed by the thing you like. 'Like' is a verb that means 'to enjoy' or 'to be fond of'.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo se dice 'Me gusta el chocolate' en inglés?",
+            "options": [
+              {"text": "I like chocolate", "is_correct": true},
+              {"text": "I am like chocolate", "is_correct": false},
+              {"text": "I liking chocolate", "is_correct": false},
+              {"text": "Me like chocolate", "is_correct": false}
+            ],
+            "explanation": "Usa 'I like' seguido de lo que te gusta. 'Like' es un verbo que significa 'disfrutar' o 'tener cariño por'."
+          }
+        }
       },
       {
         "type": "text",
@@ -113,14 +152,30 @@ INSERT INTO lessons (
           "'I don't like' means you have a negative feeling about something",
           "'I really don't like' emphasizes strong dislike",
           "'I hate' is very strong - use it carefully"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Expresar Disgustos",
+            "content": "Para expresar que no te gusta algo, usa 'I don't like' (contracción de 'do not like'). Para disgustos fuertes, puedes usar 'I hate' o 'I really don't like'. Ten cuidado con 'hate' ya que es muy fuerte.",
+            "examples": [
+              "'I don't like' significa que tienes un sentimiento negativo sobre algo",
+              "'I really don't like' enfatiza un disgusto fuerte",
+              "'I hate' es muy fuerte - úsalo con cuidado"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "dislikes_example_1",
-        "spanish_example": "A: Do you like vegetables? / B: No, I don't like them. I prefer fruit.",
+        "spanish_example": "A: ¿Te gustan las verduras? / B: No, no me gustan. Prefiero la fruta.",
         "english_translation": "A: Do you like vegetables? / B: No, I don't like them. I prefer fruit.",
-        "explanation": "Answer 'no' questions with 'No, I don't like...' Use 'them' to refer back to the thing mentioned (vegetables)."
+        "explanation": "Answer 'no' questions with 'No, I don't like...' Use 'them' to refer back to the thing mentioned (vegetables).",
+        "translations": {
+          "es": {
+            "explanation": "Responde preguntas de 'no' con 'No, I don't like...' Usa 'them' para referirte a la cosa mencionada (verduras)."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -132,7 +187,19 @@ INSERT INTO lessons (
           {"text": "I not like vegetables", "is_correct": false},
           {"text": "I doesn't like vegetables", "is_correct": false}
         ],
-        "explanation": "Use 'I don't like' (with 'do not' contracted to 'don't'). The negative comes from 'don't', not from adding 'not' after the verb."
+        "explanation": "Use 'I don't like' (with 'do not' contracted to 'don't'). The negative comes from 'don't', not from adding 'not' after the verb.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo se dice 'No me gustan las verduras' en inglés?",
+            "options": [
+              {"text": "I don't like vegetables", "is_correct": true},
+              {"text": "I no like vegetables", "is_correct": false},
+              {"text": "I not like vegetables", "is_correct": false},
+              {"text": "I doesn't like vegetables", "is_correct": false}
+            ],
+            "explanation": "Usa 'I don't like' (con 'do not' contraído a 'don't'). La negación viene de 'don't', no de agregar 'not' después del verbo."
+          }
+        }
       },
       {
         "type": "text",
@@ -143,21 +210,42 @@ INSERT INTO lessons (
           "'I prefer' means you like one thing better than another",
           "'I like X more than Y' compares two things",
           "Use 'Which do you prefer?' to ask about someone's choice"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Expresar Preferencias",
+            "content": "Para decir lo que prefieres, usa 'I prefer' seguido de un sustantivo o gerundio. También puedes usar 'I like X more than Y' para comparar dos cosas. Estos son útiles para tomar decisiones.",
+            "examples": [
+              "'I prefer' significa que te gusta una cosa más que otra",
+              "'I like X more than Y' compara dos cosas",
+              "Usa 'Which do you prefer?' para preguntar sobre la elección de alguien"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "preferences_example_1",
-        "spanish_example": "A: Do you prefer coffee or tea? / B: I prefer coffee. I like it more.",
+        "spanish_example": "A: ¿Prefieres café o té? / B: Prefiero café. Me gusta más.",
         "english_translation": "A: Do you prefer coffee or tea? / B: I prefer coffee. I like it more.",
-        "explanation": "When choosing between options, use 'I prefer' or 'I like X more'. Both express that you favor one option over another."
+        "explanation": "When choosing between options, use 'I prefer' or 'I like X more'. Both express that you favor one option over another.",
+        "translations": {
+          "es": {
+            "explanation": "Cuando eliges entre opciones, usa 'I prefer' o 'I like X more'. Ambos expresan que favoreces una opción sobre otra."
+          }
+        }
       },
       {
         "type": "example",
         "id": "preferences_example_2",
-        "spanish_example": "I prefer cooking to eating in restaurants.",
+        "spanish_example": "Prefiero cocinar a comer en restaurantes.",
         "english_translation": "I prefer cooking to eating in restaurants.",
-        "explanation": "When comparing actions, use 'I prefer [action 1] to [action 2]' to say you favor the first action."
+        "explanation": "When comparing actions, use 'I prefer [action 1] to [action 2]' to say you favor the first action.",
+        "translations": {
+          "es": {
+            "explanation": "Cuando comparas acciones, usa 'I prefer [acción 1] to [acción 2]' para decir que favoreces la primera acción."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -169,7 +257,19 @@ INSERT INTO lessons (
           {"text": "I preferring pizza", "is_correct": false},
           {"text": "Me prefer pizza", "is_correct": false}
         ],
-        "explanation": "'Prefer' is a verb meaning 'to like better'. Use 'I prefer' followed by what you prefer."
+        "explanation": "'Prefer' is a verb meaning 'to like better'. Use 'I prefer' followed by what you prefer.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo se dice 'Prefiero pizza' en inglés?",
+            "options": [
+              {"text": "I prefer pizza", "is_correct": true},
+              {"text": "I am prefer pizza", "is_correct": false},
+              {"text": "I preferring pizza", "is_correct": false},
+              {"text": "Me prefer pizza", "is_correct": false}
+            ],
+            "explanation": "'Prefer' es un verbo que significa 'gustar más'. Usa 'I prefer' seguido de lo que prefieres."
+          }
+        }
       },
       {
         "type": "text",
@@ -180,14 +280,30 @@ INSERT INTO lessons (
           "'I like reading' means you enjoy the activity of reading",
           "'I like listening to music' uses the gerund form",
           "'I don't like cooking' expresses dislike for an activity"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Hablar de Actividades",
+            "content": "Cuando hablas de actividades que te gustan o no te gustan, usa la forma de gerundio (verbo + -ing) después de 'like', 'love', 'don't like', etc. Las actividades comunes incluyen leer, escuchar música, ver películas, cocinar y deportes.",
+            "examples": [
+              "'I like reading' significa que disfrutas la actividad de leer",
+              "'I like listening to music' usa la forma de gerundio",
+              "'I don't like cooking' expresa disgusto por una actividad"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "activities_example_1",
-        "spanish_example": "I like dancing and singing. I also enjoy swimming.",
+        "spanish_example": "Me gusta bailar y cantar. También disfruto nadar.",
         "english_translation": "I like dancing and singing. I also enjoy swimming.",
-        "explanation": "Use gerunds (dancing, singing, swimming) after 'like' or 'enjoy'. You can list multiple activities with 'and'. 'Enjoy' is similar to 'like'."
+        "explanation": "Use gerunds (dancing, singing, swimming) after 'like' or 'enjoy'. You can list multiple activities with 'and'. 'Enjoy' is similar to 'like'.",
+        "translations": {
+          "es": {
+            "explanation": "Usa gerundios (dancing, singing, swimming) después de 'like' o 'enjoy'. Puedes enumerar múltiples actividades con 'and'. 'Enjoy' es similar a 'like'."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -199,7 +315,19 @@ INSERT INTO lessons (
           {"text": "I like travel", "is_correct": false},
           {"text": "I like travels", "is_correct": false}
         ],
-        "explanation": "You can use either 'I like traveling' (gerund) or 'I like to travel' (infinitive). Both are correct in English!"
+        "explanation": "You can use either 'I like traveling' (gerund) or 'I like to travel' (infinitive). Both are correct in English!",
+        "translations": {
+          "es": {
+            "question": "¿Cómo se dice 'Me gusta viajar' en inglés?",
+            "options": [
+              {"text": "I like traveling", "is_correct": true},
+              {"text": "I like to travel", "is_correct": true},
+              {"text": "I like travel", "is_correct": false},
+              {"text": "I like travels", "is_correct": false}
+            ],
+            "explanation": "Puedes usar 'I like traveling' (gerundio) o 'I like to travel' (infinitivo). ¡Ambos son correctos en inglés!"
+          }
+        }
       },
       {
         "type": "text",
@@ -210,14 +338,30 @@ INSERT INTO lessons (
           "'Me too' means you share the same positive feeling",
           "'Me neither' means you also don't like something",
           "'I do too' is another way to say 'me too'"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Estar de Acuerdo y en Desacuerdo",
+            "content": "Cuando alguien comparte sus gustos o disgustos, puedes estar de acuerdo con 'Me too' si te gusta lo mismo, o 'Me neither' si tampoco te gusta. Esto hace que las conversaciones fluyan naturalmente y muestra que estás escuchando.",
+            "examples": [
+              "'Me too' significa que compartes el mismo sentimiento positivo",
+              "'Me neither' significa que tampoco te gusta algo",
+              "'I do too' es otra forma de decir 'me too'"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "agreement_example_1",
-        "spanish_example": "A: I like chocolate. / B: Me too! / A: I don't like cooking. / B: Me neither.",
+        "spanish_example": "A: Me gusta el chocolate. / B: ¡A mí también! / A: No me gusta cocinar. / B: A mí tampoco.",
         "english_translation": "A: I like chocolate. / B: Me too! / A: I don't like cooking. / B: Me neither.",
-        "explanation": "Use 'Me too' to agree with positive statements (likes), and 'Me neither' to agree with negative statements (dislikes)."
+        "explanation": "Use 'Me too' to agree with positive statements (likes), and 'Me neither' to agree with negative statements (dislikes).",
+        "translations": {
+          "es": {
+            "explanation": "Usa 'Me too' para estar de acuerdo con declaraciones positivas (gustos), y 'Me neither' para estar de acuerdo con declaraciones negativas (disgustos)."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -229,7 +373,19 @@ INSERT INTO lessons (
           {"text": "I like", "is_correct": false},
           {"text": "Yes, I like", "is_correct": false}
         ],
-        "explanation": "When someone says they DON'T like something (negative), use 'Me neither' to agree that you also don't like it."
+        "explanation": "When someone says they DON'T like something (negative), use 'Me neither' to agree that you also don't like it.",
+        "translations": {
+          "es": {
+            "question": "¿Cuál es la forma correcta de estar de acuerdo cuando alguien dice 'I don't like sports'?",
+            "options": [
+              {"text": "Me neither", "is_correct": true},
+              {"text": "Me too", "is_correct": false},
+              {"text": "I like", "is_correct": false},
+              {"text": "Yes, I like", "is_correct": false}
+            ],
+            "explanation": "Cuando alguien dice que NO le gusta algo (negativo), usa 'Me neither' para estar de acuerdo en que tampoco te gusta."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -241,7 +397,19 @@ INSERT INTO lessons (
           {"text": "reads, listens", "is_correct": false},
           {"text": "readed, listened", "is_correct": false}
         ],
-        "explanation": "After 'I like', use gerunds (verb + -ing): 'reading' and 'listening'. This form expresses the activity itself."
+        "explanation": "After 'I like', use gerunds (verb + -ing): 'reading' and 'listening'. This form expresses the activity itself.",
+        "translations": {
+          "es": {
+            "question": "Completa la oración: 'I like ___ and ___ to music.'",
+            "options": [
+              {"text": "reading, listening", "is_correct": true},
+              {"text": "read, listen", "is_correct": false},
+              {"text": "reads, listens", "is_correct": false},
+              {"text": "readed, listened", "is_correct": false}
+            ],
+            "explanation": "Después de 'I like', usa gerundios (verbo + -ing): 'reading' y 'listening'. Esta forma expresa la actividad en sí."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -253,7 +421,19 @@ INSERT INTO lessons (
           {"text": "I much like it", "is_correct": false},
           {"text": "I like it very", "is_correct": false}
         ],
-        "explanation": "Use 'really' before 'like' to emphasize. You can also say 'I like it very much' or 'I like it a lot'."
+        "explanation": "Use 'really' before 'like' to emphasize. You can also say 'I like it very much' or 'I like it a lot'.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo enfatizas que realmente te gusta algo?",
+            "options": [
+              {"text": "I really like it", "is_correct": true},
+              {"text": "I very like it", "is_correct": false},
+              {"text": "I much like it", "is_correct": false},
+              {"text": "I like it very", "is_correct": false}
+            ],
+            "explanation": "Usa 'really' antes de 'like' para enfatizar. También puedes decir 'I like it very much' o 'I like it a lot'."
+          }
+        }
       }
     ]
   }$lesson_json$::jsonb,

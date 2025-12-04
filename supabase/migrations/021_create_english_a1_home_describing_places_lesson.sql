@@ -81,6 +81,12 @@ INSERT INTO lessons (
   6,
   35,
   $lesson_json${
+    "translations": {
+      "es": {
+        "title": "El Hogar y Describir Lugares",
+        "description": "Aprende vocabulario para habitaciones, muebles y cómo describir tu hogar y otros lugares en inglés. ¡Esencial para hablar sobre dónde vives!"
+      }
+    },
     "sections": [
       {
         "type": "text",
@@ -93,19 +99,42 @@ INSERT INTO lessons (
           "kitchen (where you cook)",
           "bathroom (where you wash)",
           "living room (where you relax)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Habitaciones de la Casa",
+            "content": "¡Aprendamos los nombres de las diferentes habitaciones en una casa o apartamento. Este vocabulario es esencial para describir dónde vives!",
+            "examples": [
+              "house/home (donde vives)",
+              "bedroom (donde duermes)",
+              "kitchen (donde cocinas)",
+              "bathroom (donde te lavas)",
+              "living room (donde descansas)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "home_example_1",
         "english_example": "I live in a small apartment. It has two bedrooms and a kitchen.",
-        "explanation": "Notice how we use 'I live in' to say where you live. We use 'It has' to describe what the apartment contains."
+        "explanation": "Notice how we use 'I live in' to say where you live. We use 'It has' to describe what the apartment contains.",
+        "translations": {
+          "es": {
+            "explanation": "Nota cómo usamos 'I live in' para decir dónde vives. Usamos 'It has' para describir lo que contiene el apartamento."
+          }
+        }
       },
       {
         "type": "example",
         "id": "home_example_2",
         "english_example": "In my house there are three bedrooms, a living room, a kitchen, and two bathrooms.",
-        "explanation": "'There are' means something exists. We use it to say what exists in a place. 'There is' is for singular, 'there are' is for plural."
+        "explanation": "'There are' means something exists. We use it to say what exists in a place. 'There is' is for singular, 'there are' is for plural.",
+        "translations": {
+          "es": {
+            "explanation": "'There are' significa que algo existe. Lo usamos para decir qué existe en un lugar. 'There is' es para singular, 'there are' es para plural."
+          }
+        }
       },
       {
         "type": "matching",
@@ -120,7 +149,13 @@ INSERT INTO lessons (
           {"word": "dining room", "translation": "room where you eat"}
         ],
         "distractors": ["garden", "window"],
-        "explanation": "Great job! These are the basic room names. 'House' and 'home' can both mean where you live, but 'home' is more personal."
+        "explanation": "Great job! These are the basic room names. 'House' and 'home' can both mean where you live, but 'home' is more personal.",
+        "translations": {
+          "es": {
+            "instruction": "Empareja los nombres de las habitaciones con sus descripciones",
+            "explanation": "¡Buen trabajo! Estos son los nombres básicos de las habitaciones. 'House' y 'home' pueden significar dónde vives, pero 'home' es más personal."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -132,7 +167,19 @@ INSERT INTO lessons (
           {"text": "bathroom", "is_correct": false},
           {"text": "living room", "is_correct": false}
         ],
-        "explanation": "'Kitchen' is the room where you prepare and cook food. It usually has a stove, refrigerator, and sink."
+        "explanation": "'Kitchen' is the room where you prepare and cook food. It usually has a stove, refrigerator, and sink.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo llamas a la habitación donde cocinas?",
+            "options": [
+              {"text": "kitchen", "is_correct": true},
+              {"text": "bedroom", "is_correct": false},
+              {"text": "bathroom", "is_correct": false},
+              {"text": "living room", "is_correct": false}
+            ],
+            "explanation": "'Kitchen' es la habitación donde preparas y cocinas comida. Generalmente tiene una estufa, refrigerador y fregadero."
+          }
+        }
       },
       {
         "type": "text",
@@ -145,13 +192,31 @@ INSERT INTO lessons (
           "bed (to sleep on)",
           "sofa (comfortable seat)",
           "wardrobe/closet (to store clothes)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Muebles y Objetos",
+            "content": "¡Ahora aprendamos los nombres de los muebles y objetos comunes que encuentras en un hogar. ¡Estas palabras te ayudarán a describir tu espacio de vida!",
+            "examples": [
+              "table (para comer o trabajar)",
+              "chair (para sentarse)",
+              "bed (para dormir)",
+              "sofa (asiento cómodo)",
+              "wardrobe/closet (para guardar ropa)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "furniture_example_1",
         "english_example": "In my bedroom there is a bed, a desk, and a wardrobe.",
-        "explanation": "Notice how we use 'there is' for singular items and 'there are' for plural. We say 'a bed' (one bed) or 'two beds' (multiple beds)."
+        "explanation": "Notice how we use 'there is' for singular items and 'there are' for plural. We say 'a bed' (one bed) or 'two beds' (multiple beds).",
+        "translations": {
+          "es": {
+            "explanation": "Nota cómo usamos 'there is' para objetos singulares y 'there are' para plural. Decimos 'a bed' (una cama) o 'two beds' (múltiples camas)."
+          }
+        }
       },
       {
         "type": "matching",
@@ -166,7 +231,13 @@ INSERT INTO lessons (
           {"word": "desk", "translation": "table for writing or working"}
         ],
         "distractors": ["door", "window"],
-        "explanation": "Excellent! You're learning furniture vocabulary. 'Wardrobe' and 'closet' both mean storage for clothes, but 'wardrobe' is a piece of furniture while 'closet' is built into the wall."
+        "explanation": "Excellent! You're learning furniture vocabulary. 'Wardrobe' and 'closet' both mean storage for clothes, but 'wardrobe' is a piece of furniture while 'closet' is built into the wall.",
+        "translations": {
+          "es": {
+            "instruction": "Empareja los muebles con sus descripciones",
+            "explanation": "¡Excelente! Estás aprendiendo vocabulario de muebles. 'Wardrobe' y 'closet' significan almacenamiento para ropa, pero 'wardrobe' es un mueble mientras que 'closet' está empotrado en la pared."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -178,7 +249,19 @@ INSERT INTO lessons (
           {"text": "desk", "is_correct": false},
           {"text": "wardrobe", "is_correct": false}
         ],
-        "explanation": "'Sofa' is common in living rooms. It's a comfortable seat where people relax and watch TV."
+        "explanation": "'Sofa' is common in living rooms. It's a comfortable seat where people relax and watch TV.",
+        "translations": {
+          "es": {
+            "question": "Completa: 'In the living room there is a ___'",
+            "options": [
+              {"text": "sofa", "is_correct": true},
+              {"text": "bed", "is_correct": false},
+              {"text": "desk", "is_correct": false},
+              {"text": "wardrobe", "is_correct": false}
+            ],
+            "explanation": "'Sofa' es común en las salas de estar. Es un asiento cómodo donde las personas se relajan y ven televisión."
+          }
+        }
       },
       {
         "type": "text",
@@ -190,13 +273,30 @@ INSERT INTO lessons (
           "pretty/nice vs ugly (appearance)",
           "modern vs old (age/style)",
           "clean vs dirty (condition)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Describir Lugares",
+            "content": "¡Aprendamos adjetivos para describir habitaciones y lugares. ¡Estos te ayudarán a hablar sobre cómo se ve y se siente tu hogar!",
+            "examples": [
+              "big/large vs small (tamaño)",
+              "pretty/nice vs ugly (apariencia)",
+              "modern vs old (edad/estilo)",
+              "clean vs dirty (condición)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "describing_example_1",
         "english_example": "My apartment is small but very comfortable. The kitchen is modern and clean.",
-        "explanation": "Notice how we use 'but' to connect contrasting ideas. Adjectives come before the noun in English: 'small apartment', 'modern kitchen'."
+        "explanation": "Notice how we use 'but' to connect contrasting ideas. Adjectives come before the noun in English: 'small apartment', 'modern kitchen'.",
+        "translations": {
+          "es": {
+            "explanation": "Nota cómo usamos 'but' para conectar ideas contrastantes. Los adjetivos van antes del sustantivo en inglés: 'small apartment', 'modern kitchen'."
+          }
+        }
       },
       {
         "type": "matching",
@@ -210,7 +310,13 @@ INSERT INTO lessons (
           {"word": "clean", "translation": "not dirty"},
           {"word": "comfortable", "translation": "pleasant to be in"}
         ],
-        "explanation": "Perfect! You're learning descriptive vocabulary. Adjectives in English come before the noun: 'big house', 'clean room', 'comfortable sofa'."
+        "explanation": "Perfect! You're learning descriptive vocabulary. Adjectives in English come before the noun: 'big house', 'clean room', 'comfortable sofa'.",
+        "translations": {
+          "es": {
+            "instruction": "Empareja los adjetivos descriptivos con sus significados",
+            "explanation": "¡Perfecto! Estás aprendiendo vocabulario descriptivo. Los adjetivos en inglés van antes del sustantivo: 'big house', 'clean room', 'comfortable sofa'."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -222,7 +328,19 @@ INSERT INTO lessons (
           {"text": "My big house", "is_correct": false},
           {"text": "My house are big", "is_correct": false}
         ],
-        "explanation": "'My house is big' is correct. We use 'is' (not 'are') because 'house' is singular. The verb 'to be' agrees with the subject."
+        "explanation": "'My house is big' is correct. We use 'is' (not 'are') because 'house' is singular. The verb 'to be' agrees with the subject.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo se dice 'Mi casa es grande' en inglés?",
+            "options": [
+              {"text": "My house is big", "is_correct": true},
+              {"text": "My house big", "is_correct": false},
+              {"text": "My big house", "is_correct": false},
+              {"text": "My house are big", "is_correct": false}
+            ],
+            "explanation": "'My house is big' es correcto. Usamos 'is' (no 'are') porque 'house' es singular. El verbo 'to be' concuerda con el sujeto."
+          }
+        }
       },
       {
         "type": "text",
@@ -235,19 +353,42 @@ INSERT INTO lessons (
           "under (below something)",
           "next to/beside (near something)",
           "in front of (ahead of something)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Ubicación y Posición",
+            "content": "¡Ahora aprendamos preposiciones para describir dónde están ubicadas las cosas. ¡Estas te ayudarán a describir la distribución de tu hogar!",
+            "examples": [
+              "in (dentro de algo)",
+              "on (encima de algo)",
+              "under (debajo de algo)",
+              "next to/beside (cerca de algo)",
+              "in front of (delante de algo)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "location_example_1",
         "english_example": "The table is in the dining room. The chairs are around the table.",
-        "explanation": "'Is in' means located inside. 'Are around' means positioned in a circle or surrounding something."
+        "explanation": "'Is in' means located inside. 'Are around' means positioned in a circle or surrounding something.",
+        "translations": {
+          "es": {
+            "explanation": "'Is in' significa ubicado dentro. 'Are around' significa posicionado en un círculo o rodeando algo."
+          }
+        }
       },
       {
         "type": "example",
         "id": "location_example_2",
         "english_example": "The sofa is next to the window. The lamp is on the table.",
-        "explanation": "Use 'next to' or 'beside' for 'near'. Use 'on' for something sitting on top of another thing."
+        "explanation": "Use 'next to' or 'beside' for 'near'. Use 'on' for something sitting on top of another thing.",
+        "translations": {
+          "es": {
+            "explanation": "Usa 'next to' o 'beside' para 'cerca'. Usa 'on' para algo que está encima de otra cosa."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -259,7 +400,19 @@ INSERT INTO lessons (
           {"text": "The book is next to the table", "is_correct": false},
           {"text": "The book is in front of the table", "is_correct": false}
         ],
-        "explanation": "'Under' means below or beneath something. 'On' would mean on top of the table."
+        "explanation": "'Under' means below or beneath something. 'On' would mean on top of the table.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo se dice 'El libro está debajo de la mesa'?",
+            "options": [
+              {"text": "The book is under the table", "is_correct": true},
+              {"text": "The book is on the table", "is_correct": false},
+              {"text": "The book is next to the table", "is_correct": false},
+              {"text": "The book is in front of the table", "is_correct": false}
+            ],
+            "explanation": "'Under' significa debajo o bajo algo. 'On' significaría encima de la mesa."
+          }
+        }
       },
       {
         "type": "text",
@@ -270,13 +423,29 @@ INSERT INTO lessons (
           "Where do you live?",
           "What floor do you live on?",
           "How many rooms does your house have?"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Preguntar sobre el Hogar",
+            "content": "¡Aprendamos cómo hacer preguntas sobre dónde vive alguien y sobre su hogar. ¡Estas son muy útiles en las conversaciones!",
+            "examples": [
+              "Where do you live?",
+              "What floor do you live on?",
+              "How many rooms does your house have?"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "asking_questions_example_1",
         "english_example": "A: Where do you live? / B: I live in an apartment in the city center.",
-        "explanation": "'Where do you live?' is a common question. Answer with 'I live in...' followed by the place."
+        "explanation": "'Where do you live?' is a common question. Answer with 'I live in...' followed by the place.",
+        "translations": {
+          "es": {
+            "explanation": "'Where do you live?' es una pregunta común. Responde con 'I live in...' seguido del lugar."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -288,7 +457,19 @@ INSERT INTO lessons (
           {"text": "Where are you live?", "is_correct": false},
           {"text": "Where is your house?", "is_correct": false}
         ],
-        "explanation": "'Where do you live?' is the correct question. We use 'do' as a helping verb with 'live' (not 'are' or 'is')."
+        "explanation": "'Where do you live?' is the correct question. We use 'do' as a helping verb with 'live' (not 'are' or 'is').",
+        "translations": {
+          "es": {
+            "question": "¿Cómo preguntas '¿Dónde vives?' en inglés?",
+            "options": [
+              {"text": "Where do you live?", "is_correct": true},
+              {"text": "Where you live?", "is_correct": false},
+              {"text": "Where are you live?", "is_correct": false},
+              {"text": "Where is your house?", "is_correct": false}
+            ],
+            "explanation": "'Where do you live?' es la pregunta correcta. Usamos 'do' como verbo auxiliar con 'live' (no 'are' o 'is')."
+          }
+        }
       },
       {
         "type": "text",
@@ -299,7 +480,18 @@ INSERT INTO lessons (
           "Describing your home: 'My house is big and has four bedrooms'",
           "Describing a room: 'The kitchen is modern and has a large window'",
           "Asking about location: 'Where is the bathroom?'"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Poniendo Todo Junto",
+            "content": "¡Ahora puedes describir tu hogar y preguntar a otros sobre el suyo! Practica usando todo el vocabulario que has aprendido sobre habitaciones, muebles y descripciones.",
+            "examples": [
+              "Describir tu hogar: 'My house is big and has four bedrooms'",
+              "Describir una habitación: 'The kitchen is modern and has a large window'",
+              "Preguntar sobre ubicación: 'Where is the bathroom?'"
+            ]
+          }
+        }
       },
       {
         "type": "matching",
@@ -316,7 +508,13 @@ INSERT INTO lessons (
           {"word": "next to", "translation": "beside, near"}
         ],
         "distractors": ["door", "small"],
-        "explanation": "Fantastic! You've mastered vocabulary for the home and describing places. Keep practicing to remember all these words!"
+        "explanation": "Fantastic! You've mastered vocabulary for the home and describing places. Keep practicing to remember all these words!",
+        "translations": {
+          "es": {
+            "instruction": "Empareja las palabras en inglés con sus significados",
+            "explanation": "¡Fantástico! Has dominado el vocabulario para el hogar y describir lugares. ¡Sigue practicando para recordar todas estas palabras!"
+          }
+        }
       },
       {
         "type": "exercise",
@@ -328,7 +526,19 @@ INSERT INTO lessons (
           {"text": "house, dirty", "is_correct": false},
           {"text": "kitchen, ugly", "is_correct": false}
         ],
-        "explanation": "'Apartment' and 'comfortable' make sense together. An apartment can be small but still comfortable to live in."
+        "explanation": "'Apartment' and 'comfortable' make sense together. An apartment can be small but still comfortable to live in.",
+        "translations": {
+          "es": {
+            "question": "Completa: 'My ___ is small but very ___'",
+            "options": [
+              {"text": "apartment, comfortable", "is_correct": true},
+              {"text": "bedroom, big", "is_correct": false},
+              {"text": "house, dirty", "is_correct": false},
+              {"text": "kitchen, ugly", "is_correct": false}
+            ],
+            "explanation": "'Apartment' y 'comfortable' tienen sentido juntos. Un apartamento puede ser pequeño pero aún cómodo para vivir."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -340,7 +550,19 @@ INSERT INTO lessons (
           {"text": "The lamp is next to the table", "is_correct": false},
           {"text": "The lamp are on the table", "is_correct": false}
         ],
-        "explanation": "'Is on' means positioned on top of. We use 'is' (not 'are') because 'lamp' is singular."
+        "explanation": "'Is on' means positioned on top of. We use 'is' (not 'are') because 'lamp' is singular.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo dirías 'La lámpara está encima de la mesa'?",
+            "options": [
+              {"text": "The lamp is on the table", "is_correct": true},
+              {"text": "The lamp is under the table", "is_correct": false},
+              {"text": "The lamp is next to the table", "is_correct": false},
+              {"text": "The lamp are on the table", "is_correct": false}
+            ],
+            "explanation": "'Is on' significa posicionado encima de. Usamos 'is' (no 'are') porque 'lamp' es singular."
+          }
+        }
       }
     ]
   }$lesson_json$::jsonb,

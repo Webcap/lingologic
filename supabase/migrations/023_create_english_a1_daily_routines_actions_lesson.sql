@@ -79,6 +79,12 @@ INSERT INTO lessons (
   7,
   35,
   $lesson_json${
+    "translations": {
+      "es": {
+        "title": "Rutinas Diarias y Acciones",
+        "description": "Aprende a describir tus rutinas diarias y actividades en inglés. ¡Vocabulario esencial para hablar sobre lo que haces todos los días!"
+      }
+    },
     "sections": [
       {
         "type": "text",
@@ -91,19 +97,42 @@ INSERT INTO lessons (
           "take a shower (wash yourself)",
           "brush teeth (clean your teeth)",
           "have breakfast (eat morning meal)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Rutina Matutina",
+            "content": "¡Aprendamos vocabulario para tu rutina matutina! Estas son las actividades que haces cuando comienzas tu día.",
+            "examples": [
+              "wake up (abrir los ojos después de dormir)",
+              "get up (salir de la cama)",
+              "take a shower (lavarse)",
+              "brush teeth (cepillarse los dientes)",
+              "have breakfast (comer el desayuno)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "morning_routine_example_1",
         "english_example": "In the morning, I wake up at seven. I get up, take a shower, and have breakfast.",
-        "explanation": "Notice the sequence: 'wake up' (open eyes), then 'get up' (leave bed). We say 'take a shower' (not 'shower' as a verb)."
+        "explanation": "Notice the sequence: 'wake up' (open eyes), then 'get up' (leave bed). We say 'take a shower' (not 'shower' as a verb).",
+        "translations": {
+          "es": {
+            "explanation": "Nota la secuencia: 'wake up' (abrir los ojos), luego 'get up' (salir de la cama). Decimos 'take a shower' (no 'shower' como verbo)."
+          }
+        }
       },
       {
         "type": "example",
         "id": "morning_routine_example_2",
         "english_example": "First I brush my teeth, then I comb my hair, and finally I get dressed.",
-        "explanation": "Use 'first', 'then', and 'finally' to show the order of actions. 'Brush my teeth' and 'comb my hair' use possessive pronouns (my)."
+        "explanation": "Use 'first', 'then', and 'finally' to show the order of actions. 'Brush my teeth' and 'comb my hair' use possessive pronouns (my).",
+        "translations": {
+          "es": {
+            "explanation": "Usa 'first', 'then' y 'finally' para mostrar el orden de las acciones. 'Brush my teeth' y 'comb my hair' usan pronombres posesivos (my)."
+          }
+        }
       },
       {
         "type": "matching",
@@ -118,7 +147,13 @@ INSERT INTO lessons (
           {"word": "have breakfast", "translation": "eat the morning meal"}
         ],
         "distractors": ["eat", "sleep"],
-        "explanation": "Great job! 'Wake up' and 'get up' are different: you wake up first (open your eyes), then you get up (leave the bed)."
+        "explanation": "Great job! 'Wake up' and 'get up' are different: you wake up first (open your eyes), then you get up (leave the bed).",
+        "translations": {
+          "es": {
+            "instruction": "Empareja las acciones de la rutina matutina con sus significados",
+            "explanation": "¡Buen trabajo! 'Wake up' y 'get up' son diferentes: primero te despiertas (abres los ojos), luego te levantas (sales de la cama)."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -130,7 +165,19 @@ INSERT INTO lessons (
           {"text": "Wake up means leave the bed, get up means open your eyes", "is_correct": false},
           {"text": "Wake up is for morning, get up is for evening", "is_correct": false}
         ],
-        "explanation": "'Wake up' is when you open your eyes and become conscious. 'Get up' is the physical action of leaving your bed."
+        "explanation": "'Wake up' is when you open your eyes and become conscious. 'Get up' is the physical action of leaving your bed.",
+        "translations": {
+          "es": {
+            "question": "¿Cuál es la diferencia entre 'wake up' y 'get up'?",
+            "options": [
+              {"text": "Wake up means open your eyes, get up means leave the bed", "is_correct": true},
+              {"text": "They mean the same thing", "is_correct": false},
+              {"text": "Wake up means leave the bed, get up means open your eyes", "is_correct": false},
+              {"text": "Wake up is for morning, get up is for evening", "is_correct": false}
+            ],
+            "explanation": "'Wake up' es cuando abres los ojos y te vuelves consciente. 'Get up' es la acción física de salir de tu cama."
+          }
+        }
       },
       {
         "type": "text",
@@ -143,19 +190,42 @@ INSERT INTO lessons (
           "eat (consume food)",
           "read (look at and understand words)",
           "clean (make something tidy)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Actividades Diarias",
+            "content": "¡Ahora aprendamos verbos para actividades diarias comunes como trabajar, estudiar, comer y otras cosas que haces durante el día!",
+            "examples": [
+              "work (hacer tu trabajo)",
+              "study (aprender en la escuela o en casa)",
+              "eat (consumir comida)",
+              "read (mirar y entender palabras)",
+              "clean (hacer algo ordenado)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "daily_activities_example_1",
         "english_example": "In the afternoon I work and study. After that I have lunch with my friends.",
-        "explanation": "'In the afternoon' means the time between noon and evening. Use 'and' to connect activities, 'after that' to show sequence."
+        "explanation": "'In the afternoon' means the time between noon and evening. Use 'and' to connect activities, 'after that' to show sequence.",
+        "translations": {
+          "es": {
+            "explanation": "'In the afternoon' significa el tiempo entre el mediodía y la noche. Usa 'and' para conectar actividades, 'after that' para mostrar secuencia."
+          }
+        }
       },
       {
         "type": "example",
         "id": "daily_activities_example_2",
         "english_example": "I like to read and listen to music at night. After that I have dinner and relax.",
-        "explanation": "'At night' means during the evening or nighttime. 'Have dinner' means to eat the evening meal."
+        "explanation": "'At night' means during the evening or nighttime. 'Have dinner' means to eat the evening meal.",
+        "translations": {
+          "es": {
+            "explanation": "'At night' significa durante la noche o la noche. 'Have dinner' significa comer la comida de la noche."
+          }
+        }
       },
       {
         "type": "matching",
@@ -170,7 +240,13 @@ INSERT INTO lessons (
           {"word": "cook", "translation": "prepare food"}
         ],
         "distractors": ["sleep", "wake up"],
-        "explanation": "Excellent! These are common daily activity verbs. Notice 'work' and 'study' don't need an object - you just 'work' or 'study'."
+        "explanation": "Excellent! These are common daily activity verbs. Notice 'work' and 'study' don't need an object - you just 'work' or 'study'.",
+        "translations": {
+          "es": {
+            "instruction": "Empareja los verbos de actividades diarias con sus significados",
+            "explanation": "¡Excelente! Estos son verbos comunes de actividades diarias. Nota que 'work' y 'study' no necesitan un objeto - simplemente 'work' o 'study'."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -182,7 +258,19 @@ INSERT INTO lessons (
           {"text": "worked, studied", "is_correct": false},
           {"text": "to work, to study", "is_correct": false}
         ],
-        "explanation": "Use the base form of verbs: 'work' and 'study'. 'Working' and 'studying' are continuous forms, used differently."
+        "explanation": "Use the base form of verbs: 'work' and 'study'. 'Working' and 'studying' are continuous forms, used differently.",
+        "translations": {
+          "es": {
+            "question": "Completa: 'In the afternoon I ___ and then I ___'",
+            "options": [
+              {"text": "work, study", "is_correct": true},
+              {"text": "working, studying", "is_correct": false},
+              {"text": "worked, studied", "is_correct": false},
+              {"text": "to work, to study", "is_correct": false}
+            ],
+            "explanation": "Usa la forma base de los verbos: 'work' y 'study'. 'Working' y 'studying' son formas continuas, usadas de manera diferente."
+          }
+        }
       },
       {
         "type": "text",
@@ -194,13 +282,30 @@ INSERT INTO lessons (
           "relax (calm down, be peaceful)",
           "sleep (rest with eyes closed)",
           "go to bed (get into bed to sleep)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Rutina Nocturna",
+            "content": "¡Aprendamos vocabulario para tu rutina nocturna. ¡Estos verbos describen cómo terminas tu día!",
+            "examples": [
+              "rest (relajarse y recuperar energía)",
+              "relax (calmarse, estar tranquilo)",
+              "sleep (descansar con los ojos cerrados)",
+              "go to bed (acostarse para dormir)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "evening_routine_example_1",
         "english_example": "At night, after dinner, I relax. Finally I go to bed at eleven.",
-        "explanation": "'After dinner' means following the evening meal. 'Go to bed' means to get into bed, while 'sleep' is the action of sleeping."
+        "explanation": "'After dinner' means following the evening meal. 'Go to bed' means to get into bed, while 'sleep' is the action of sleeping.",
+        "translations": {
+          "es": {
+            "explanation": "'After dinner' significa después de la comida de la noche. 'Go to bed' significa acostarse en la cama, mientras que 'sleep' es la acción de dormir."
+          }
+        }
       },
       {
         "type": "matching",
@@ -212,7 +317,13 @@ INSERT INTO lessons (
           {"word": "sleep", "translation": "rest with eyes closed"},
           {"word": "go to bed", "translation": "get into bed to sleep"}
         ],
-        "explanation": "Perfect! 'Go to bed' means the action of getting into bed, while 'sleep' is the state of being asleep."
+        "explanation": "Perfect! 'Go to bed' means the action of getting into bed, while 'sleep' is the state of being asleep.",
+        "translations": {
+          "es": {
+            "instruction": "Empareja las actividades nocturnas con sus significados",
+            "explanation": "¡Perfecto! 'Go to bed' significa la acción de acostarse en la cama, mientras que 'sleep' es el estado de estar dormido."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -224,7 +335,19 @@ INSERT INTO lessons (
           {"text": "rest", "is_correct": false},
           {"text": "get up", "is_correct": false}
         ],
-        "explanation": "'Go to bed' means to get into bed. 'Sleep' is the action of being asleep, not getting into bed."
+        "explanation": "'Go to bed' means to get into bed. 'Sleep' is the action of being asleep, not getting into bed.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo se dice 'acostarse en la cama' en inglés?",
+            "options": [
+              {"text": "go to bed", "is_correct": true},
+              {"text": "sleep", "is_correct": false},
+              {"text": "rest", "is_correct": false},
+              {"text": "get up", "is_correct": false}
+            ],
+            "explanation": "'Go to bed' significa acostarse en la cama. 'Sleep' es la acción de estar dormido, no acostarse en la cama."
+          }
+        }
       },
       {
         "type": "text",
@@ -238,13 +361,32 @@ INSERT INTO lessons (
           "at night (during nighttime)",
           "early (before the usual time)",
           "late (after the usual time)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Expresiones de Tiempo",
+            "content": "¡Aprendamos a hablar sobre cuándo haces las cosas. Las expresiones de tiempo te ayudan a organizar tu rutina diaria!",
+            "examples": [
+              "in the morning (parte temprana del día)",
+              "in the afternoon (parte media del día)",
+              "in the evening (parte tardía del día)",
+              "at night (durante la noche)",
+              "early (antes de la hora usual)",
+              "late (después de la hora usual)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "time_expressions_example_1",
         "english_example": "I wake up early in the morning. I work in the afternoon and rest at night.",
-        "explanation": "Use 'in the morning/afternoon/evening' and 'at night'. Notice 'at night' (not 'in the night')."
+        "explanation": "Use 'in the morning/afternoon/evening' and 'at night'. Notice 'at night' (not 'in the night').",
+        "translations": {
+          "es": {
+            "explanation": "Usa 'in the morning/afternoon/evening' y 'at night'. Nota 'at night' (no 'in the night')."
+          }
+        }
       },
       {
         "type": "matching",
@@ -257,7 +399,13 @@ INSERT INTO lessons (
           {"word": "at night", "translation": "during nighttime"},
           {"word": "early", "translation": "before the usual time"}
         ],
-        "explanation": "Great! Remember: 'in the morning/afternoon/evening' but 'at night'. 'Early' and 'late' describe timing."
+        "explanation": "Great! Remember: 'in the morning/afternoon/evening' but 'at night'. 'Early' and 'late' describe timing.",
+        "translations": {
+          "es": {
+            "instruction": "Empareja las expresiones de tiempo con sus significados",
+            "explanation": "¡Genial! Recuerda: 'in the morning/afternoon/evening' pero 'at night'. 'Early' y 'late' describen el tiempo."
+          }
+        }
       },
       {
         "type": "text",
@@ -270,13 +418,31 @@ INSERT INTO lessons (
           "after (following in time)",
           "finally (at the end)",
           "before (earlier than)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Palabras de Secuencia",
+            "content": "¡Aprendamos palabras para describir el orden de tus actividades diarias. ¡Estas te ayudan a contar una historia sobre tu día!",
+            "examples": [
+              "first (antes que todos los demás)",
+              "then (después de eso, siguiente)",
+              "after (siguiendo en el tiempo)",
+              "finally (al final)",
+              "before (antes que)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "sequence_words_example_1",
         "english_example": "First I get up, then I take a shower. After that I have breakfast and finally I leave home.",
-        "explanation": "Sequence words organize your routine: 'first' (start), 'then' or 'after that' (next), 'finally' (end)."
+        "explanation": "Sequence words organize your routine: 'first' (start), 'then' or 'after that' (next), 'finally' (end).",
+        "translations": {
+          "es": {
+            "explanation": "Las palabras de secuencia organizan tu rutina: 'first' (comienzo), 'then' o 'after that' (siguiente), 'finally' (final)."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -288,7 +454,19 @@ INSERT INTO lessons (
           {"text": "after", "is_correct": false},
           {"text": "finally", "is_correct": false}
         ],
-        "explanation": "'First' means before all others. Use it to start describing a sequence: 'First I...'"
+        "explanation": "'First' means before all others. Use it to start describing a sequence: 'First I...'",
+        "translations": {
+          "es": {
+            "question": "¿Qué palabra significa 'antes que todos los demás'?",
+            "options": [
+              {"text": "first", "is_correct": true},
+              {"text": "then", "is_correct": false},
+              {"text": "after", "is_correct": false},
+              {"text": "finally", "is_correct": false}
+            ],
+            "explanation": "'First' significa antes que todos los demás. Úsalo para comenzar a describir una secuencia: 'First I...'"
+          }
+        }
       },
       {
         "type": "text",
@@ -299,13 +477,29 @@ INSERT INTO lessons (
           "What do you do? (asking about activities)",
           "What time do you get up? (asking about specific time)",
           "When do you eat? (asking about timing)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Preguntar sobre Rutinas Diarias",
+            "content": "¡Aprendamos cómo hacer preguntas sobre rutinas diarias y actividades. ¡Estas son muy útiles en las conversaciones!",
+            "examples": [
+              "What do you do? (preguntando sobre actividades)",
+              "What time do you get up? (preguntando sobre hora específica)",
+              "When do you eat? (preguntando sobre el tiempo)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "asking_questions_example_1",
         "english_example": "A: What time do you wake up? / B: I wake up at six thirty.",
-        "explanation": "'What time...?' asks for a specific time. Answer with 'at [time]' or 'at [time] [AM/PM]'."
+        "explanation": "'What time...?' asks for a specific time. Answer with 'at [time]' or 'at [time] [AM/PM]'.",
+        "translations": {
+          "es": {
+            "explanation": "'What time...?' pregunta por una hora específica. Responde con 'at [hora]' o 'at [hora] [AM/PM]'."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -317,7 +511,19 @@ INSERT INTO lessons (
           {"text": "What do you get up?", "is_correct": false},
           {"text": "When time do you get up?", "is_correct": false}
         ],
-        "explanation": "'What time do you get up?' is correct. We use 'do' as a helping verb. 'When' is used differently."
+        "explanation": "'What time do you get up?' is correct. We use 'do' as a helping verb. 'When' is used differently.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo preguntas '¿A qué hora te levantas?' en inglés?",
+            "options": [
+              {"text": "What time do you get up?", "is_correct": true},
+              {"text": "What time you get up?", "is_correct": false},
+              {"text": "What do you get up?", "is_correct": false},
+              {"text": "When time do you get up?", "is_correct": false}
+            ],
+            "explanation": "'What time do you get up?' es correcto. Usamos 'do' como verbo auxiliar. 'When' se usa de manera diferente."
+          }
+        }
       },
       {
         "type": "text",
@@ -328,7 +534,18 @@ INSERT INTO lessons (
           "Full routine: 'In the morning I get up early. First I take a shower, then I have breakfast, and finally I go to work.'",
           "Asking questions: 'What do you do in the afternoon?'",
           "Talking about time: 'I have lunch at one and dinner at eight.'"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Poniendo Todo Junto",
+            "content": "¡Ahora puedes describir tu rutina diaria completa! Practica usando todo el vocabulario que has aprendido sobre rutinas, actividades, tiempo y secuencia.",
+            "examples": [
+              "Rutina completa: 'In the morning I get up early. First I take a shower, then I have breakfast, and finally I go to work.'",
+              "Hacer preguntas: 'What do you do in the afternoon?'",
+              "Hablar sobre el tiempo: 'I have lunch at one and dinner at eight.'"
+            ]
+          }
+        }
       },
       {
         "type": "matching",
@@ -345,7 +562,13 @@ INSERT INTO lessons (
           {"word": "early", "translation": "before the usual time"}
         ],
         "distractors": ["late", "afternoon"],
-        "explanation": "Fantastic! You've mastered daily routines and actions vocabulary. Keep practicing to remember all these verbs and time expressions!"
+        "explanation": "Fantastic! You've mastered daily routines and actions vocabulary. Keep practicing to remember all these verbs and time expressions!",
+        "translations": {
+          "es": {
+            "instruction": "Empareja las palabras de rutina diaria con sus significados",
+            "explanation": "¡Fantástico! Has dominado el vocabulario de rutinas diarias y acciones. ¡Sigue practicando para recordar todos estos verbos y expresiones de tiempo!"
+          }
+        }
       },
       {
         "type": "exercise",
@@ -357,7 +580,19 @@ INSERT INTO lessons (
           {"text": "After, finally, first", "is_correct": false},
           {"text": "Finally, first, then", "is_correct": false}
         ],
-        "explanation": "The correct sequence is: 'First' (beginning), 'then' (next), 'finally' (end). This shows the order of actions."
+        "explanation": "The correct sequence is: 'First' (beginning), 'then' (next), 'finally' (end). This shows the order of actions.",
+        "translations": {
+          "es": {
+            "question": "Completa: '___ I get up, ___ I have breakfast, and ___ I go to work'",
+            "options": [
+              {"text": "First, then, finally", "is_correct": true},
+              {"text": "Then, first, after", "is_correct": false},
+              {"text": "After, finally, first", "is_correct": false},
+              {"text": "Finally, first, then", "is_correct": false}
+            ],
+            "explanation": "La secuencia correcta es: 'First' (comienzo), 'then' (siguiente), 'finally' (final). Esto muestra el orden de las acciones."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -369,7 +604,19 @@ INSERT INTO lessons (
           {"text": "I wake up late in the morning", "is_correct": false},
           {"text": "I wake up early at the morning", "is_correct": false}
         ],
-        "explanation": "'I wake up early in the morning' is correct. Use 'in the morning' (not 'at the morning'), and 'wake up' not 'get up' for opening your eyes."
+        "explanation": "'I wake up early in the morning' is correct. Use 'in the morning' (not 'at the morning'), and 'wake up' not 'get up' for opening your eyes.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo dirías 'Me despierto temprano en la mañana'?",
+            "options": [
+              {"text": "I wake up early in the morning", "is_correct": true},
+              {"text": "I get up early in the morning", "is_correct": false},
+              {"text": "I wake up late in the morning", "is_correct": false},
+              {"text": "I wake up early at the morning", "is_correct": false}
+            ],
+            "explanation": "'I wake up early in the morning' es correcto. Usa 'in the morning' (no 'at the morning'), y 'wake up' no 'get up' para abrir los ojos."
+          }
+        }
       }
     ]
   }$lesson_json$::jsonb,

@@ -57,6 +57,12 @@ INSERT INTO lessons (
   2,
   25,
   $lesson_json${
+    "translations": {
+      "es": {
+        "title": "Información Personal",
+        "description": "Aprende a compartir y solicitar información personal, incluyendo edad, nacionalidad, ocupación y detalles de contacto en inglés."
+      }
+    },
     "sections": [
       {
         "type": "text",
@@ -67,21 +73,42 @@ INSERT INTO lessons (
           "Age: 'I am 25 years old' or 'I'm 25'",
           "Nationality: 'I am from the United States' or 'I am American'",
           "Occupation: 'I am a student' or 'I work as a teacher'"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Compartir Información Personal",
+            "content": "¡Ahora que sabes cómo saludar y presentarte, aprendamos a compartir más detalles personales! En inglés, aprenderás a hablar sobre tu edad, de dónde eres, a qué te dedicas y cómo las personas pueden contactarte.",
+            "examples": [
+              "Edad: 'I am 25 years old' o 'I'm 25'",
+              "Nacionalidad: 'I am from the United States' o 'I am American'",
+              "Ocupación: 'I am a student' o 'I work as a teacher'"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "age_example_1",
-        "spanish_example": "How old are you? I'm twenty-five years old.",
+        "spanish_example": "¿Cuántos años tienes? Tengo veinticinco años.",
         "english_translation": "How old are you? I'm twenty-five years old.",
-        "explanation": "To ask someone's age, use 'How old are you?' You can respond with 'I am [number] years old' or the shorter form 'I'm [number]'."
+        "explanation": "To ask someone's age, use 'How old are you?' You can respond with 'I am [number] years old' or the shorter form 'I'm [number]'.",
+        "translations": {
+          "es": {
+            "explanation": "Para preguntar la edad de alguien, usa 'How old are you?' Puedes responder con 'I am [número] years old' o la forma más corta 'I'm [número]'."
+          }
+        }
       },
       {
         "type": "example",
         "id": "age_example_2",
-        "spanish_example": "My birthday is March 15th. When is your birthday?",
+        "spanish_example": "Mi cumpleaños es el 15 de marzo. ¿Cuándo es tu cumpleaños?",
         "english_translation": "My birthday is March 15th. When is your birthday?",
-        "explanation": "When talking about birthdays, use 'My birthday is...' followed by the date. You can ask 'When is your birthday?' to find out someone else's birthday."
+        "explanation": "When talking about birthdays, use 'My birthday is...' followed by the date. You can ask 'When is your birthday?' to find out someone else's birthday.",
+        "translations": {
+          "es": {
+            "explanation": "Cuando hablas de cumpleaños, usa 'My birthday is...' seguido de la fecha. Puedes preguntar 'When is your birthday?' para saber el cumpleaños de otra persona."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -93,7 +120,19 @@ INSERT INTO lessons (
           {"text": "How many years you have?", "is_correct": false},
           {"text": "What is your age number?", "is_correct": false}
         ],
-        "explanation": "'How old are you?' is the standard and polite way to ask about someone's age in English."
+        "explanation": "'How old are you?' is the standard and polite way to ask about someone's age in English.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo preguntas la edad de alguien de manera cortés?",
+            "options": [
+              {"text": "How old are you?", "is_correct": true},
+              {"text": "What age you are?", "is_correct": false},
+              {"text": "How many years you have?", "is_correct": false},
+              {"text": "What is your age number?", "is_correct": false}
+            ],
+            "explanation": "'How old are you?' es la forma estándar y cortés de preguntar sobre la edad de alguien en inglés."
+          }
+        }
       },
       {
         "type": "text",
@@ -104,21 +143,42 @@ INSERT INTO lessons (
           "To say your nationality: 'I am American' or 'I am from the United States'",
           "To say your job: 'I am a teacher' or 'I work as a teacher'",
           "To say you're a student: 'I am a student' or 'I study at the university'"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Nacionalidad y Ocupación",
+            "content": "¡Aprendamos a hablar sobre de dónde eres y a qué te dedicas en el trabajo o estudio. ¡Estos son temas comunes en las conversaciones!",
+            "examples": [
+              "Para decir tu nacionalidad: 'I am American' o 'I am from the United States'",
+              "Para decir tu trabajo: 'I am a teacher' o 'I work as a teacher'",
+              "Para decir que eres estudiante: 'I am a student' o 'I study at the university'"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "nationality_example_1",
-        "spanish_example": "What's your nationality? I'm Canadian.",
+        "spanish_example": "¿Cuál es tu nacionalidad? Soy canadiense.",
         "english_translation": "What's your nationality? I'm Canadian.",
-        "explanation": "To ask about nationality, you can use 'What's your nationality?' or 'Where are you from?' You can respond with 'I'm [nationality]' or 'I'm from [country]'."
+        "explanation": "To ask about nationality, you can use 'What's your nationality?' or 'Where are you from?' You can respond with 'I'm [nationality]' or 'I'm from [country]'.",
+        "translations": {
+          "es": {
+            "explanation": "Para preguntar sobre la nacionalidad, puedes usar 'What's your nationality?' o 'Where are you from?' Puedes responder con 'I'm [nacionalidad]' o 'I'm from [país]'."
+          }
+        }
       },
       {
         "type": "example",
         "id": "occupation_example_1",
-        "spanish_example": "What do you do? I'm a doctor. I work at a hospital.",
+        "spanish_example": "¿A qué te dedicas? Soy médico. Trabajo en un hospital.",
         "english_translation": "What do you do? I'm a doctor. I work at a hospital.",
-        "explanation": "'What do you do?' is a common way to ask about someone's profession. You can respond with 'I'm a [profession]' or 'I work as a [profession]'."
+        "explanation": "'What do you do?' is a common way to ask about someone's profession. You can respond with 'I'm a [profession]' or 'I work as a [profession]'.",
+        "translations": {
+          "es": {
+            "explanation": "'What do you do?' es una forma común de preguntar sobre la profesión de alguien. Puedes responder con 'I'm a [profesión]' o 'I work as a [profesión]'."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -130,7 +190,19 @@ INSERT INTO lessons (
           {"text": "have", "is_correct": false},
           {"text": "do", "is_correct": false}
         ],
-        "explanation": "Use 'I am' (or 'I'm') to express identity, profession, or status. 'I am a student' is the correct form."
+        "explanation": "Use 'I am' (or 'I'm') to express identity, profession, or status. 'I am a student' is the correct form.",
+        "translations": {
+          "es": {
+            "question": "Completa la oración: 'I ___ a student at the university.'",
+            "options": [
+              {"text": "am", "is_correct": true},
+              {"text": "work", "is_correct": false},
+              {"text": "have", "is_correct": false},
+              {"text": "do", "is_correct": false}
+            ],
+            "explanation": "Usa 'I am' (o 'I'm') para expresar identidad, profesión o estado. 'I am a student' es la forma correcta."
+          }
+        }
       },
       {
         "type": "text",
@@ -141,21 +213,42 @@ INSERT INTO lessons (
           "Email: 'My email address is...' or 'You can email me at...'",
           "Phone: 'My phone number is...' or 'You can call me at...'",
           "Address: 'I live at...' or 'My address is...'"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Información de Contacto",
+            "content": "En el mundo de hoy, es importante saber cómo intercambiar información de contacto. Aprendamos a pedir y compartir direcciones de correo electrónico, números de teléfono y direcciones en inglés.",
+            "examples": [
+              "Correo electrónico: 'My email address is...' o 'You can email me at...'",
+              "Teléfono: 'My phone number is...' o 'You can call me at...'",
+              "Dirección: 'I live at...' o 'My address is...'"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "contact_example_1",
-        "spanish_example": "What's your email address? It's john.smith@gmail.com",
+        "spanish_example": "¿Cuál es tu dirección de correo electrónico? Es john.smith@gmail.com",
         "english_translation": "What's your email address? It's john.smith@gmail.com",
-        "explanation": "To ask for an email address, use 'What's your email address?' or 'What's your email?' You can respond with 'It's [email]' or 'My email is [email]'."
+        "explanation": "To ask for an email address, use 'What's your email address?' or 'What's your email?' You can respond with 'It's [email]' or 'My email is [email]'.",
+        "translations": {
+          "es": {
+            "explanation": "Para pedir una dirección de correo electrónico, usa 'What's your email address?' o 'What's your email?' Puedes responder con 'It's [correo]' o 'My email is [correo]'."
+          }
+        }
       },
       {
         "type": "example",
         "id": "contact_example_2",
-        "spanish_example": "Where do you live? I live in London, England.",
+        "spanish_example": "¿Dónde vives? Vivo en Londres, Inglaterra.",
         "english_translation": "Where do you live? I live in London, England.",
-        "explanation": "To ask where someone lives, use 'Where do you live?' Respond with 'I live in [city/place]' or 'I live at [address]' for a specific address."
+        "explanation": "To ask where someone lives, use 'Where do you live?' Respond with 'I live in [city/place]' or 'I live at [address]' for a specific address.",
+        "translations": {
+          "es": {
+            "explanation": "Para preguntar dónde vive alguien, usa 'Where do you live?' Responde con 'I live in [ciudad/lugar]' o 'I live at [dirección]' para una dirección específica."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -167,7 +260,19 @@ INSERT INTO lessons (
           {"text": "How many phones do you have?", "is_correct": false},
           {"text": "Do you have a phone?", "is_correct": false}
         ],
-        "explanation": "'What's your phone number?' is the standard way to ask for someone's phone number. You can also say 'Can I have your phone number?'"
+        "explanation": "'What's your phone number?' is the standard way to ask for someone's phone number. You can also say 'Can I have your phone number?'",
+        "translations": {
+          "es": {
+            "question": "¿Cómo pides el número de teléfono de alguien?",
+            "options": [
+              {"text": "What's your phone number?", "is_correct": true},
+              {"text": "Where is your phone?", "is_correct": false},
+              {"text": "How many phones do you have?", "is_correct": false},
+              {"text": "Do you have a phone?", "is_correct": false}
+            ],
+            "explanation": "'What's your phone number?' es la forma estándar de pedir el número de teléfono de alguien. También puedes decir 'Can I have your phone number?'"
+          }
+        }
       },
       {
         "type": "text",
@@ -178,14 +283,30 @@ INSERT INTO lessons (
           "Combine all the information: name, age, nationality, occupation, and contact",
           "Practice asking and answering questions about personal information",
           "Use polite phrases when asking for someone's details"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Poniendo Todo Junto",
+            "content": "¡Ahora veamos cómo tener una conversación completa compartiendo información personal. ¡Estos detalles ayudan a las personas a conocerte mejor!",
+            "examples": [
+              "Combina toda la información: nombre, edad, nacionalidad, ocupación y contacto",
+              "Practica preguntando y respondiendo preguntas sobre información personal",
+              "Usa frases corteses al pedir los detalles de alguien"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "complete_example_1",
-        "spanish_example": "A: Hi, I'm Sarah. Nice to meet you!\nB: Nice to meet you too, Sarah. I'm Michael. How old are you?\nA: I'm twenty-eight years old. I'm a student. What about you?\nB: I'm thirty years old and I'm a teacher. Where do you live?\nA: I live in New York. What's your email address?\nB: It's michael.brown@email.com. What's yours?",
+        "spanish_example": "A: Hola, soy Sarah. ¡Encantada de conocerte!\nB: Encantado de conocerte también, Sarah. Soy Michael. ¿Cuántos años tienes?\nA: Tengo veintiocho años. Soy estudiante. ¿Y tú?\nB: Tengo treinta años y soy profesor. ¿Dónde vives?\nA: Vivo en Nueva York. ¿Cuál es tu dirección de correo electrónico?\nB: Es michael.brown@email.com. ¿Cuál es la tuya?",
         "english_translation": "A: Hi, I'm Sarah. Nice to meet you!\nB: Nice to meet you too, Sarah. I'm Michael. How old are you?\nA: I'm twenty-eight years old. I'm a student. What about you?\nB: I'm thirty years old and I'm a teacher. Where do you live?\nA: I live in New York. What's your email address?\nB: It's michael.brown@email.com. What's yours?",
-        "explanation": "A complete conversation combining introductions, age, occupation, location, and contact information. Notice how the conversation flows naturally and how people take turns asking questions."
+        "explanation": "A complete conversation combining introductions, age, occupation, location, and contact information. Notice how the conversation flows naturally and how people take turns asking questions.",
+        "translations": {
+          "es": {
+            "explanation": "Una conversación completa que combina presentaciones, edad, ocupación, ubicación e información de contacto. Nota cómo fluye naturalmente la conversación y cómo las personas se turnan haciendo preguntas."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -197,7 +318,19 @@ INSERT INTO lessons (
           {"text": "I'm David, I'm 22, I'm student and I live Toronto.", "is_correct": false},
           {"text": "I'm David, I am years 22, I'm a student and I live at Toronto.", "is_correct": false}
         ],
-        "explanation": "The correct structure: name (I'm), age (I'm [number] years old), occupation (I'm a [profession]), and location (I live in [place])."
+        "explanation": "The correct structure: name (I'm), age (I'm [number] years old), occupation (I'm a [profession]), and location (I live in [place]).",
+        "translations": {
+          "es": {
+            "question": "¿Qué oración combina correctamente la información personal?",
+            "options": [
+              {"text": "I'm David, I'm 22 years old, I'm a student and I live in Toronto.", "is_correct": true},
+              {"text": "I'm David, I have 22 years, I work student and I am in Toronto.", "is_correct": false},
+              {"text": "I'm David, I'm 22, I'm student and I live Toronto.", "is_correct": false},
+              {"text": "I'm David, I am years 22, I'm a student and I live at Toronto.", "is_correct": false}
+            ],
+            "explanation": "La estructura correcta: nombre (I'm), edad (I'm [número] years old), ocupación (I'm a [profesión]), y ubicación (I live in [lugar])."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -209,7 +342,19 @@ INSERT INTO lessons (
           {"text": "How many phones do you have?", "is_correct": false},
           {"text": "Can you give me phone?", "is_correct": false}
         ],
-        "explanation": "'What's your phone number?' is the polite and standard way to ask for someone's phone number in English."
+        "explanation": "'What's your phone number?' is the polite and standard way to ask for someone's phone number in English.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo pedirías cortésmente el número de teléfono de alguien?",
+            "options": [
+              {"text": "What's your phone number?", "is_correct": true},
+              {"text": "Where is your phone?", "is_correct": false},
+              {"text": "How many phones do you have?", "is_correct": false},
+              {"text": "Can you give me phone?", "is_correct": false}
+            ],
+            "explanation": "'What's your phone number?' es la forma cortés y estándar de pedir el número de teléfono de alguien en inglés."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -221,7 +366,19 @@ INSERT INTO lessons (
           {"text": "I have teacher job", "is_correct": false},
           {"text": "I make teacher", "is_correct": false}
         ],
-        "explanation": "'I'm a teacher' is a casual and common way to state your profession. You can also say 'I work as a teacher' which is slightly more formal."
+        "explanation": "'I'm a teacher' is a casual and common way to state your profession. You can also say 'I work as a teacher' which is slightly more formal.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo dices 'I work as a teacher' de una manera más casual?",
+            "options": [
+              {"text": "I'm a teacher", "is_correct": true},
+              {"text": "I do teacher", "is_correct": false},
+              {"text": "I have teacher job", "is_correct": false},
+              {"text": "I make teacher", "is_correct": false}
+            ],
+            "explanation": "'I'm a teacher' es una forma casual y común de decir tu profesión. También puedes decir 'I work as a teacher' que es ligeramente más formal."
+          }
+        }
       }
     ]
   }$lesson_json$::jsonb,

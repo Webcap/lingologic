@@ -75,6 +75,12 @@ INSERT INTO lessons (
   9,
   35,
   $lesson_json${
+    "translations": {
+      "es": {
+        "title": "Comida, Bebida y Pedidos",
+        "description": "¡Aprende vocabulario esencial para comida, bebidas y pedidos en restaurantes en inglés!"
+      }
+    },
     "sections": [
       {
         "type": "text",
@@ -88,13 +94,32 @@ INSERT INTO lessons (
           "bread",
           "chicken",
           "fish"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Comida y Bebidas",
+            "content": "¡El vocabulario de comida es esencial para la vida diaria! Aprendamos alimentos y bebidas comunes en inglés. Estas palabras te ayudarán a pedir en restaurantes y comprar en tiendas de comestibles.",
+            "examples": [
+              "food",
+              "drink",
+              "water",
+              "bread",
+              "chicken",
+              "fish"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "basic_foods_example",
         "english_example": "I like chicken and rice. I don't like fish.",
-        "explanation": "Use 'like' to express preference: 'I like...' (positive) or 'I don't like...' (negative). You can use 'and' to connect foods: 'chicken and rice'."
+        "explanation": "Use 'like' to express preference: 'I like...' (positive) or 'I don't like...' (negative). You can use 'and' to connect foods: 'chicken and rice'.",
+        "translations": {
+          "es": {
+            "explanation": "Usa 'like' para expresar preferencia: 'I like...' (positivo) o 'I don't like...' (negativo). Puedes usar 'and' para conectar alimentos: 'chicken and rice'."
+          }
+        }
       },
       {
         "type": "text",
@@ -107,13 +132,31 @@ INSERT INTO lessons (
           "orange",
           "vegetable",
           "fruit"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Frutas y Verduras",
+            "content": "¡Las frutas y verduras son saludables y deliciosas! Aprende las comunes en inglés.",
+            "examples": [
+              "apple",
+              "banana",
+              "orange",
+              "vegetable",
+              "fruit"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "fruits_example",
         "english_example": "I eat an apple every day. My sister eats bananas for breakfast.",
-        "explanation": "'Eat' means to consume food. Use 'an' before words starting with vowels: 'an apple', 'an egg'. Use 'a' before consonants: 'a banana', 'a sandwich'."
+        "explanation": "'Eat' means to consume food. Use 'an' before words starting with vowels: 'an apple', 'an egg'. Use 'a' before consonants: 'a banana', 'a sandwich'.",
+        "translations": {
+          "es": {
+            "explanation": "'Eat' significa consumir comida. Usa 'an' antes de palabras que comienzan con vocales: 'an apple', 'an egg'. Usa 'a' antes de consonantes: 'a banana', 'a sandwich'."
+          }
+        }
       },
       {
         "type": "text",
@@ -126,13 +169,31 @@ INSERT INTO lessons (
           "tea",
           "juice",
           "milk"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Bebidas",
+            "content": "¡Calma tu sed con estas bebidas comunes! Todas las bebidas son sustantivos contables o incontables.",
+            "examples": [
+              "water",
+              "coffee",
+              "tea",
+              "juice",
+              "milk"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "drinks_example",
         "english_example": "I drink water and coffee in the morning. In the afternoon, I drink tea.",
-        "explanation": "'Drink' means to consume liquids. Some drinks are uncountable (water, coffee, tea) - you don't say 'a water', just 'water' or 'a glass of water'."
+        "explanation": "'Drink' means to consume liquids. Some drinks are uncountable (water, coffee, tea) - you don't say 'a water', just 'water' or 'a glass of water'.",
+        "translations": {
+          "es": {
+            "explanation": "'Drink' significa consumir líquidos. Algunas bebidas son incontables (water, coffee, tea) - no dices 'a water', solo 'water' o 'a glass of water'."
+          }
+        }
       },
       {
         "type": "text",
@@ -145,13 +206,31 @@ INSERT INTO lessons (
           "table",
           "waiter/waitress",
           "bill/check"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "En el Restaurante",
+            "content": "¿Listo para pedir en un restaurante? ¡Aprende estas frases esenciales para comer fuera en inglés!",
+            "examples": [
+              "restaurant",
+              "menu",
+              "table",
+              "waiter/waitress",
+              "bill/check"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "restaurant_example",
         "english_example": "Waiter, can I see the menu, please? I would like to order chicken and rice.",
-        "explanation": "'Can I see...?' is a polite way to ask. 'I would like...' is more polite than 'I want...'. 'Please' is very important for politeness!"
+        "explanation": "'Can I see...?' is a polite way to ask. 'I would like...' is more polite than 'I want...'. 'Please' is very important for politeness!",
+        "translations": {
+          "es": {
+            "explanation": "'Can I see...?' es una forma educada de preguntar. 'I would like...' es más educado que 'I want...'. ¡'Please' es muy importante para la cortesía!"
+          }
+        }
       },
       {
         "type": "text",
@@ -164,13 +243,31 @@ INSERT INTO lessons (
           "Please",
           "Thank you",
           "You're welcome"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Cómo Pedir",
+            "content": "¡Domina estas frases educadas para pedir comida y bebidas!",
+            "examples": [
+              "I want...",
+              "I would like...",
+              "Please",
+              "Thank you",
+              "You're welcome"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "ordering_example",
         "english_example": "- I would like a coffee, please. - Of course, anything else? - No, thank you. - You're welcome.",
-        "explanation": "When ordering, 'I would like' is more polite than 'I want'. Always say 'please' when making requests and 'thank you' when you receive something."
+        "explanation": "When ordering, 'I would like' is more polite than 'I want'. Always say 'please' when making requests and 'thank you' when you receive something.",
+        "translations": {
+          "es": {
+            "explanation": "Al pedir, 'I would like' es más educado que 'I want'. Siempre di 'please' cuando hagas solicitudes y 'thank you' cuando recibas algo."
+          }
+        }
       },
       {
         "type": "matching",
@@ -185,7 +282,13 @@ INSERT INTO lessons (
           {"word": "cheese", "translation": "dairy product"}
         ],
         "distractors": ["table", "menu"],
-        "explanation": "Excellent! These are essential food words. Remember that some foods are countable (apples, bananas) and others are uncountable (rice, water)."
+        "explanation": "Excellent! These are essential food words. Remember that some foods are countable (apples, bananas) and others are uncountable (rice, water).",
+        "translations": {
+          "es": {
+            "instruction": "Empareja las palabras en inglés con sus significados",
+            "explanation": "¡Excelente! Estas son palabras esenciales de comida. Recuerda que algunos alimentos son contables (apples, bananas) y otros son incontables (rice, water)."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -197,7 +300,19 @@ INSERT INTO lessons (
           {"text": "Give me", "is_correct": false},
           {"text": "I need", "is_correct": false}
         ],
-        "explanation": "Perfect! 'I would like' is more polite than 'I want'. Use it when ordering: 'I would like a coffee, please.' Always remember to add 'please' to be polite!"
+        "explanation": "Perfect! 'I would like' is more polite than 'I want'. Use it when ordering: 'I would like a coffee, please.' Always remember to add 'please' to be polite!",
+        "translations": {
+          "es": {
+            "question": "¿Cuál es una forma educada de decir que quieres algo?",
+            "options": [
+              {"text": "I would like", "is_correct": true},
+              {"text": "I want", "is_correct": false},
+              {"text": "Give me", "is_correct": false},
+              {"text": "I need", "is_correct": false}
+            ],
+            "explanation": "¡Perfecto! 'I would like' es más educado que 'I want'. Úsalo al pedir: 'I would like a coffee, please.' ¡Siempre recuerda agregar 'please' para ser educado!"
+          }
+        }
       },
       {
         "type": "text",
@@ -209,10 +324,22 @@ INSERT INTO lessons (
           "Say 'thank you' when the waiter brings your food",
           "To ask for the bill, say: 'The bill, please' or 'The check, please'",
           "If you don't understand, say: 'I don't understand' or 'Could you repeat that?'"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Consejos Prácticos",
+            "content": "Aquí hay algunos consejos útiles para pedir comida en países de habla inglesa:",
+            "examples": [
+              "Siempre usa 'please' al pedir",
+              "Di 'thank you' cuando el mesero traiga tu comida",
+              "Para pedir la cuenta, di: 'The bill, please' o 'The check, please'",
+              "Si no entiendes, di: 'I don't understand' o 'Could you repeat that?'"
+            ]
+          }
+        }
       }
     ]
-  }$lesson_json$,
+  }$lesson_json$::jsonb,
   ARRAY[
     'english_food', 'english_water', 'english_bread', 'english_rice', 'english_chicken', 
     'english_fish', 'english_meat', 'english_vegetable', 'english_fruit',
@@ -224,8 +351,8 @@ INSERT INTO lessons (
     'english_table', 'english_restaurant',
     'english_want', 'english_would_like', 'english_order', 'english_please',
     'english_thank_you', 'english_you_re_welcome'
-  ],
-  ARRAY['present_tense_verbs', 'countable_uncountable_nouns', 'polite_expressions']
+  ]::TEXT[],
+  ARRAY['present_tense_verbs', 'countable_uncountable_nouns', 'polite_expressions']::TEXT[]
 )
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,

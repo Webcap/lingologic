@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_cast
+
 import 'package:flutter/foundation.dart';
 import '../../models/word.dart';
 import '../../models/word_mastery.dart';
@@ -13,7 +15,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseRepository {
   SupabaseClient? _supabase;
-  
+
   SupabaseClient? get _supabaseClient {
     if (_supabase == null) {
       _supabase = SupabaseConfig.client;
@@ -25,7 +27,9 @@ class SupabaseRepository {
   SupabaseClient _getClient() {
     final client = _supabaseClient;
     if (client == null) {
-      throw Exception('Supabase client is not initialized. Cannot perform database operations.');
+      throw Exception(
+        'Supabase client is not initialized. Cannot perform database operations.',
+      );
     }
     return client;
   }
@@ -37,7 +41,7 @@ class SupabaseRepository {
       if (client == null) {
         throw Exception('Supabase not initialized');
       }
-      
+
       var query = client.from('words').select();
 
       if (language != null) {
@@ -60,7 +64,7 @@ class SupabaseRepository {
     if (client == null) {
       throw Exception('Supabase not initialized');
     }
-    
+
     final response = await client
         .from('words')
         .select()
@@ -76,16 +80,16 @@ class SupabaseRepository {
     if (client == null) {
       throw Exception('Supabase not initialized');
     }
-    
+
     var query = client
         .from('words')
         .select()
         .eq('word_text', wordText.toLowerCase().trim());
-    
+
     if (language != null) {
       query = query.eq('language', language);
     }
-    
+
     final response = await query.maybeSingle();
 
     if (response == null) return null;
@@ -98,7 +102,7 @@ class SupabaseRepository {
     if (client == null) {
       throw Exception('Supabase not initialized');
     }
-    
+
     final response = await client
         .from('word_mastery')
         .select()
@@ -114,7 +118,7 @@ class SupabaseRepository {
     if (client == null) {
       throw Exception('Supabase not initialized');
     }
-    
+
     await client.from('word_mastery').upsert(mastery.toJson());
   }
 
@@ -124,7 +128,7 @@ class SupabaseRepository {
     if (client == null) {
       throw Exception('Supabase not initialized');
     }
-    
+
     final response = await client
         .from('user_profiles')
         .select()
@@ -140,7 +144,7 @@ class SupabaseRepository {
     if (client == null) {
       throw Exception('Supabase not initialized');
     }
-    
+
     await client.from('user_profiles').upsert(profile.toJson());
   }
 
@@ -150,19 +154,22 @@ class SupabaseRepository {
     if (client == null) {
       throw Exception('Supabase not initialized');
     }
-    
+
     await client.from('game_sessions').insert({
       ...session.toJson(),
       'id': DateTime.now().millisecondsSinceEpoch.toString(),
     });
   }
 
-  Future<List<GameSession>> getGameSessions(String userId, {GameType? gameType}) async {
+  Future<List<GameSession>> getGameSessions(
+    String userId, {
+    GameType? gameType,
+  }) async {
     final client = _supabaseClient;
     if (client == null) {
       throw Exception('Supabase not initialized');
     }
-    
+
     var query = client.from('game_sessions').select().eq('user_id', userId);
 
     if (gameType != null) {
@@ -182,7 +189,9 @@ class SupabaseRepository {
       var query = client.from('lessons').select();
 
       if (language != null) {
-        debugPrint('SupabaseRepository: Filtering lessons by language: $language');
+        debugPrint(
+          'SupabaseRepository: Filtering lessons by language: $language',
+        );
         query = query.eq('language', language);
       }
       if (category != null) {
@@ -190,18 +199,24 @@ class SupabaseRepository {
       }
 
       final response = await query.order('order_index');
-      
+
       // Log raw response for debugging
       final responseList = response as List;
-      debugPrint('SupabaseRepository: Raw response count: ${responseList.length}');
-      
+      debugPrint(
+        'SupabaseRepository: Raw response count: ${responseList.length}',
+      );
+
       if (responseList.isNotEmpty) {
         final firstItem = responseList.first;
         if (firstItem is Map) {
-          debugPrint('SupabaseRepository: First lesson raw data keys: ${firstItem.keys.toList()}');
-          debugPrint('SupabaseRepository: First lesson data: id=${firstItem['id']}, title=${firstItem['title']}, language=${firstItem['language']}');
+          debugPrint(
+            'SupabaseRepository: First lesson raw data keys: ${firstItem.keys.toList()}',
+          );
+          debugPrint(
+            'SupabaseRepository: First lesson data: id=${firstItem['id']}, title=${firstItem['title']}, language=${firstItem['language']}',
+          );
         }
-        
+
         // Log all lesson IDs from database
         final allIds = responseList.map((item) {
           if (item is Map) return item['id'] ?? 'NO_ID';
@@ -209,69 +224,98 @@ class SupabaseRepository {
         }).toList();
         debugPrint('SupabaseRepository: All lesson IDs from database: $allIds');
       }
-      
+
       final lessons = <Lesson>[];
       final failedLessons = <Map<String, String>>[];
-      
+
       for (final item in responseList) {
         try {
           if (item is Map<String, dynamic>) {
             final lessonId = item['id'] as String? ?? 'unknown';
             try {
               lessons.add(Lesson.fromJson(item));
-              debugPrint('SupabaseRepository: ✅ Successfully parsed lesson: $lessonId');
+              debugPrint(
+                'SupabaseRepository: ✅ Successfully parsed lesson: $lessonId',
+              );
             } catch (parseError, stackTrace) {
               final errorMessage = parseError.toString();
-              failedLessons.add({
-                'id': lessonId,
-                'error': errorMessage,
-              });
-              debugPrint('SupabaseRepository: ❌ ERROR parsing lesson $lessonId');
+              failedLessons.add({'id': lessonId, 'error': errorMessage});
+              debugPrint(
+                'SupabaseRepository: ❌ ERROR parsing lesson $lessonId',
+              );
               debugPrint('SupabaseRepository: Error message: $errorMessage');
-              debugPrint('SupabaseRepository: Lesson has content_json: ${item['content_json'] != null}');
-              
+              debugPrint(
+                'SupabaseRepository: Lesson has content_json: ${item['content_json'] != null}',
+              );
+
               // Check content_json structure
               final contentJson = item['content_json'];
               if (contentJson != null) {
                 if (contentJson is Map) {
                   final contentMap = contentJson as Map;
-                  debugPrint('SupabaseRepository: content_json is Map, has sections: ${contentMap.containsKey('sections')}');
+                  debugPrint(
+                    'SupabaseRepository: content_json is Map, has sections: ${contentMap.containsKey('sections')}',
+                  );
                   if (contentMap.containsKey('sections')) {
                     final sections = contentMap['sections'];
-                    debugPrint('SupabaseRepository: sections type: ${sections.runtimeType}');
+                    debugPrint(
+                      'SupabaseRepository: sections type: ${sections.runtimeType}',
+                    );
                     if (sections is List) {
-                      debugPrint('SupabaseRepository: sections array length: ${sections.length}');
+                      debugPrint(
+                        'SupabaseRepository: sections array length: ${sections.length}',
+                      );
                     }
                   }
                 } else {
-                  debugPrint('SupabaseRepository: content_json type: ${contentJson.runtimeType}');
+                  debugPrint(
+                    'SupabaseRepository: content_json type: ${contentJson.runtimeType}',
+                  );
                 }
               }
-              
+
               debugPrint('SupabaseRepository: Stack trace: $stackTrace');
             }
           } else {
-            debugPrint('SupabaseRepository: Skipping invalid lesson item (not a Map): ${item.runtimeType}');
+            debugPrint(
+              'SupabaseRepository: Skipping invalid lesson item (not a Map): ${item.runtimeType}',
+            );
           }
         } catch (e, stackTrace) {
-          debugPrint('SupabaseRepository: Unexpected error processing lesson: $e');
+          debugPrint(
+            'SupabaseRepository: Unexpected error processing lesson: $e',
+          );
           debugPrint('SupabaseRepository: Stack trace: $stackTrace');
         }
       }
-      
-      debugPrint('SupabaseRepository: Total lessons in database: ${responseList.length}');
-      debugPrint('SupabaseRepository: Successfully parsed: ${lessons.length} lessons');
-      debugPrint('SupabaseRepository: Failed to parse: ${failedLessons.length} lessons');
+
+      debugPrint(
+        'SupabaseRepository: Total lessons in database: ${responseList.length}',
+      );
+      debugPrint(
+        'SupabaseRepository: Successfully parsed: ${lessons.length} lessons',
+      );
+      debugPrint(
+        'SupabaseRepository: Failed to parse: ${failedLessons.length} lessons',
+      );
       if (failedLessons.isNotEmpty) {
-        debugPrint('SupabaseRepository: Failed lesson IDs: ${failedLessons.map((f) => f['id']).toList()}');
+        debugPrint(
+          'SupabaseRepository: Failed lesson IDs: ${failedLessons.map((f) => f['id']).toList()}',
+        );
         for (final failed in failedLessons) {
-          debugPrint('SupabaseRepository:   - ${failed['id']}: ${failed['error']}');
+          debugPrint(
+            'SupabaseRepository:   - ${failed['id']}: ${failed['error']}',
+          );
         }
       }
-      
+
       if (lessons.isNotEmpty) {
-        debugPrint('SupabaseRepository: First lesson: ${lessons.first.id} - ${lessons.first.title} (level: ${lessons.first.level})');
-        debugPrint('SupabaseRepository: All loaded lesson IDs: ${lessons.map((l) => l.id).toList()}');
+        debugPrint(
+          'SupabaseRepository: First lesson: ${lessons.first.id} - ${lessons.first.title} (level: ${lessons.first.level})',
+        );
+        debugPrint(
+          'SupabaseRepository: All loaded lesson IDs: ${lessons.map((l) => l.id).toList()}',
+        );
       }
       return lessons;
     } catch (e) {
@@ -306,7 +350,9 @@ class SupabaseRepository {
   }
 
   Future<LessonProgress?> getLessonProgressById(
-      String userId, String lessonId) async {
+    String userId,
+    String lessonId,
+  ) async {
     final client = _getClient();
     final response = await client
         .from('lesson_progress')
@@ -355,11 +401,10 @@ class SupabaseRepository {
   Future<List<FeatureFlag>> getFeatureFlags() async {
     final client = _getClient();
     try {
-      final response = await client
-          .from('feature_flags')
-          .select()
-          .order('key');
-      return (response as List).map((json) => FeatureFlag.fromJson(json)).toList();
+      final response = await client.from('feature_flags').select().order('key');
+      return (response as List)
+          .map((json) => FeatureFlag.fromJson(json))
+          .toList();
     } catch (e) {
       rethrow;
     }
@@ -391,4 +436,3 @@ class SupabaseRepository {
     return Game.fromJson(response);
   }
 }
-

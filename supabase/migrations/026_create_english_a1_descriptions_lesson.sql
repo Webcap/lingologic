@@ -95,6 +95,12 @@ INSERT INTO lessons (
   8,
   40,
   $lesson_json${
+    "translations": {
+      "es": {
+        "title": "Descripciones",
+        "description": "Aprende a describir personas, objetos y cosas en inglés. ¡Domina adjetivos, colores y vocabulario de apariencia física!"
+      }
+    },
     "sections": [
       {
         "type": "text",
@@ -108,13 +114,32 @@ INSERT INTO lessons (
           "small (little in size)",
           "pretty (attractive)",
           "intelligent (smart, clever)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Describir Personas y Cosas",
+            "content": "¡Aprender a describir es esencial para la comunicación! Aprendamos a describir personas, objetos y cosas en inglés usando adjetivos.",
+            "examples": [
+              "tall (tener gran altura)",
+              "short (tener poca altura)",
+              "big (grande en tamaño)",
+              "small (pequeño en tamaño)",
+              "pretty (atractivo)",
+              "intelligent (inteligente, listo)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "physical_appearance_example_1",
         "english_example": "My sister is tall and has long hair. My brother is short and has short hair.",
-        "explanation": "Use 'is' for physical characteristics: 'is tall', 'is short'. Use 'has' for hair: 'has long hair', 'has short hair'."
+        "explanation": "Use 'is' for physical characteristics: 'is tall', 'is short'. Use 'has' for hair: 'has long hair', 'has short hair'.",
+        "translations": {
+          "es": {
+            "explanation": "Usa 'is' para características físicas: 'is tall', 'is short'. Usa 'has' para el cabello: 'has long hair', 'has short hair'."
+          }
+        }
       },
       {
         "type": "matching",
@@ -129,7 +154,13 @@ INSERT INTO lessons (
           {"word": "old", "translation": "having lived for many years"}
         ],
         "distractors": ["big", "small"],
-        "explanation": "Great! These adjectives describe physical appearance. Use them with 'is' or 'are': 'He is tall', 'They are young'."
+        "explanation": "Great! These adjectives describe physical appearance. Use them with 'is' or 'are': 'He is tall', 'They are young'.",
+        "translations": {
+          "es": {
+            "instruction": "Empareja los adjetivos en inglés con sus significados",
+            "explanation": "¡Genial! Estos adjetivos describen la apariencia física. Úsalos con 'is' o 'are': 'He is tall', 'They are young'."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -141,7 +172,19 @@ INSERT INTO lessons (
           {"text": "big", "is_correct": false},
           {"text": "small", "is_correct": false}
         ],
-        "explanation": "'Tall' means having great height. Use it with 'is': 'She is tall' or 'He is tall'. 'Big' refers to size, not height."
+        "explanation": "'Tall' means having great height. Use it with 'is': 'She is tall' or 'He is tall'. 'Big' refers to size, not height.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo se dice que alguien tiene gran altura en inglés?",
+            "options": [
+              {"text": "tall", "is_correct": true},
+              {"text": "short", "is_correct": false},
+              {"text": "big", "is_correct": false},
+              {"text": "small", "is_correct": false}
+            ],
+            "explanation": "'Tall' significa tener gran altura. Úsalo con 'is': 'She is tall' o 'He is tall'. 'Big' se refiere al tamaño, no a la altura."
+          }
+        }
       },
       {
         "type": "text",
@@ -155,13 +198,32 @@ INSERT INTO lessons (
           "yellow (the color of the sun)",
           "white (the color of snow)",
           "black (the color of night)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Colores",
+            "content": "¡Aprendamos colores en inglés! Los colores nos ayudan a describir cómo se ven las cosas.",
+            "examples": [
+              "blue (el color del cielo)",
+              "red (el color de la sangre)",
+              "green (el color de la hierba)",
+              "yellow (el color del sol)",
+              "white (el color de la nieve)",
+              "black (el color de la noche)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "colors_example_1",
         "english_example": "I have a blue car. My friend has a red purse.",
-        "explanation": "Colors come before the noun in English: 'blue car', 'red purse'. Use 'a' or 'an' with singular nouns."
+        "explanation": "Colors come before the noun in English: 'blue car', 'red purse'. Use 'a' or 'an' with singular nouns.",
+        "translations": {
+          "es": {
+            "explanation": "Los colores van antes del sustantivo en inglés: 'blue car', 'red purse'. Usa 'a' o 'an' con sustantivos singulares."
+          }
+        }
       },
       {
         "type": "pronunciation",
@@ -200,7 +262,13 @@ INSERT INTO lessons (
             "translation": "black"
           }
         ],
-        "explanation": "Excellent pronunciation practice! Notice the sounds in each color word. Keep practicing to sound natural!"
+        "explanation": "Excellent pronunciation practice! Notice the sounds in each color word. Keep practicing to sound natural!",
+        "translations": {
+          "es": {
+            "instruction": "Practica pronunciando estas palabras de colores",
+            "explanation": "¡Excelente práctica de pronunciación! Nota los sonidos en cada palabra de color. ¡Sigue practicando para sonar natural!"
+          }
+        }
       },
       {
         "type": "matching",
@@ -217,7 +285,13 @@ INSERT INTO lessons (
           {"word": "orange", "translation": "the color of an orange fruit"}
         ],
         "distractors": ["brown", "pink"],
-        "explanation": "Perfect! You've learned the main colors in English. Remember: colors come before the noun: 'blue car', not 'car blue'."
+        "explanation": "Perfect! You've learned the main colors in English. Remember: colors come before the noun: 'blue car', not 'car blue'.",
+        "translations": {
+          "es": {
+            "instruction": "Empareja los colores en inglés con sus descripciones",
+            "explanation": "¡Perfecto! Has aprendido los colores principales en inglés. Recuerda: los colores van antes del sustantivo: 'blue car', no 'car blue'."
+          }
+        }
       },
       {
         "type": "text",
@@ -230,13 +304,31 @@ INSERT INTO lessons (
           "black hair (dark hair)",
           "blonde hair (light yellow hair)",
           "brown hair (medium brown hair)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Describir el Cabello",
+            "content": "Aprendamos a describir el cabello en inglés. Usa 'has' o 'have' con descripciones de cabello.",
+            "examples": [
+              "long hair (cabello que es largo)",
+              "short hair (cabello que es corto)",
+              "black hair (cabello oscuro)",
+              "blonde hair (cabello amarillo claro)",
+              "brown hair (cabello marrón medio)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "hair_descriptions_example_1",
         "english_example": "Maria has long, blonde hair. John has short, black hair.",
-        "explanation": "Use 'has' (he/she/it) or 'have' (I/you/we/they) with hair descriptions. Put color and length together: 'long, blonde hair'."
+        "explanation": "Use 'has' (he/she/it) or 'have' (I/you/we/they) with hair descriptions. Put color and length together: 'long, blonde hair'.",
+        "translations": {
+          "es": {
+            "explanation": "Usa 'has' (he/she/it) o 'have' (I/you/we/they) con descripciones de cabello. Pon el color y la longitud juntos: 'long, blonde hair'."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -248,7 +340,19 @@ INSERT INTO lessons (
           {"text": "have", "is_correct": false},
           {"text": "are", "is_correct": false}
         ],
-        "explanation": "'Has' is used with 'she', 'he', and 'it'. 'Have' is used with 'I', 'you', 'we', and 'they'. Use 'has hair' or 'have hair' to describe hair."
+        "explanation": "'Has' is used with 'she', 'he', and 'it'. 'Have' is used with 'I', 'you', 'we', and 'they'. Use 'has hair' or 'have hair' to describe hair.",
+        "translations": {
+          "es": {
+            "question": "Completa: 'She ___ long hair'",
+            "options": [
+              {"text": "has", "is_correct": true},
+              {"text": "is", "is_correct": false},
+              {"text": "have", "is_correct": false},
+              {"text": "are", "is_correct": false}
+            ],
+            "explanation": "'Has' se usa con 'she', 'he' e 'it'. 'Have' se usa con 'I', 'you', 'we' y 'they'. Usa 'has hair' o 'have hair' para describir el cabello."
+          }
+        }
       },
       {
         "type": "text",
@@ -262,13 +366,32 @@ INSERT INTO lessons (
           "funny (humorous)",
           "serious (not joking, solemn)",
           "quiet (making little noise)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Personalidad y Características",
+            "content": "¡Ahora aprendamos adjetivos para describir personalidad y características!",
+            "examples": [
+              "intelligent (inteligente, listo)",
+              "kind (amable, cariñoso)",
+              "friendly (agradable, sociable)",
+              "funny (gracioso)",
+              "serious (no bromista, solemne)",
+              "quiet (haciendo poco ruido)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "characteristics_example_1",
         "english_example": "My teacher is very intelligent and kind. My friend is funny but sometimes he is serious.",
-        "explanation": "Use 'is' or 'are' with personality traits. 'Very' means 'a lot'. You can combine adjectives with 'and' or 'but'."
+        "explanation": "Use 'is' or 'are' with personality traits. 'Very' means 'a lot'. You can combine adjectives with 'and' or 'but'.",
+        "translations": {
+          "es": {
+            "explanation": "Usa 'is' o 'are' con rasgos de personalidad. 'Very' significa 'mucho'. Puedes combinar adjetivos con 'and' o 'but'."
+          }
+        }
       },
       {
         "type": "pronunciation",
@@ -297,7 +420,13 @@ INSERT INTO lessons (
             "translation": "serious"
           }
         ],
-        "explanation": "Good job! Notice the pronunciation and stress patterns. Practice these to sound more natural in English!"
+        "explanation": "Good job! Notice the pronunciation and stress patterns. Practice these to sound more natural in English!",
+        "translations": {
+          "es": {
+            "instruction": "Practica pronunciando estos adjetivos de personalidad",
+            "explanation": "¡Buen trabajo! Nota los patrones de pronunciación y acentuación. ¡Practica estos para sonar más natural en inglés!"
+          }
+        }
       },
       {
         "type": "matching",
@@ -312,7 +441,13 @@ INSERT INTO lessons (
           {"word": "quiet", "translation": "making little noise"}
         ],
         "distractors": ["ugly", "tall"],
-        "explanation": "Excellent! These adjectives describe personality. Use them with 'is' or 'are': 'She is friendly', 'They are kind'."
+        "explanation": "Excellent! These adjectives describe personality. Use them with 'is' or 'are': 'She is friendly', 'They are kind'.",
+        "translations": {
+          "es": {
+            "instruction": "Empareja los adjetivos de personalidad con sus significados",
+            "explanation": "¡Excelente! Estos adjetivos describen la personalidad. Úsalos con 'is' o 'are': 'She is friendly', 'They are kind'."
+          }
+        }
       },
       {
         "type": "text",
@@ -326,13 +461,32 @@ INSERT INTO lessons (
           "rough (not smooth, uneven surface)",
           "hot (high temperature)",
           "cold (low temperature)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Describir Objetos: Material y Textura",
+            "content": "¡Aprendamos a describir objetos! Estos adjetivos describen cómo se sienten las cosas o de qué están hechas.",
+            "examples": [
+              "hard (no suave, firme)",
+              "soft (no duro, suave al tacto)",
+              "smooth (no áspero, superficie lisa)",
+              "rough (no liso, superficie desigual)",
+              "hot (alta temperatura)",
+              "cold (baja temperatura)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "material_texture_example_1",
         "english_example": "The bed is soft and smooth. The table is hard.",
-        "explanation": "Use 'is' or 'are' to describe characteristics of objects. You can combine adjectives: 'soft and smooth'."
+        "explanation": "Use 'is' or 'are' to describe characteristics of objects. You can combine adjectives: 'soft and smooth'.",
+        "translations": {
+          "es": {
+            "explanation": "Usa 'is' o 'are' para describir características de objetos. Puedes combinar adjetivos: 'soft and smooth'."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -344,7 +498,19 @@ INSERT INTO lessons (
           {"text": "smooth", "is_correct": false},
           {"text": "hot", "is_correct": false}
         ],
-        "explanation": "'Soft' means not hard, gentle to touch. 'Smooth' means even surface. Both can describe textures, but 'soft' refers to how something feels when you press it."
+        "explanation": "'Soft' means not hard, gentle to touch. 'Smooth' means even surface. Both can describe textures, but 'soft' refers to how something feels when you press it.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo se dice 'no duro, suave al tacto' en inglés?",
+            "options": [
+              {"text": "soft", "is_correct": true},
+              {"text": "hard", "is_correct": false},
+              {"text": "smooth", "is_correct": false},
+              {"text": "hot", "is_correct": false}
+            ],
+            "explanation": "'Soft' significa no duro, suave al tacto. 'Smooth' significa superficie lisa. Ambos pueden describir texturas, pero 'soft' se refiere a cómo se siente algo cuando lo presionas."
+          }
+        }
       },
       {
         "type": "text",
@@ -358,13 +524,32 @@ INSERT INTO lessons (
           "difficult (not easy, hard)",
           "clean (not dirty, free from dirt)",
           "dirty (not clean, covered with dirt)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Adjetivos Descriptivos Comunes",
+            "content": "¡Aquí hay algunos adjetivos muy comunes que usarás a menudo para describir cosas!",
+            "examples": [
+              "new (no viejo, hecho recientemente)",
+              "old (no nuevo, que ha existido por mucho tiempo)",
+              "easy (no difícil, simple)",
+              "difficult (no fácil, duro)",
+              "clean (no sucio, libre de suciedad)",
+              "dirty (no limpio, cubierto de suciedad)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "common_adjectives_example_1",
         "english_example": "I have a new car. The homework is easy. The house is clean.",
-        "explanation": "Adjectives come before nouns: 'new car', 'easy homework'. Or use 'is/are' + adjective: 'is easy', 'is clean'."
+        "explanation": "Adjectives come before nouns: 'new car', 'easy homework'. Or use 'is/are' + adjective: 'is easy', 'is clean'.",
+        "translations": {
+          "es": {
+            "explanation": "Los adjetivos van antes de los sustantivos: 'new car', 'easy homework'. O usa 'is/are' + adjetivo: 'is easy', 'is clean'."
+          }
+        }
       },
       {
         "type": "pronunciation",
@@ -393,7 +578,13 @@ INSERT INTO lessons (
             "translation": "clean"
           }
         ],
-        "explanation": "Great pronunciation! Notice the vowel sounds in these words. Keep practicing to improve your English pronunciation!"
+        "explanation": "Great pronunciation! Notice the vowel sounds in these words. Keep practicing to improve your English pronunciation!",
+        "translations": {
+          "es": {
+            "instruction": "Practica pronunciando estos adjetivos comunes",
+            "explanation": "¡Gran pronunciación! Nota los sonidos de las vocales en estas palabras. ¡Sigue practicando para mejorar tu pronunciación en inglés!"
+          }
+        }
       },
       {
         "type": "text",
@@ -404,13 +595,29 @@ INSERT INTO lessons (
           "What is... like? (asking for a description)",
           "What color...? (asking about color)",
           "How does... look? (asking about appearance)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Preguntar sobre Descripciones",
+            "content": "¡Aprendamos a preguntar sobre descripciones! Estas preguntas te ayudan a descubrir cómo son las cosas.",
+            "examples": [
+              "What is... like? (preguntando por una descripción)",
+              "What color...? (preguntando sobre el color)",
+              "How does... look? (preguntando sobre la apariencia)"
+            ]
+          }
+        }
       },
       {
         "type": "example",
         "id": "asking_questions_example_1",
         "english_example": "A: What is your sister like? / B: She is tall and has blonde hair.",
-        "explanation": "'What is... like?' asks for a description of someone or something. Answer with 'is/are' + adjectives and characteristics."
+        "explanation": "'What is... like?' asks for a description of someone or something. Answer with 'is/are' + adjectives and characteristics.",
+        "translations": {
+          "es": {
+            "explanation": "'What is... like?' pregunta por una descripción de alguien o algo. Responde con 'is/are' + adjetivos y características."
+          }
+        }
       },
       {
         "type": "exercise",
@@ -422,7 +629,19 @@ INSERT INTO lessons (
           {"text": "How is the color?", "is_correct": false},
           {"text": "Which color is it?", "is_correct": false}
         ],
-        "explanation": "'What color is it?' is the most common way to ask about color. You can also say 'What color is the car?' or 'What color are the shoes?'"
+        "explanation": "'What color is it?' is the most common way to ask about color. You can also say 'What color is the car?' or 'What color are the shoes?'",
+        "translations": {
+          "es": {
+            "question": "¿Cómo preguntas '¿De qué color es?' en inglés?",
+            "options": [
+              {"text": "What color is it?", "is_correct": true},
+              {"text": "What is the color?", "is_correct": false},
+              {"text": "How is the color?", "is_correct": false},
+              {"text": "Which color is it?", "is_correct": false}
+            ],
+            "explanation": "'What color is it?' es la forma más común de preguntar sobre el color. También puedes decir 'What color is the car?' o 'What color are the shoes?'"
+          }
+        }
       },
       {
         "type": "text",
@@ -433,7 +652,18 @@ INSERT INTO lessons (
           "Complete description: 'My friend is tall, young, and has short, black hair. He is very intelligent and kind.'",
           "Describing objects: 'I have a new table. It's big and brown. The surface is smooth.'",
           "Asking questions: 'What is your teacher like?' (asking for a description)"
-        ]
+        ],
+        "translations": {
+          "es": {
+            "title": "Poniendo Todo Junto",
+            "content": "¡Ahora puedes describir personas, objetos y cosas en inglés! Practica combinando diferentes tipos de descripciones.",
+            "examples": [
+              "Descripción completa: 'My friend is tall, young, and has short, black hair. He is very intelligent and kind.'",
+              "Describir objetos: 'I have a new table. It's big and brown. The surface is smooth.'",
+              "Hacer preguntas: 'What is your teacher like?' (preguntando por una descripción)"
+            ]
+          }
+        }
       },
       {
         "type": "matching",
@@ -450,7 +680,13 @@ INSERT INTO lessons (
           {"word": "kind", "translation": "nice, caring"}
         ],
         "distractors": ["difficult", "ugly"],
-        "explanation": "Fantastic! You've learned a comprehensive set of descriptive vocabulary. Keep practicing to remember all these adjectives!"
+        "explanation": "Fantastic! You've learned a comprehensive set of descriptive vocabulary. Keep practicing to remember all these adjectives!",
+        "translations": {
+          "es": {
+            "instruction": "Empareja las palabras de descripción en inglés con sus significados",
+            "explanation": "¡Fantástico! Has aprendido un conjunto completo de vocabulario descriptivo. ¡Sigue practicando para recordar todos estos adjetivos!"
+          }
+        }
       },
       {
         "type": "exercise",
@@ -462,7 +698,19 @@ INSERT INTO lessons (
           {"text": "is, is", "is_correct": false},
           {"text": "has, has", "is_correct": false}
         ],
-        "explanation": "Use 'is' for characteristics: 'is tall'. Use 'has' for hair: 'has long hair'. Don't mix them up!"
+        "explanation": "Use 'is' for characteristics: 'is tall'. Use 'has' for hair: 'has long hair'. Don't mix them up!",
+        "translations": {
+          "es": {
+            "question": "Completa: 'She ___ tall and ___ long hair'",
+            "options": [
+              {"text": "is, has", "is_correct": true},
+              {"text": "has, is", "is_correct": false},
+              {"text": "is, is", "is_correct": false},
+              {"text": "has, has", "is_correct": false}
+            ],
+            "explanation": "Usa 'is' para características: 'is tall'. Usa 'has' para el cabello: 'has long hair'. ¡No los confundas!"
+          }
+        }
       },
       {
         "type": "exercise",
@@ -474,7 +722,19 @@ INSERT INTO lessons (
           {"text": "How is...?", "is_correct": false},
           {"text": "What does... have?", "is_correct": false}
         ],
-        "explanation": "'What is... like?' asks for a description of what someone or something is like. 'How is...?' asks about health or feelings."
+        "explanation": "'What is... like?' asks for a description of what someone or something is like. 'How is...?' asks about health or feelings.",
+        "translations": {
+          "es": {
+            "question": "¿Cómo preguntas '¿Cómo es él/ella/eso?' en inglés?",
+            "options": [
+              {"text": "What is... like?", "is_correct": true},
+              {"text": "What is...?", "is_correct": false},
+              {"text": "How is...?", "is_correct": false},
+              {"text": "What does... have?", "is_correct": false}
+            ],
+            "explanation": "'What is... like?' pregunta por una descripción de cómo es alguien o algo. 'How is...?' pregunta sobre salud o sentimientos."
+          }
+        }
       }
     ]
   }$lesson_json$::jsonb,
