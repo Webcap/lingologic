@@ -149,10 +149,20 @@ class ExampleSection extends LessonSection {
   }) : super(type: 'example', id: id);
 
   factory ExampleSection.fromJson(Map<String, dynamic> json) {
+    // Handle both formats:
+    // Old format: spanish_example + english_translation (for Spanish lessons)
+    // New format: english_example only (for English lessons)
+    final spanishExample = json['spanish_example'] as String? ?? 
+                          json['english_example'] as String? ?? 
+                          '';
+    final englishTranslation = json['english_translation'] as String? ?? 
+                              json['english_example'] as String? ?? 
+                              '';
+    
     return ExampleSection(
       id: json['id'] as String,
-      spanishExample: json['spanish_example'] as String,
-      englishTranslation: json['english_translation'] as String,
+      spanishExample: spanishExample,
+      englishTranslation: englishTranslation,
       explanation: json['explanation'] as String?,
     );
   }
@@ -172,10 +182,14 @@ class ExampleSection extends LessonSection {
 // Main lesson content container
 class LessonContent {
   final List<LessonSection> sections;
+  final Map<String, dynamic>? translations; // Store translations at content_json root level
+  final Map<String, dynamic>? _rawJson; // Store raw JSON to access section translations
 
   LessonContent({
     required this.sections,
-  });
+    this.translations,
+    Map<String, dynamic>? rawJson,
+  }) : _rawJson = rawJson;
 
   factory LessonContent.fromJson(Map<String, dynamic> json) {
     final sectionsJson = json['sections'] as List;
@@ -183,13 +197,28 @@ class LessonContent {
       sections: sectionsJson
           .map((section) => LessonSection.fromJson(section as Map<String, dynamic>))
           .toList(),
+      translations: json['translations'] as Map<String, dynamic>?,
+      rawJson: json, // Preserve original JSON for translation access
     );
+  }
+  
+  /// Get raw section JSON by index (for accessing translations)
+  Map<String, dynamic>? getSectionJson(int index) {
+    final rawJson = _rawJson;
+    if (rawJson == null) return null;
+    final sections = rawJson['sections'] as List?;
+    if (sections == null || index < 0 || index >= sections.length) return null;
+    return sections[index] as Map<String, dynamic>?;
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final json = <String, dynamic>{
       'sections': sections.map((section) => section.toJson()).toList(),
     };
+    if (translations != null) {
+      json['translations'] = translations;
+    }
+    return json;
   }
 
   factory LessonContent.fromJsonString(String jsonString) {

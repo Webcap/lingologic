@@ -11,6 +11,7 @@ import '../../services/lesson_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../services/language_service.dart';
+import '../../services/pronunciation_skip_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/error_handler.dart';
 import '../../l10n/app_localizations.dart';
@@ -34,6 +35,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   final _authService = AuthService();
   final _userService = UserService();
   final _languageService = LanguageService();
+  final _pronunciationSkipService = PronunciationSkipService();
   final PageController _pageController = PageController();
 
   Lesson? _lesson;
@@ -230,9 +232,21 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     Navigator.pop(context); // Close dialog
-                    await _saveCurrentProgress();
-                    if (mounted) {
-                      context.pop();
+                    try {
+                      // Save current slide position first
+                      await _saveSlidePosition(_currentSlideIndex);
+                      // Save progress
+                      await _saveCurrentProgress();
+                      // Navigate back after saving
+                      if (mounted) {
+                        Navigator.of(context).pop(true);
+                      }
+                    } catch (e) {
+                      debugPrint('Error saving and closing lesson: $e');
+                      // Error is logged, still navigate back even if save failed
+                      if (mounted) {
+                        Navigator.of(context).pop(true);
+                      }
                     }
                   },
                   icon: const Icon(Icons.check_rounded, size: 20),
@@ -820,9 +834,12 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     ),
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(context); // Close dialog
-                        context.go('/'); // Navigate to home screen
+                        // Return true to indicate lesson was completed so lessons list refreshes
+                        if (mounted) {
+                          context.pop(true);
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryMintGreen,
@@ -889,7 +906,21 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         currentSection is PronunciationExerciseSection) {
       final exerciseId = _getExerciseId(currentSection);
       if (exerciseId != null) {
-        // Allow proceeding if answered (either correct or incorrect)
+        final isInRetrySection = _currentSlideIndex >= _normalSectionCount;
+        final isRetryExercise = _exercisesToRetry.contains(exerciseId);
+
+        // For retry exercises, check if they've answered or attempted
+        if (isInRetrySection && isRetryExercise) {
+          final attemptCount = _retryAttemptCounts[exerciseId] ?? 0;
+          final isAnswered = _exerciseAnswersById[exerciseId] != null;
+          // Allow proceeding if:
+          // 1. They've answered it (correct answer, or wrong answer after max attempts)
+          // 2. OR they've attempted it at least once (so they can move to next retry question)
+          // This allows them to go through all retries once, then come back for final attempts
+          return isAnswered || attemptCount > 0;
+        }
+
+        // For normal exercises, allow proceeding if answered
         return _exerciseAnswersById[exerciseId] != null;
       }
       return false;
@@ -997,18 +1028,84 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
       final isAnswered = _exerciseAnswersById[exerciseId] != null;
       final isCorrect = _exerciseAnswersById[exerciseId] == true;
 
-      return PronunciationExerciseWidget(
-        section: section,
-        onAnswerSubmitted: (isCorrect) {
-          _onExerciseAnswered(
-            0, // Not used in new system
-            isCorrect,
-            exerciseId: exerciseId,
+      // Check if pronunciation exercises are skipped
+      return FutureBuilder<bool>(
+        future: _pronunciationSkipService.isPronunciationSkipped(),
+        builder: (context, snapshot) {
+          final isSkipped = snapshot.data ?? false;
+
+          // If skipped, auto-complete the exercise
+          if (isSkipped && !isAnswered) {
+            // Auto-mark as completed after a short delay to ensure state is updated
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _onExerciseAnswered(0, true, exerciseId: exerciseId);
+              }
+            });
+
+            // Show a simple message that pronunciation is skipped
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.cardWhite,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: AppTheme.goldenOrange.withOpacity(0.3),
+                  width: 2,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.skip_next_rounded,
+                    color: AppTheme.goldenOrange,
+                    size: 32,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.pronunciationSkipped,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.pronunciationSkippedMessage,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppTheme.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Not skipped, show the normal pronunciation widget
+          return PronunciationExerciseWidget(
+            section: section,
+            onAnswerSubmitted: (isCorrect) {
+              _onExerciseAnswered(
+                0, // Not used in new system
+                isCorrect,
+                exerciseId: exerciseId,
+              );
+            },
+            isAnswered: isAnswered,
+            isCorrect: isCorrect,
+            canRetry: false,
           );
         },
-        isAnswered: isAnswered,
-        isCorrect: isCorrect,
-        canRetry: false,
       );
     }
     return const SizedBox.shrink();

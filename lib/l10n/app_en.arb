@@ -670,6 +670,212 @@
   "hint": "Hint",
   "@hint": {
     "description": "Hint label"
+  },
+  
+  "createAccount": "Create Account",
+  "@createAccount": {
+    "description": "Sign up screen title and button text"
+  },
+  
+  "startLanguageLearningJourneyToday": "Start your language learning journey today",
+  "@startLanguageLearningJourneyToday": {
+    "description": "Sign up screen subtitle"
+  },
+  
+  "createPassword": "Create a password",
+  "@createPassword": {
+    "description": "Password field hint on signup screen"
+  },
+  
+  "confirmPassword": "Confirm Password",
+  "@confirmPassword": {
+    "description": "Confirm password field label"
+  },
+  
+  "reEnterPassword": "Re-enter your password",
+  "@reEnterPassword": {
+    "description": "Confirm password field hint"
+  },
+  
+  "pleaseConfirmPassword": "Please confirm your password",
+  "@pleaseConfirmPassword": {
+    "description": "Confirm password validation error"
+  },
+  
+  "passwordsDoNotMatch": "Passwords do not match",
+  "@passwordsDoNotMatch": {
+    "description": "Password mismatch validation error"
+  },
+  
+  "alreadyHaveAccount": "Already have an account? ",
+  "@alreadyHaveAccount": {
+    "description": "Login prompt on signup screen"
+  },
+  
+  "signupFailed": "Signup failed. Please check your information and try again.",
+  "@signupFailed": {
+    "description": "Signup error message"
+  },
+  
+  "yourProgress": "Your Progress",
+  "@yourProgress": {
+    "description": "Progress screen title"
+  },
+  
+  "trackYourLearningJourney": "Track your learning journey",
+  "@trackYourLearningJourney": {
+    "description": "Progress screen subtitle"
+  },
+  
+  "wordsLearned": "Words Learned",
+  "@wordsLearned": {
+    "description": "Words learned label in progress screen"
+  },
+  
+  "masteryProgress": "Mastery Progress",
+  "@masteryProgress": {
+    "description": "Mastery progress label"
+  },
+  
+  "wordMastery": "Word Mastery",
+  "@wordMastery": {
+    "description": "Word mastery section title"
+  },
+  
+  "mastered": "Mastered",
+  "@mastered": {
+    "description": "Mastered mastery level label"
+  },
+  
+  "masteryIntermediate": "Intermediate",
+  "@masteryIntermediate": {
+    "description": "Intermediate mastery level label (different from CEFR level)"
+  },
+  
+  "novice": "Novice",
+  "@novice": {
+    "description": "Novice mastery level label"
+  },
+  
+  "lessonsProgress": "Lessons Progress",
+  "@lessonsProgress": {
+    "description": "Lessons progress section title"
+  },
+  
+  "noProgressYet": "No Progress Yet",
+  "@noProgressYet": {
+    "description": "Empty progress state title"
+  },
+  
+  "startLearningToSeeProgress": "Start learning to see your progress here!\nComplete lessons or play games to track your achievements.",
+  "@startLearningToSeeProgress": {
+    "description": "Empty progress state message"
+  },
+  
+  "startLearning": "Start Learning",
+  "@startLearning": {
+    "description": "Start learning button text"
+  },
+  
+  "errorLoadingProgress": "Error loading progress",
+  "@errorLoadingProgress": {
+    "description": "Error message when loading progress fails"
+  },
+  
+  "languages": "Languages",
+  "@languages": {
+    "description": "Languages screen title"
+  },
+  
+  "yourLanguages": "Your Languages",
+  "@yourLanguages": {
+    "description": "Your languages section title"
+  },
+  
+  "availableLanguages": "Available Languages",
+  "@availableLanguages": {
+    "description": "Available languages section title"
+  },
+  
+  "noLanguagesYet": "No languages yet",
+  "@noLanguagesYet": {
+    "description": "Empty languages state title"
+  },
+  
+  "addLanguageToGetStarted": "Add a language to get started",
+  "@addLanguageToGetStarted": {
+    "description": "Empty languages state message"
+  },
+  
+  "active": "Active",
+  "@active": {
+    "description": "Active language badge label"
+  },
+  
+  "words": "words",
+  "@words": {
+    "description": "Words label (plural, for stat chips)"
+  },
+  
+  "lessonsLowercase": "lessons",
+  "@lessonsLowercase": {
+    "description": "Lessons label (plural, lowercase, for stat chips)"
+  },
+  
+  "addedLanguageToYourLanguages": "Added {languageName} to your languages",
+  "@addedLanguageToYourLanguages": {
+    "description": "Success message when language is added",
+    "placeholders": {
+      "languageName": {
+        "type": "String",
+        "example": "Spanish"
+      }
+    }
+  },
+  
+  "languageSwitched": "Language switched",
+  "@languageSwitched": {
+    "description": "Success message when language is switched"
+  },
+  
+  "errorLoadingLanguages": "Error loading languages",
+  "@errorLoadingLanguages": {
+    "description": "Error message when loading languages fails"
+  },
+  
+  "errorAddingLanguage": "Error adding language",
+  "@errorAddingLanguage": {
+    "description": "Error message when adding language fails"
+  },
+  
+  "errorSwitchingLanguage": "Error switching language",
+  "@errorSwitchingLanguage": {
+    "description": "Error message when switching language fails"
+  },
+  
+  "skip": "Skip",
+  "@skip": {
+    "description": "Skip button text"
+  },
+  
+  "skipPronunciation": "Skip Pronunciation",
+  "@skipPronunciation": {
+    "description": "Skip pronunciation dialog title"
+  },
+  
+  "skipPronunciationMessage": "Skip pronunciation exercises for 1 hour? You can continue with the rest of the lesson.",
+  "@skipPronunciationMessage": {
+    "description": "Skip pronunciation confirmation message"
+  },
+  
+  "pronunciationSkipped": "Pronunciation exercises skipped for 1 hour",
+  "@pronunciationSkipped": {
+    "description": "Success message when pronunciation is skipped"
+  },
+  
+  "pronunciationSkippedMessage": "Pronunciation exercises are currently skipped. You can continue with the rest of the lesson.",
+  "@pronunciationSkippedMessage": {
+    "description": "Message shown when pronunciation exercises are skipped in a lesson"
   }
 }
 

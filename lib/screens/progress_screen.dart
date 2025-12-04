@@ -8,6 +8,7 @@ import '../utils/error_handler.dart';
 import '../theme/app_theme.dart';
 import '../services/language_service.dart';
 import '../widgets/language_selector.dart';
+import '../l10n/app_localizations.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -115,7 +116,7 @@ class _ProgressScreenState extends State<ProgressScreen>
       }
     } catch (e) {
       if (mounted) {
-        ErrorHandler.handleError(context, e, contextMessage: 'Error loading progress');
+        ErrorHandler.handleError(context, e, contextMessage: AppLocalizations.of(context)!.errorLoadingProgress);
         setState(() {
           _isLoading = false;
           _hasInitialLoad = true;
@@ -133,6 +134,7 @@ class _ProgressScreenState extends State<ProgressScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -144,7 +146,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _hasNoData()
-                    ? _buildEmptyState()
+                    ? _buildEmptyState(context)
                     : FadeTransition(
                         opacity: _fadeAnimation,
                         child: CustomScrollView(
@@ -190,7 +192,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Your Progress',
+                                      l10n.yourProgress,
                                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
                                             fontWeight: FontWeight.w800,
                                             color: AppTheme.textPrimary,
@@ -198,7 +200,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'Track your learning journey',
+                                      l10n.trackYourLearningJourney,
                                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                             color: AppTheme.textSecondary,
                                           ),
@@ -212,7 +214,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                             SliverToBoxAdapter(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                child: _buildHeroCard(),
+                                child: _buildHeroCard(context),
                               ),
                             ),
                             
@@ -220,7 +222,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                             SliverToBoxAdapter(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                child: _buildMasterySection(),
+                                child: _buildMasterySection(context),
                               ),
                             ),
                             
@@ -228,7 +230,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                             SliverToBoxAdapter(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                child: _buildLessonsSection(),
+                                child: _buildLessonsSection(context),
                               ),
                             ),
                             
@@ -245,7 +247,8 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  Widget _buildHeroCard() {
+  Widget _buildHeroCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -285,7 +288,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Words Learned',
+                    l10n.wordsLearned,
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withOpacity(0.9),
@@ -317,7 +320,7 @@ class _ProgressScreenState extends State<ProgressScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Mastery Progress',
+                    l10n.masteryProgress,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.white.withOpacity(0.9),
@@ -351,7 +354,8 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  Widget _buildMasterySection() {
+  Widget _buildMasterySection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final total = _noviceCount + _intermediateCount + _masteredCount;
     final novicePercent = total > 0 ? _noviceCount / total : 0.0;
     final intermediatePercent = total > 0 ? _intermediateCount / total : 0.0;
@@ -384,7 +388,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               ),
               const SizedBox(width: 12),
               Text(
-                'Word Mastery',
+                l10n.wordMastery,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -396,7 +400,7 @@ class _ProgressScreenState extends State<ProgressScreen>
           
           // Mastery Cards
           _buildMasteryLevelCard(
-            title: 'Mastered',
+            title: l10n.mastered,
             count: _masteredCount,
             percent: masteredPercent,
             color: AppTheme.primaryMintGreen,
@@ -404,7 +408,7 @@ class _ProgressScreenState extends State<ProgressScreen>
           ),
           const SizedBox(height: 16),
           _buildMasteryLevelCard(
-            title: 'Intermediate',
+            title: l10n.masteryIntermediate,
             count: _intermediateCount,
             percent: intermediatePercent,
             color: AppTheme.goldenOrange,
@@ -412,7 +416,7 @@ class _ProgressScreenState extends State<ProgressScreen>
           ),
           const SizedBox(height: 16),
           _buildMasteryLevelCard(
-            title: 'Novice',
+            title: l10n.novice,
             count: _noviceCount,
             percent: novicePercent,
             color: AppTheme.salmonPink,
@@ -503,7 +507,8 @@ class _ProgressScreenState extends State<ProgressScreen>
     );
   }
 
-  Widget _buildLessonsSection() {
+  Widget _buildLessonsSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: AppTheme.cardDecoration(),
@@ -531,7 +536,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               ),
               const SizedBox(width: 12),
               Text(
-                'Lessons Progress',
+                l10n.lessonsProgress,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -544,7 +549,7 @@ class _ProgressScreenState extends State<ProgressScreen>
             children: [
               Expanded(
                 child: _buildLessonStatCard(
-                  title: 'Completed',
+                  title: l10n.completed,
                   value: '$_lessonsCompleted',
                   icon: Icons.check_circle_rounded,
                   color: AppTheme.successGreen,
@@ -553,7 +558,7 @@ class _ProgressScreenState extends State<ProgressScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: _buildLessonStatCard(
-                  title: 'In Progress',
+                  title: l10n.inProgress,
                   value: '$_lessonsInProgress',
                   icon: Icons.play_circle_rounded,
                   color: AppTheme.goldenOrange,
@@ -632,7 +637,8 @@ class _ProgressScreenState extends State<ProgressScreen>
            !_isLoading;
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(24.0),
@@ -659,7 +665,7 @@ class _ProgressScreenState extends State<ProgressScreen>
           ),
           const SizedBox(height: 32),
           Text(
-            'No Progress Yet',
+            l10n.noProgressYet,
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textPrimary,
@@ -669,7 +675,7 @@ class _ProgressScreenState extends State<ProgressScreen>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              'Start learning to see your progress here!\nComplete lessons or play games to track your achievements.',
+              l10n.startLearningToSeeProgress,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: AppTheme.textSecondary,
                   ),
@@ -684,9 +690,9 @@ class _ProgressScreenState extends State<ProgressScreen>
                 Navigator.of(context).pop();
               },
               icon: const Icon(Icons.school_rounded, size: 20),
-              label: const Text(
-                'Start Learning',
-                style: TextStyle(
+              label: Text(
+                l10n.startLearning,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),

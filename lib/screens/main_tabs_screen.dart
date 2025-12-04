@@ -9,6 +9,11 @@ import '../games/neuro_match/neuro_match_game.dart';
 import '../games/syntax_constructor/syntax_constructor_game.dart';
 import '../widgets/language_selector.dart';
 import '../services/game_service.dart';
+import '../services/mini_game_service.dart';
+import '../services/language_service.dart';
+import '../models/mini_game_type.dart';
+import '../screens/mini_games/vocabulary_review_mini_game.dart';
+import '../screens/mini_games/word_search_mini_game.dart';
 
 class MainTabsScreen extends StatefulWidget {
   const MainTabsScreen({super.key});
@@ -191,8 +196,12 @@ class _GamesTab extends StatefulWidget {
 
 class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin {
   final _gameService = GameService();
+  final _miniGameService = MiniGameService();
+  final _languageService = LanguageService();
   bool _areGamesUnlocked = false;
   bool _isLoading = true;
+  List<({int miniGameNumber, MiniGameType gameType, bool isCompleted})> _unlockedMiniGames = [];
+  Map<String, Map<String, String>> _gameInfoCache = {}; // Cache: gameId -> {name, description}
 
   @override
   bool get wantKeepAlive => true;
@@ -200,24 +209,48 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
   @override
   void initState() {
     super.initState();
-    _checkGameUnlockStatus();
+    _loadGames();
   }
 
   void refresh() {
     // Public method to refresh unlock status
-    _checkGameUnlockStatus();
+    _loadGames();
   }
 
-  Future<void> _checkGameUnlockStatus() async {
+  Future<void> _loadGames() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
       final unlocked = await _gameService.areGamesUnlocked();
+      final miniGames = await _miniGameService.getUnlockedMiniGames();
+      
+      // Pre-load game info (name and description) from database
+      final gameInfoCache = <String, Map<String, String>>{};
+      final activeLanguage = await _languageService.getActiveLanguage();
+      
+      if (activeLanguage != null) {
+        for (final miniGame in miniGames) {
+          final gameId = 'minigame_${activeLanguage}_${miniGame.miniGameNumber}';
+          try {
+            final gameInfo = await _miniGameService.getGameInfo(
+              gameId,
+              miniGame.gameType,
+              miniGame.miniGameNumber,
+            );
+            gameInfoCache[gameId] = gameInfo;
+          } catch (e) {
+            // Will use fallback in the card
+          }
+        }
+      }
+      
       if (mounted) {
         setState(() {
           _areGamesUnlocked = unlocked;
+          _unlockedMiniGames = miniGames;
+          _gameInfoCache = gameInfoCache;
           _isLoading = false;
         });
       }
@@ -225,6 +258,8 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
       if (mounted) {
         setState(() {
           _areGamesUnlocked = false;
+          _unlockedMiniGames = [];
+          _gameInfoCache = {};
           _isLoading = false;
         });
       }
@@ -250,8 +285,8 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
               actions: [
                 LanguageSelector(
                   onLanguageSelected: (language) {
-                    // Reload unlock status when language changes
-                    _checkGameUnlockStatus();
+                    // Reload games when language changes
+                    _loadGames();
                   },
                 ),
                 const SizedBox(width: 8),
@@ -288,6 +323,37 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
                     else if (!_areGamesUnlocked)
                       _buildLockedGamesMessage(context)
                     else ...[
+                      // Mini Games Section
+                      if (_unlockedMiniGames.isNotEmpty) ...[
+                        Text(
+                          'Mini Games',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary,
+                              ),
+                        ),
+                        const SizedBox(height: 16),
+                        ..._unlockedMiniGames.map((miniGame) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: _buildMiniGameCard(
+                              context: context,
+                              miniGameNumber: miniGame.miniGameNumber,
+                              gameType: miniGame.gameType,
+                              isCompleted: miniGame.isCompleted,
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: 32),
+                        Text(
+                          'Practice Games',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary,
+                              ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                       _buildGameCard(
                         context: context,
                         title: AppLocalizations.of(context)!.neuroMatch,
@@ -548,6 +614,269 @@ class _GamesTabState extends State<_GamesTab> with AutomaticKeepAliveClientMixin
         ),
       ),
     );
+  }
+
+  Widget _buildMiniGameCard({
+    required BuildContext context,
+    required int miniGameNumber,
+    required MiniGameType gameType,
+    required bool isCompleted,
+  }) {
+    final difficulty = MiniGameDifficulty.fromMiniGameNumber(miniGameNumber);
+    
+    // Try to get game info from cache, otherwise use fallbacks
+    String gameName;
+    String gameDescription;
+    
+    // Find the game ID from cache
+    final gameId = _gameInfoCache.keys.firstWhere(
+      (id) => id.contains('_$miniGameNumber'),
+      orElse: () => '',
+    );
+    
+    if (gameId.isNotEmpty && _gameInfoCache.containsKey(gameId)) {
+      gameName = _gameInfoCache[gameId]!['name'] ?? gameType.getFunName(miniGameNumber);
+      gameDescription = _gameInfoCache[gameId]!['description'] ?? gameType.description;
+    } else {
+      // Use fallback values
+      gameName = gameType.getFunName(miniGameNumber);
+      gameDescription = gameType.description;
+    }
+    
+    Gradient gradient;
+    switch (gameType) {
+      case MiniGameType.vocabularyReview:
+        gradient = LinearGradient(
+          colors: [AppTheme.primaryMintGreen, AppTheme.softCyan],
+        );
+        break;
+      case MiniGameType.wordSearch:
+        gradient = LinearGradient(
+          colors: [AppTheme.goldenOrange, Color(0xFFFFA726)],
+        );
+        break;
+      case MiniGameType.neuroMatch:
+        gradient = LinearGradient(
+          colors: [AppTheme.salmonPink, Color(0xFFFF6B9D)],
+        );
+        break;
+      case MiniGameType.syntaxConstructor:
+        gradient = LinearGradient(
+          colors: [AppTheme.softCyan, Color(0xFF22D3EE)],
+        );
+        break;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardWhite.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isCompleted
+              ? AppTheme.successGreen.withOpacity(0.3)
+              : AppTheme.textSecondary.withOpacity(0.1),
+          width: isCompleted ? 2 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _launchMiniGame(context, miniGameNumber, gameType, difficulty),
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    gradient: gradient,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: gradient.colors.first.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    gameType.icon,
+                    size: 32,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              gameName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                          ),
+                          if (isCompleted)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.successGreen.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.check_circle_rounded,
+                                    size: 14,
+                                    color: AppTheme.successGreen,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Completed',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.successGreen,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        gameDescription,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Mini Game $miniGameNumber',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.textSecondary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchMiniGame(
+    BuildContext context,
+    int miniGameNumber,
+    MiniGameType gameType,
+    MiniGameDifficulty difficulty,
+  ) async {
+    try {
+      // Load words for the mini game
+      final words = await _miniGameService.getMiniGameWords(
+        miniGameNumber,
+        difficulty,
+      );
+
+      if (!mounted) return;
+
+      if (words.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.noWordsAvailableForMiniGame,
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Launch the appropriate mini game based on type
+      Widget gameWidget;
+      switch (gameType) {
+        case MiniGameType.wordSearch:
+          gameWidget = WordSearchMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+            difficulty: difficulty,
+          );
+          break;
+        case MiniGameType.vocabularyReview:
+        case MiniGameType.neuroMatch:
+        case MiniGameType.syntaxConstructor:
+          // Default to vocabulary review for other types
+          gameWidget = VocabularyReviewMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
+      }
+
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => gameWidget,
+        ),
+      );
+
+      // Reload mini games after completing
+      if (mounted) {
+        _loadGames();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.errorLaunchingMiniGame,
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 

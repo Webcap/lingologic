@@ -414,4 +414,129 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hint => 'Hint';
+
+  @override
+  String get createAccount => 'Create Account';
+
+  @override
+  String get startLanguageLearningJourneyToday =>
+      'Start your language learning journey today';
+
+  @override
+  String get createPassword => 'Create a password';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get reEnterPassword => 'Re-enter your password';
+
+  @override
+  String get pleaseConfirmPassword => 'Please confirm your password';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account? ';
+
+  @override
+  String get signupFailed =>
+      'Signup failed. Please check your information and try again.';
+
+  @override
+  String get yourProgress => 'Your Progress';
+
+  @override
+  String get trackYourLearningJourney => 'Track your learning journey';
+
+  @override
+  String get wordsLearned => 'Words Learned';
+
+  @override
+  String get masteryProgress => 'Mastery Progress';
+
+  @override
+  String get wordMastery => 'Word Mastery';
+
+  @override
+  String get mastered => 'Mastered';
+
+  @override
+  String get masteryIntermediate => 'Intermediate';
+
+  @override
+  String get novice => 'Novice';
+
+  @override
+  String get lessonsProgress => 'Lessons Progress';
+
+  @override
+  String get noProgressYet => 'No Progress Yet';
+
+  @override
+  String get startLearningToSeeProgress =>
+      'Start learning to see your progress here!\nComplete lessons or play games to track your achievements.';
+
+  @override
+  String get startLearning => 'Start Learning';
+
+  @override
+  String get errorLoadingProgress => 'Error loading progress';
+
+  @override
+  String get languages => 'Languages';
+
+  @override
+  String get yourLanguages => 'Your Languages';
+
+  @override
+  String get availableLanguages => 'Available Languages';
+
+  @override
+  String get noLanguagesYet => 'No languages yet';
+
+  @override
+  String get addLanguageToGetStarted => 'Add a language to get started';
+
+  @override
+  String get words => 'words';
+
+  @override
+  String get lessonsLowercase => 'lessons';
+
+  @override
+  String addedLanguageToYourLanguages(String languageName) {
+    return 'Added $languageName to your languages';
+  }
+
+  @override
+  String get languageSwitched => 'Language switched';
+
+  @override
+  String get errorLoadingLanguages => 'Error loading languages';
+
+  @override
+  String get errorAddingLanguage => 'Error adding language';
+
+  @override
+  String get errorSwitchingLanguage => 'Error switching language';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get skipPronunciation => 'Skip Pronunciation';
+
+  @override
+  String get skipPronunciationMessage =>
+      'Skip pronunciation exercises for 1 hour? You can continue with the rest of the lesson.';
+
+  @override
+  String get pronunciationSkipped =>
+      'Pronunciation exercises skipped for 1 hour';
+
+  @override
+  String get pronunciationSkippedMessage =>
+      'Pronunciation exercises are currently skipped. You can continue with the rest of the lesson.';
 }

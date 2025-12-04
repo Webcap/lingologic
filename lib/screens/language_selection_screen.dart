@@ -7,6 +7,7 @@ import '../config/supported_languages.dart';
 import '../services/language_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/error_handler.dart';
+import '../l10n/app_localizations.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   const LanguageSelectionScreen({super.key});
@@ -45,7 +46,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ErrorHandler.handleError(context, e, contextMessage: 'Error loading languages');
+        ErrorHandler.handleError(context, e, contextMessage: AppLocalizations.of(context)!.errorLoadingLanguages);
         setState(() {
           _isLoading = false;
         });
@@ -61,7 +62,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Added ${language.name} to your languages'),
+            content: Text(AppLocalizations.of(context)!.addedLanguageToYourLanguages(language.name)),
             backgroundColor: AppTheme.successGreen,
             duration: const Duration(seconds: 2),
           ),
@@ -69,7 +70,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ErrorHandler.handleError(context, e, contextMessage: 'Error adding language');
+        ErrorHandler.handleError(context, e, contextMessage: AppLocalizations.of(context)!.errorAddingLanguage);
       }
     }
   }
@@ -82,7 +83,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Language switched'),
+            content: Text(AppLocalizations.of(context)!.languageSwitched),
             backgroundColor: AppTheme.successGreen,
             duration: const Duration(seconds: 1),
           ),
@@ -90,7 +91,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ErrorHandler.handleError(context, e, contextMessage: 'Error switching language');
+        ErrorHandler.handleError(context, e, contextMessage: AppLocalizations.of(context)!.errorSwitchingLanguage);
       }
     }
   }
@@ -107,9 +108,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Languages'),
+        title: Text(l10n.languages),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -125,7 +127,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Your Languages',
+                      l10n.yourLanguages,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary,
@@ -148,12 +150,12 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'No languages yet',
+                              l10n.noLanguagesYet,
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Add a language to get started',
+                              l10n.addLanguageToGetStarted,
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: AppTheme.textSecondary,
                                   ),
@@ -167,6 +169,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                         if (langInfo == null) return const SizedBox.shrink();
 
                         return _buildLanguageCard(
+                          context,
                           langInfo,
                           ul,
                           isActive: ul.isActive,
@@ -175,7 +178,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       }),
                     const SizedBox(height: 32),
                     Text(
-                      'Available Languages',
+                      l10n.availableLanguages,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary,
@@ -184,6 +187,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     const SizedBox(height: 16),
                     ..._availableLanguages.where((lang) => !_isUserLearning(lang.code)).map(
                           (lang) => _buildLanguageCard(
+                            context,
                             lang,
                             null,
                             isActive: false,
@@ -199,12 +203,14 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   }
 
   Widget _buildLanguageCard(
+    BuildContext context,
     LanguageInfo language,
     UserLanguage? userLanguage, {
     required bool isActive,
     required VoidCallback onTap,
     bool showAddButton = false,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -255,12 +261,12 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               Row(
                 children: [
                   _buildStatChip(
-                    '${userLanguage.totalWordsLearned} words',
+                    '${userLanguage.totalWordsLearned} ${l10n.words}',
                     Icons.book,
                   ),
                   const SizedBox(width: 8),
                   _buildStatChip(
-                    '${userLanguage.totalLessonsCompleted} lessons',
+                    '${userLanguage.totalLessonsCompleted} ${l10n.lessonsLowercase}',
                     Icons.school,
                   ),
                 ],
@@ -285,7 +291,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Active',
+                      l10n.active,
                       style: TextStyle(
                         color: AppTheme.successGreen,
                         fontWeight: FontWeight.w600,

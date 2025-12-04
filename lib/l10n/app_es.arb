@@ -140,6 +140,53 @@
   "hearPronunciation": "Escuchar Pronunciación",
   "close": "Cerrar",
   "showHint": "Mostrar Pista",
-  "hint": "Pista"
+  "hint": "Pista",
+  "createAccount": "Crear Cuenta",
+  "startLanguageLearningJourneyToday": "Comienza tu viaje de aprendizaje de idiomas hoy",
+  "createPassword": "Crea una contraseña",
+  "confirmPassword": "Confirmar Contraseña",
+  "reEnterPassword": "Vuelve a ingresar tu contraseña",
+  "pleaseConfirmPassword": "Por favor, confirma tu contraseña",
+  "passwordsDoNotMatch": "Las contraseñas no coinciden",
+  "alreadyHaveAccount": "¿Ya tienes una cuenta? ",
+  "signupFailed": "Error al registrarse. Por favor, verifica tu información e inténtalo de nuevo.",
+  "yourProgress": "Tu Progreso",
+  "trackYourLearningJourney": "Rastrea tu viaje de aprendizaje",
+  "wordsLearned": "Palabras Aprendidas",
+  "masteryProgress": "Progreso de Dominio",
+  "wordMastery": "Dominio de Palabras",
+  "mastered": "Dominado",
+  "masteryIntermediate": "Intermedio",
+  "novice": "Principiante",
+  "lessonsProgress": "Progreso de Lecciones",
+  "noProgressYet": "Aún No Hay Progreso",
+  "startLearningToSeeProgress": "¡Comienza a aprender para ver tu progreso aquí!\nCompleta lecciones o juega juegos para rastrear tus logros.",
+  "startLearning": "Comenzar a Aprender",
+  "errorLoadingProgress": "Error al cargar el progreso",
+  "languages": "Idiomas",
+  "yourLanguages": "Tus Idiomas",
+  "availableLanguages": "Idiomas Disponibles",
+  "noLanguagesYet": "Aún no hay idiomas",
+  "addLanguageToGetStarted": "Agrega un idioma para comenzar",
+  "active": "Activo",
+  "words": "palabras",
+  "lessonsLowercase": "lecciones",
+  "addedLanguageToYourLanguages": "Se agregó {languageName} a tus idiomas",
+  "@addedLanguageToYourLanguages": {
+    "placeholders": {
+      "languageName": {
+        "type": "String"
+      }
+    }
+  },
+  "languageSwitched": "Idioma cambiado",
+  "errorLoadingLanguages": "Error al cargar los idiomas",
+  "errorAddingLanguage": "Error al agregar el idioma",
+  "errorSwitchingLanguage": "Error al cambiar el idioma",
+  "skip": "Omitir",
+  "skipPronunciation": "Omitir Pronunciación",
+  "skipPronunciationMessage": "¿Omitir ejercicios de pronunciación por 1 hora? Puedes continuar con el resto de la lección.",
+  "pronunciationSkipped": "Ejercicios de pronunciación omitidos por 1 hora",
+  "pronunciationSkippedMessage": "Los ejercicios de pronunciación están omitidos actualmente. Puedes continuar con el resto de la lección."
 }
 

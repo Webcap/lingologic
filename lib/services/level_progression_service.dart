@@ -19,7 +19,7 @@ class LevelProgressionService {
     return client;
   }
 
-  /// Check if user has completed 60% of lessons in a level
+  /// Check if user has completed 70% of lessons in a level
   Future<bool> hasCompleted60Percent(String level, List<Lesson> allLessons, Map<String, LessonProgress> progressMap) async {
     final levelLessons = allLessons.where((l) => l.level == level).toList();
     if (levelLessons.isEmpty) return false;
@@ -30,10 +30,10 @@ class LevelProgressionService {
     }).length;
 
     final completionPercentage = (completedCount / levelLessons.length) * 100;
-    return completionPercentage >= 60;
+    return completionPercentage >= 70;
   }
 
-  /// Check if user can take the level progression test (60% completed and hasn't passed yet)
+  /// Check if user can take the level progression test (70% completed and hasn't passed yet)
   Future<bool> canTakeLevelTest(String level) async {
     final user = _authService.currentUser;
     if (user == null) return false;
@@ -47,7 +47,7 @@ class LevelProgressionService {
       return false; // Already passed, no need to retake
     }
 
-    // Check 60% completion (this will be checked by the caller with actual lesson data)
+    // Check 70% completion (this will be checked by the caller with actual lesson data)
     return true;
   }
 

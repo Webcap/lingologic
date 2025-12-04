@@ -5,6 +5,8 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:permission_handler/permission_handler.dart';
 import '../../../models/lesson_content.dart';
 import '../../../theme/app_theme.dart';
+import '../../../services/pronunciation_skip_service.dart';
+import '../../../l10n/app_localizations.dart';
 
 class PronunciationExerciseWidget extends StatefulWidget {
   final PronunciationExerciseSection section;
@@ -31,6 +33,7 @@ class PronunciationExerciseWidget extends StatefulWidget {
 class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidget> {
   final FlutterTts _flutterTts = FlutterTts();
   final stt.SpeechToText _speech = stt.SpeechToText();
+  final PronunciationSkipService _skipService = PronunciationSkipService();
   
   int _currentWordIndex = 0;
   bool _isListening = false;
@@ -469,6 +472,88 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
     }
   }
 
+  Future<void> _handleSkip() async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.goldenOrange.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.skip_next_rounded,
+                color: AppTheme.goldenOrange,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context)!.skipPronunciation,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          AppLocalizations.of(context)!.skipPronunciationMessage,
+          style: const TextStyle(height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              AppLocalizations.of(context)!.cancel,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.goldenOrange,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: Text(
+              AppLocalizations.of(context)!.skip,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await _skipService.skipPronunciation();
+      if (success && mounted) {
+        // Mark this exercise as answered/complete so user can continue
+        widget.onAnswerSubmitted?.call(true);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.pronunciationSkipped),
+            backgroundColor: AppTheme.goldenOrange,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.section.words.isEmpty) {
@@ -576,6 +661,24 @@ class _PronunciationExerciseWidgetState extends State<PronunciationExerciseWidge
                     ],
                   ),
                 ),
+                // Skip button
+                if (!_showResult)
+                  IconButton(
+                    onPressed: _handleSkip,
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.goldenOrange.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.skip_next_rounded,
+                        color: AppTheme.goldenOrange,
+                        size: 20,
+                      ),
+                    ),
+                    tooltip: AppLocalizations.of(context)!.skip,
+                  ),
               ],
             ),
           ),

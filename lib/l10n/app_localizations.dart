@@ -644,7 +644,7 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get done;
 
-  /// Lesson in progress status
+  /// Active language badge label
   ///
   /// In en, this message translates to:
   /// **'Active'**
@@ -889,6 +889,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hint'**
   String get hint;
+
+  /// Sign up screen title and button text
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get createAccount;
+
+  /// Sign up screen subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Start your language learning journey today'**
+  String get startLanguageLearningJourneyToday;
+
+  /// Password field hint on signup screen
+  ///
+  /// In en, this message translates to:
+  /// **'Create a password'**
+  String get createPassword;
+
+  /// Confirm password field label
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get confirmPassword;
+
+  /// Confirm password field hint
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter your password'**
+  String get reEnterPassword;
+
+  /// Confirm password validation error
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm your password'**
+  String get pleaseConfirmPassword;
+
+  /// Password mismatch validation error
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// Login prompt on signup screen
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? '**
+  String get alreadyHaveAccount;
+
+  /// Signup error message
+  ///
+  /// In en, this message translates to:
+  /// **'Signup failed. Please check your information and try again.'**
+  String get signupFailed;
+
+  /// Progress screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Your Progress'**
+  String get yourProgress;
+
+  /// Progress screen subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Track your learning journey'**
+  String get trackYourLearningJourney;
+
+  /// Words learned label in progress screen
+  ///
+  /// In en, this message translates to:
+  /// **'Words Learned'**
+  String get wordsLearned;
+
+  /// Mastery progress label
+  ///
+  /// In en, this message translates to:
+  /// **'Mastery Progress'**
+  String get masteryProgress;
+
+  /// Word mastery section title
+  ///
+  /// In en, this message translates to:
+  /// **'Word Mastery'**
+  String get wordMastery;
+
+  /// Mastered mastery level label
+  ///
+  /// In en, this message translates to:
+  /// **'Mastered'**
+  String get mastered;
+
+  /// Intermediate mastery level label (different from CEFR level)
+  ///
+  /// In en, this message translates to:
+  /// **'Intermediate'**
+  String get masteryIntermediate;
+
+  /// Novice mastery level label
+  ///
+  /// In en, this message translates to:
+  /// **'Novice'**
+  String get novice;
+
+  /// Lessons progress section title
+  ///
+  /// In en, this message translates to:
+  /// **'Lessons Progress'**
+  String get lessonsProgress;
+
+  /// Empty progress state title
+  ///
+  /// In en, this message translates to:
+  /// **'No Progress Yet'**
+  String get noProgressYet;
+
+  /// Empty progress state message
+  ///
+  /// In en, this message translates to:
+  /// **'Start learning to see your progress here!\nComplete lessons or play games to track your achievements.'**
+  String get startLearningToSeeProgress;
+
+  /// Start learning button text
+  ///
+  /// In en, this message translates to:
+  /// **'Start Learning'**
+  String get startLearning;
+
+  /// Error message when loading progress fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading progress'**
+  String get errorLoadingProgress;
+
+  /// Languages screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Languages'**
+  String get languages;
+
+  /// Your languages section title
+  ///
+  /// In en, this message translates to:
+  /// **'Your Languages'**
+  String get yourLanguages;
+
+  /// Available languages section title
+  ///
+  /// In en, this message translates to:
+  /// **'Available Languages'**
+  String get availableLanguages;
+
+  /// Empty languages state title
+  ///
+  /// In en, this message translates to:
+  /// **'No languages yet'**
+  String get noLanguagesYet;
+
+  /// Empty languages state message
+  ///
+  /// In en, this message translates to:
+  /// **'Add a language to get started'**
+  String get addLanguageToGetStarted;
+
+  /// Words label (plural, for stat chips)
+  ///
+  /// In en, this message translates to:
+  /// **'words'**
+  String get words;
+
+  /// Lessons label (plural, lowercase, for stat chips)
+  ///
+  /// In en, this message translates to:
+  /// **'lessons'**
+  String get lessonsLowercase;
+
+  /// Success message when language is added
+  ///
+  /// In en, this message translates to:
+  /// **'Added {languageName} to your languages'**
+  String addedLanguageToYourLanguages(String languageName);
+
+  /// Success message when language is switched
+  ///
+  /// In en, this message translates to:
+  /// **'Language switched'**
+  String get languageSwitched;
+
+  /// Error message when loading languages fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading languages'**
+  String get errorLoadingLanguages;
+
+  /// Error message when adding language fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error adding language'**
+  String get errorAddingLanguage;
+
+  /// Error message when switching language fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error switching language'**
+  String get errorSwitchingLanguage;
+
+  /// Skip button text
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// Skip pronunciation dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Skip Pronunciation'**
+  String get skipPronunciation;
+
+  /// Skip pronunciation confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Skip pronunciation exercises for 1 hour? You can continue with the rest of the lesson.'**
+  String get skipPronunciationMessage;
+
+  /// Success message when pronunciation is skipped
+  ///
+  /// In en, this message translates to:
+  /// **'Pronunciation exercises skipped for 1 hour'**
+  String get pronunciationSkipped;
+
+  /// Message shown when pronunciation exercises are skipped in a lesson
+  ///
+  /// In en, this message translates to:
+  /// **'Pronunciation exercises are currently skipped. You can continue with the rest of the lesson.'**
+  String get pronunciationSkippedMessage;
 }
 
 class _AppLocalizationsDelegate

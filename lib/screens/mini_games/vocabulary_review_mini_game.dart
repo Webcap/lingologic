@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/word.dart';
+import '../../models/mini_game_type.dart';
 import '../../theme/app_theme.dart';
 import '../../services/mini_game_service.dart';
 import '../../services/auth_service.dart';
@@ -194,7 +195,7 @@ class _VocabularyReviewMiniGameState extends State<VocabularyReviewMiniGame>
     if (user != null && activeLanguage != null) {
       final miniGameId = 'minigame_${activeLanguage}_${widget.miniGameNumber}';
       try {
-        await _miniGameService.completeMiniGame(miniGameId);
+        await _miniGameService.completeMiniGame(miniGameId, MiniGameType.vocabularyReview);
       } catch (e) {
         debugPrint('Error completing mini game: $e');
       }
@@ -339,7 +340,7 @@ class _VocabularyReviewMiniGameState extends State<VocabularyReviewMiniGame>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Vocabulary Review',
+                            MiniGameType.vocabularyReview.getFunName(widget.miniGameNumber),
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(
                                   fontWeight: FontWeight.w700,

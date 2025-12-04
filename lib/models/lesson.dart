@@ -43,15 +43,61 @@ class Lesson {
       throw Exception('Invalid content_json format');
     }
 
+    // Safely parse required fields with null checks
+    final id = json['id'] as String?;
+    if (id == null) {
+      throw Exception('Lesson id is null');
+    }
+
+    final title = json['title'] as String?;
+    if (title == null) {
+      throw Exception('Lesson title is null');
+    }
+
+    final language = json['language'] as String?;
+    if (language == null) {
+      throw Exception('Lesson language is null');
+    }
+
+    final orderIndex = json['order_index'];
+    final orderIndexInt = orderIndex is int
+        ? orderIndex
+        : (orderIndex is num ? orderIndex.toInt() : 0);
+
+    final estimatedMinutes = json['estimated_minutes'];
+    final estimatedMinutesInt = estimatedMinutes is int
+        ? estimatedMinutes
+        : (estimatedMinutes is num ? estimatedMinutes.toInt() : 5);
+
+    final createdAtStr = json['created_at'];
+    DateTime createdAt;
+    if (createdAtStr is String) {
+      createdAt = DateTime.parse(createdAtStr);
+    } else if (createdAtStr is DateTime) {
+      createdAt = createdAtStr;
+    } else {
+      createdAt = DateTime.now();
+    }
+
+    final updatedAtStr = json['updated_at'];
+    DateTime updatedAt;
+    if (updatedAtStr is String) {
+      updatedAt = DateTime.parse(updatedAtStr);
+    } else if (updatedAtStr is DateTime) {
+      updatedAt = updatedAtStr;
+    } else {
+      updatedAt = DateTime.now();
+    }
+
     return Lesson(
-      id: json['id'] as String,
-      title: json['title'] as String,
+      id: id,
+      title: title,
       description: json['description'] as String?,
-      language: json['language'] as String,
+      language: language,
       category: json['category'] as String?,
       level: json['level'] as String?,
-      orderIndex: json['order_index'] as int,
-      estimatedMinutes: json['estimated_minutes'] as int,
+      orderIndex: orderIndexInt,
+      estimatedMinutes: estimatedMinutesInt,
       content: content,
       unlocksWordIds: json['unlocks_word_ids'] != null
           ? List<String>.from(json['unlocks_word_ids'] as List)
@@ -59,8 +105,8 @@ class Lesson {
       unlocksGrammarConcepts: json['unlocks_grammar_concepts'] != null
           ? List<String>.from(json['unlocks_grammar_concepts'] as List)
           : [],
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 

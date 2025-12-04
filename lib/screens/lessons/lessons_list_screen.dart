@@ -4,6 +4,7 @@ import '../../models/lesson.dart';
 import '../../models/lesson_progress.dart';
 import '../../services/lesson_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/language_service.dart';
 import '../../services/mini_game_service.dart';
 import '../../services/level_progression_service.dart';
 import '../../theme/app_theme.dart';
@@ -12,6 +13,8 @@ import '../../widgets/language_selector.dart';
 import '../../l10n/app_localizations.dart';
 import 'widgets/mini_game_card.dart';
 import '../mini_games/vocabulary_review_mini_game.dart';
+import '../mini_games/word_search_mini_game.dart';
+import '../../models/mini_game_type.dart';
 import '../level_tests/level_knowledge_test_screen.dart';
 import 'widgets/knowledge_test_card.dart';
 
@@ -25,6 +28,7 @@ class LessonsListScreen extends StatefulWidget {
 class _LessonsListScreenState extends State<LessonsListScreen> {
   final _lessonService = LessonService();
   final _authService = AuthService();
+  final _languageService = LanguageService();
   final _miniGameService = MiniGameService();
   final _levelProgressionService = LevelProgressionService();
 
@@ -51,6 +55,8 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
     // Skip the first call since initState already loads
     if (_hasInitialLoad && !_isLoading) {
       _loadLessons();
+      _hasInitialLoad =
+          false; // Reset to avoid reloading on every dependency change
     }
   }
 
@@ -69,7 +75,15 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
       }
 
       // GetLessons will automatically filter by active language
+      final activeLanguage = await _languageService.getActiveLanguage();
+      debugPrint('LessonsListScreen: Active language: $activeLanguage');
       final lessons = await _lessonService.getLessons();
+      debugPrint('LessonsListScreen: Loaded ${lessons.length} lessons');
+      if (lessons.isNotEmpty) {
+        debugPrint(
+          'LessonsListScreen: Lesson levels: ${lessons.map((l) => l.level).toSet()}',
+        );
+      }
       final progressList = await _lessonService.getUserLessonProgressAll();
 
       // Filter progress to only include lessons for active language
@@ -116,14 +130,79 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
         }
       }
 
-      // Default to A1 if no completed lessons
-      final effectiveCurrentLevel = currentLevel ?? 'A1';
+      // Default to A1 if no completed lessons, but ensure we have lessons at that level
+      String effectiveCurrentLevel = currentLevel ?? 'A1';
+
+      // If no completed lessons, find the lowest level that has lessons available
+      if (currentLevel == null && lessons.isNotEmpty) {
+        final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+        final availableLevels = lessons
+            .map((l) => l.level)
+            .whereType<String>()
+            .toSet()
+            .toList();
+
+        debugPrint('LessonsListScreen: Available levels: $availableLevels');
+
+        // Find the lowest available level
+        for (final level in cefrOrder) {
+          if (availableLevels.contains(level)) {
+            effectiveCurrentLevel = level;
+            debugPrint(
+              'LessonsListScreen: Selected lowest available level: $effectiveCurrentLevel',
+            );
+            break;
+          }
+        }
+
+        // If no valid level found, use first available level or A1
+        if (!availableLevels.contains(effectiveCurrentLevel) &&
+            availableLevels.isNotEmpty) {
+          effectiveCurrentLevel = availableLevels.first;
+          debugPrint(
+            'LessonsListScreen: No CEFR level found, using first available: $effectiveCurrentLevel',
+          );
+        }
+      }
+
+      debugPrint(
+        'LessonsListScreen: Effective current level: $effectiveCurrentLevel',
+      );
 
       // Check if all lessons in current level are completed
       // If so, advance to next level
       final currentLevelLessons = lessons
           .where((l) => l.level == effectiveCurrentLevel)
           .toList();
+      debugPrint(
+        'LessonsListScreen: Found ${currentLevelLessons.length} lessons at level $effectiveCurrentLevel',
+      );
+
+      // If no lessons at effective level, find the lowest level with lessons
+      if (currentLevelLessons.isEmpty && lessons.isNotEmpty) {
+        final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+        final availableLevels = lessons
+            .map((l) => l.level)
+            .whereType<String>()
+            .toSet()
+            .toList();
+
+        for (final level in cefrOrder) {
+          if (availableLevels.contains(level)) {
+            final levelLessons = lessons
+                .where((l) => l.level == level)
+                .toList();
+            if (levelLessons.isNotEmpty) {
+              effectiveCurrentLevel = level;
+              debugPrint(
+                'LessonsListScreen: Adjusted to level with lessons: $effectiveCurrentLevel',
+              );
+              break;
+            }
+          }
+        }
+      }
+
       final allCurrentLevelCompleted =
           currentLevelLessons.isNotEmpty &&
           currentLevelLessons.every((lesson) {
@@ -141,7 +220,7 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
             lessons,
             progressMap,
           );
-      final canTakeTest = completionPercentage >= 60 && !hasPassedTest;
+      final canTakeTest = completionPercentage >= 70 && !hasPassedTest;
 
       // Advance to next level if all current level lessons are completed OR if test is passed
       String finalCurrentLevel = effectiveCurrentLevel;
@@ -158,6 +237,8 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
           }
         }
       }
+
+      debugPrint('LessonsListScreen: Final current level: $finalCurrentLevel');
 
       if (mounted) {
         setState(() {
@@ -190,15 +271,31 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
   }
 
   List<Lesson> get _filteredLessons {
-    // Filter to only show lessons for current level
+    // Filter to show all lessons from accessible levels (A1 up to and including current level)
     var filtered = _lessons.where((lesson) {
-      // Only show lessons matching current level
-      if (_currentLevel != null && lesson.level != _currentLevel) {
-        return false;
+      // Show lessons from all levels up to and including current level
+      if (_currentLevel != null) {
+        final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+        final lessonLevel = lesson.level;
+        if (lessonLevel == null) return false;
+
+        final currentLevelIndex = cefrOrder.indexOf(_currentLevel!);
+        final lessonLevelIndex = cefrOrder.indexOf(lessonLevel);
+
+        // Only show lessons from levels up to and including current level
+        if (currentLevelIndex == -1 || lessonLevelIndex == -1) {
+          // If levels aren't in CEFR order, allow current level only
+          return lessonLevel == _currentLevel;
+        }
+
+        // Allow lessons from current level and all previous levels
+        if (lessonLevelIndex > currentLevelIndex) {
+          return false;
+        }
       }
-      // Filter out completed lessons
-      final progress = _getProgress(lesson.id);
-      return progress?.isCompleted != true;
+
+      // Don't filter out completed lessons - allow users to redo them
+      return true;
     }).toList();
 
     // Apply category filter if selected
@@ -229,19 +326,32 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
   }
 
   List<String> get _levels {
-    // Only show current level
+    // Show all levels up to and including current level
     if (_currentLevel == null) return [];
-    if (!_lessonsByLevel.containsKey(_currentLevel!)) return [];
-    return [_currentLevel!];
+
+    final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+    final currentLevelIndex = cefrOrder.indexOf(_currentLevel!);
+
+    if (currentLevelIndex == -1) {
+      // Current level not in CEFR order, show only current level if it has lessons
+      if (_lessonsByLevel.containsKey(_currentLevel!)) {
+        return [_currentLevel!];
+      }
+      return [];
+    }
+
+    // Get all levels from A1 up to and including current level
+    final accessibleLevels = cefrOrder.sublist(0, currentLevelIndex + 1);
+
+    // Filter to only include levels that have lessons in _lessonsByLevel
+    return accessibleLevels
+        .where((level) => _lessonsByLevel.containsKey(level))
+        .toList();
   }
 
   List<String> get _categories {
-    // Only include categories from visible (non-completed) lessons
-    final visibleLessons = _lessons.where((lesson) {
-      final progress = _getProgress(lesson.id);
-      return progress?.isCompleted != true;
-    }).toList();
-    final categories = visibleLessons
+    // Include categories from all accessible lessons (including completed ones)
+    final categories = _filteredLessons
         .map((l) => l.category)
         .whereType<String>()
         .toSet()
@@ -534,7 +644,7 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                               ),
                             ),
                           ),
-                        // Knowledge Test Card (if 60% completed and test not passed)
+                        // Knowledge Test Card (if 70% completed and test not passed)
                         if (_currentLevel == level &&
                             _canTakeLevelTest &&
                             !_hasPassedLevelTest)
@@ -624,8 +734,30 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
 
   Future<void> _launchMiniGame(int miniGameNumber) async {
     try {
+      // Get the game type for this mini game (mini game 3 = word search)
+      final gameType = await _miniGameService.getMiniGameType(miniGameNumber);
+      if (gameType == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.errorLaunchingMiniGame,
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Get difficulty settings
+      final difficulty = MiniGameDifficulty.fromMiniGameNumber(miniGameNumber);
+
       // Load words for the mini game
-      final words = await _miniGameService.getMiniGameWords(miniGameNumber);
+      final words = await _miniGameService.getMiniGameWords(
+        miniGameNumber,
+        difficulty,
+      );
 
       if (!mounted) return;
 
@@ -643,15 +775,30 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
         return;
       }
 
-      // Launch the mini game
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => VocabularyReviewMiniGame(
+      // Launch the appropriate mini game based on type
+      Widget gameWidget;
+      switch (gameType) {
+        case MiniGameType.wordSearch:
+          gameWidget = WordSearchMiniGame(
             miniGameNumber: miniGameNumber,
             words: words,
-          ),
-        ),
-      );
+            difficulty: difficulty,
+          );
+          break;
+        case MiniGameType.vocabularyReview:
+        case MiniGameType.neuroMatch:
+        case MiniGameType.syntaxConstructor:
+          // Default to vocabulary review for other types
+          gameWidget = VocabularyReviewMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
+      }
+
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => gameWidget));
 
       // Reload lessons after completing mini game
       _loadLessons();

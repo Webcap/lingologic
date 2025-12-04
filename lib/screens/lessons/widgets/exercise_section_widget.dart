@@ -31,7 +31,104 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
   int? _selectedIndex;
   bool _showResult = false;
   bool? _isCorrect;
-  bool _showHint = false;
+  void _showHintPopup(BuildContext context) {
+    if (widget.section.hint == null) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.6),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          decoration: BoxDecoration(
+            color: AppTheme.cardWhite,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 32),
+              // Icon
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppTheme.electricLavender.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.lightbulb_rounded,
+                  color: AppTheme.electricLavender,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  AppLocalizations.of(context)!.hint,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Hint content
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  widget.section.hint!,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppTheme.textSecondary,
+                        height: 1.6,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Close button
+              Container(
+                margin: const EdgeInsets.only(left: 32, right: 32, bottom: 32),
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.electricLavender,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.close,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -68,10 +165,6 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
           break;
         }
       }
-      // Show hint automatically if answer is incorrect (to help them learn)
-      if (widget.isCorrect == false && widget.section.hint != null) {
-        _showHint = true;
-      }
     }
     // Reset if section changes (for retry)
     if (widget.section.id != oldWidget.section.id) {
@@ -81,7 +174,6 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
       _selectedIndex = null;
       _showResult = false;
       _isCorrect = null;
-      _showHint = false;
     }
   }
 
@@ -200,19 +292,13 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
                 if (widget.section.hint != null && !_showResult) ...[
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _showHint = !_showHint;
-                      });
-                    },
-                    icon: Icon(
-                      _showHint ? Icons.visibility_off_rounded : Icons.lightbulb_outline_rounded,
+                    onPressed: () => _showHintPopup(context),
+                    icon: const Icon(
+                      Icons.lightbulb_outline_rounded,
                       size: 18,
                     ),
                     label: Text(
-                      _showHint
-                          ? AppLocalizations.of(context)!.close
-                          : AppLocalizations.of(context)!.showHint,
+                      AppLocalizations.of(context)!.showHint,
                     ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.electricLavender,
@@ -227,54 +313,6 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
                         color: AppTheme.electricLavender,
                         width: 1.5,
                       ),
-                    ),
-                  ),
-                ],
-                // Hint display
-                if (_showHint && widget.section.hint != null && !_showResult) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.electricLavender.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppTheme.electricLavender.withOpacity(0.3),
-                        width: 2,
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.lightbulb_rounded,
-                          color: AppTheme.electricLavender,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                AppLocalizations.of(context)!.hint,
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                      color: AppTheme.electricLavender,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                widget.section.hint!,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: AppTheme.textPrimary,
-                                      height: 1.5,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ],
@@ -579,10 +617,6 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
                   setState(() {
                     _showResult = true;
                     _isCorrect = isCorrect;
-                    // Show hint automatically if answer is wrong (to help them learn)
-                    if (!isCorrect && widget.section.hint != null) {
-                      _showHint = true;
-                    }
                   });
                   widget.onAnswerSubmitted?.call(isCorrect);
                 },

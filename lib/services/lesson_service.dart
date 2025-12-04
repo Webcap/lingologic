@@ -4,11 +4,13 @@ import '../models/lesson_progress.dart';
 import '../data/remote/supabase_repository.dart';
 import '../services/auth_service.dart';
 import 'language_service.dart';
+import 'lesson_translation_service.dart';
 
 class LessonService {
   final SupabaseRepository _repository = SupabaseRepository();
   final AuthService _authService = AuthService();
   final LanguageService _languageService = LanguageService();
+  final LessonTranslationService _translationService = LessonTranslationService();
 
   /// Get all available lessons, optionally filtered by language and category
   /// If language is not provided, uses the active language
@@ -19,15 +21,33 @@ class LessonService {
     // If no language specified, use active language
     final activeLanguage = language ?? await _languageService.getActiveLanguage();
     
-    return await _repository.getLessons(
+    if (activeLanguage == null) {
+      debugPrint('LessonService: No active language set');
+      return [];
+    }
+    
+    debugPrint('LessonService: Getting lessons for language: $activeLanguage');
+    final lessons = await _repository.getLessons(
       language: activeLanguage,
       category: category,
     );
+    debugPrint('LessonService: Found ${lessons.length} lessons for language: $activeLanguage');
+    
+    // Translate lessons based on app language
+    final translatedLessons = await Future.wait(
+      lessons.map((lesson) => _translationService.translateLesson(lesson)),
+    );
+    
+    return translatedLessons;
   }
 
   /// Get a specific lesson by ID
   Future<Lesson?> getLessonById(String id) async {
-    return await _repository.getLessonById(id);
+    final lesson = await _repository.getLessonById(id);
+    if (lesson == null) return null;
+    
+    // Translate lesson based on app language
+    return await _translationService.translateLesson(lesson);
   }
 
   /// Get user's progress for a specific lesson
@@ -158,9 +178,9 @@ class LessonService {
         .map((p) => p.lessonId)
         .toSet();
 
-    // Get lessons for the active language
+    // Get lessons for the active language (already translated via getLessons)
     final activeLanguage = await _languageService.getActiveLanguage();
-    final lessons = await _repository.getLessons(language: activeLanguage);
+    final lessons = await getLessons(language: activeLanguage);
     
     // CEFR level order for sorting
     const cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
