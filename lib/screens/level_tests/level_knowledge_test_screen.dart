@@ -10,7 +10,6 @@ import '../../services/auth_service.dart';
 import '../../services/language_service.dart';
 import '../../data/remote/supabase_repository.dart';
 import '../../utils/error_handler.dart';
-import '../../l10n/app_localizations.dart';
 
 class LevelKnowledgeTestScreen extends StatefulWidget {
   final String level;
@@ -60,9 +59,8 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
       final activeLanguage = await _languageService.getActiveLanguage();
       if (activeLanguage == null) {
         if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.noActiveLanguageSelected)),
+            const SnackBar(content: Text('No active language selected')),
           );
           context.pop();
         }
@@ -75,9 +73,8 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
 
       if (levelLessons.isEmpty) {
         if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.noLessonsFoundForLevel)),
+            const SnackBar(content: Text('No lessons found for this level')),
           );
           context.pop();
         }
@@ -92,9 +89,8 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
 
       if (wordIds.isEmpty) {
         if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.noVocabularyFoundForLevel)),
+            const SnackBar(content: Text('No vocabulary found for this level')),
           );
           context.pop();
         }
@@ -117,9 +113,8 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
 
       if (words.length < 10) {
         if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.notEnoughVocabularyForTest)),
+            const SnackBar(content: Text('Not enough vocabulary for the test. Complete more lessons first.')),
           );
           context.pop();
         }
@@ -136,8 +131,7 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ErrorHandler.handleError(context, e, contextMessage: l10n.errorLoadingTest);
+        ErrorHandler.handleError(context, e, contextMessage: 'Error loading test');
         setState(() {
           _isLoading = false;
         });
@@ -232,8 +226,7 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ErrorHandler.handleError(context, e, contextMessage: l10n.errorSavingTestResult);
+        ErrorHandler.handleError(context, e, contextMessage: 'Error saving test result');
       }
     }
   }
@@ -250,7 +243,6 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
     }
 
     if (_isCompleted) {
-      final l10n = AppLocalizations.of(context)!;
       final percentage = (_correctAnswers / _questions.length) * 100;
       final passed = percentage >= 70;
 
@@ -281,7 +273,7 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      passed ? l10n.congratulations : l10n.testComplete,
+                      passed ? 'Congratulations!' : 'Test Complete',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.w800,
                             color: AppTheme.textPrimary,
@@ -290,8 +282,8 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
                     const SizedBox(height: 12),
                     Text(
                       passed
-                          ? l10n.youPassedLevelKnowledgeTest(widget.level)
-                          : l10n.testScoreMessage(percentage.round()),
+                          ? 'You passed the ${widget.level} knowledge test!'
+                          : 'You scored ${percentage.round()}%. You need 70% to pass.',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: AppTheme.textSecondary,
                           ),
@@ -299,7 +291,7 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      l10n.score(_correctAnswers, _questions.length),
+                      'Score: $_correctAnswers / ${_questions.length}',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary,
@@ -323,7 +315,7 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
                             Icon(Icons.lock_open_rounded, color: AppTheme.successGreen),
                             const SizedBox(width: 12),
                             Text(
-                              l10n.youCanNowAccessLevelLessons(_getNextLevel(widget.level, l10n)),
+                              'You can now access ${_getNextLevel(widget.level)} lessons!',
                               style: TextStyle(
                                 color: AppTheme.successGreen,
                                 fontWeight: FontWeight.w700,
@@ -343,9 +335,9 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
                           borderRadius: BorderRadius.circular(28),
                         ),
                       ),
-                      child: Text(
-                        l10n.continueButton,
-                        style: const TextStyle(
+                      child: const Text(
+                        'Continue',
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
@@ -361,16 +353,14 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
     }
 
     if (_questions.isEmpty) {
-      final l10n = AppLocalizations.of(context)!;
       return Scaffold(
         body: Container(
           decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
-          child: Center(child: Text(l10n.noQuestionsAvailable)),
+          child: const Center(child: Text('No questions available')),
         ),
       );
     }
 
-    final l10n = AppLocalizations.of(context)!;
     final currentQuestion = _questions[_currentQuestionIndex];
     final progress = (_currentQuestionIndex + 1) / _questions.length;
 
@@ -394,7 +384,7 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            l10n.levelKnowledgeTest(widget.level),
+                            '${widget.level} Knowledge Test',
                             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w700,
                                   color: AppTheme.textPrimary,
@@ -402,7 +392,7 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            l10n.questionXOfY(_currentQuestionIndex + 1, _questions.length),
+                            'Question ${_currentQuestionIndex + 1} of ${_questions.length}',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: AppTheme.textSecondary,
                                 ),
@@ -454,7 +444,7 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              l10n.whatIsTranslationOf,
+                              'What is the translation of:',
                               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     color: AppTheme.textSecondary,
                                   ),
@@ -569,13 +559,13 @@ class _LevelKnowledgeTestScreenState extends State<LevelKnowledgeTestScreen> {
     );
   }
 
-  String _getNextLevel(String currentLevel, AppLocalizations l10n) {
+  String _getNextLevel(String currentLevel) {
     const cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
     final index = cefrOrder.indexOf(currentLevel);
     if (index >= 0 && index < cefrOrder.length - 1) {
       return cefrOrder[index + 1];
     }
-    return l10n.nextLevel;
+    return 'next level';
   }
 }
 

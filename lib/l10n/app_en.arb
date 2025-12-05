@@ -878,178 +878,34 @@
     "description": "Message shown when pronunciation exercises are skipped in a lesson"
   },
   
-  "noActiveLanguageSelected": "No active language selected",
-  "@noActiveLanguageSelected": {
-    "description": "Error message when no language is selected for knowledge test"
+  "matchTheWords": "Match the Words",
+  "@matchTheWords": {
+    "description": "Title for matching exercise section"
   },
   
-  "noLessonsFoundForLevel": "No lessons found for this level",
-  "@noLessonsFoundForLevel": {
-    "description": "Error message when no lessons exist for the test level"
-  },
-  
-  "noVocabularyFoundForLevel": "No vocabulary found for this level",
-  "@noVocabularyFoundForLevel": {
-    "description": "Error message when no vocabulary exists for the test level"
-  },
-  
-  "notEnoughVocabularyForTest": "Not enough vocabulary for the test. Complete more lessons first.",
-  "@notEnoughVocabularyForTest": {
-    "description": "Error message when there isn't enough vocabulary to generate test questions"
-  },
-  
-  "noQuestionsAvailable": "No questions available",
-  "@noQuestionsAvailable": {
-    "description": "Message shown when test has no questions to display"
-  },
-  
-  "errorLoadingTest": "Error loading test",
-  "@errorLoadingTest": {
-    "description": "Error message when loading knowledge test fails"
-  },
-  
-  "errorSavingTestResult": "Error saving test result",
-  "@errorSavingTestResult": {
-    "description": "Error message when saving test result fails"
-  },
-  
-  "congratulations": "Congratulations!",
-  "@congratulations": {
-    "description": "Congratulations message for passing test"
-  },
-  
-  "testComplete": "Test Complete",
-  "@testComplete": {
-    "description": "Test completion message"
-  },
-  
-  "youPassedLevelKnowledgeTest": "You passed the {level} knowledge test!",
-  "@youPassedLevelKnowledgeTest": {
-    "description": "Success message for passing knowledge test",
-    "placeholders": {
-      "level": {
-        "type": "String",
-        "example": "A1"
-      }
-    }
-  },
-  
-  "testScoreMessage": "You scored {percentage}%. You need 70% to pass.",
-  "@testScoreMessage": {
-    "description": "Test score message with percentage",
-    "placeholders": {
-      "percentage": {
-        "type": "int",
-        "example": "65"
-      }
-    }
-  },
-  
-  "score": "Score: {correct} / {total}",
-  "@score": {
-    "description": "Test score display",
-    "placeholders": {
-      "correct": {
-        "type": "int",
-        "example": "10"
-      },
-      "total": {
-        "type": "int",
-        "example": "15"
-      }
-    }
-  },
-  
-  "youCanNowAccessLevelLessons": "You can now access {level} lessons!",
-  "@youCanNowAccessLevelLessons": {
-    "description": "Message shown when user passes test and unlocks next level",
-    "placeholders": {
-      "level": {
-        "type": "String",
-        "example": "A2"
-      }
-    }
-  },
-  
-  "levelKnowledgeTest": "{level} Knowledge Test",
-  "@levelKnowledgeTest": {
-    "description": "Knowledge test title with level",
-    "placeholders": {
-      "level": {
-        "type": "String",
-        "example": "A1"
-      }
-    }
-  },
-  
-  "questionXOfY": "Question {current} of {total}",
-  "@questionXOfY": {
-    "description": "Question progress indicator",
-    "placeholders": {
-      "current": {
-        "type": "int",
-        "example": "5"
-      },
-      "total": {
-        "type": "int",
-        "example": "15"
-      }
-    }
-  },
-  
-  "whatIsTranslationOf": "What is the translation of:",
-  "@whatIsTranslationOf": {
-    "description": "Question prompt for translation"
-  },
-  
-  "nextLevel": "next level",
-  "@nextLevel": {
-    "description": "Generic next level text"
-  },
-  
-  "practiceSection": "Practice",
-  "@practiceSection": {
-    "description": "Practice section title"
-  },
-  
-  "correct": "Correct!",
+  "correct": "Correct",
   "@correct": {
-    "description": "Correct answer feedback"
+    "description": "Label shown when answer is correct"
   },
   
-  "tryAgain": "Try again",
+  "tryAgain": "Try Again",
   "@tryAgain": {
-    "description": "Try again message for incorrect answers"
-  },
-  
-  "tryAgainButton": "Try Again",
-  "@tryAgainButton": {
-    "description": "Try again button text"
-  },
-  
-  "tryDifferentQuestion": "Try a different question",
-  "@tryDifferentQuestion": {
-    "description": "Message suggesting to try a different question"
+    "description": "Label shown when answer is incorrect"
   },
   
   "retryWithDifferentQuestion": "Retry with Different Question",
   "@retryWithDifferentQuestion": {
-    "description": "Button text to retry with a different question"
+    "description": "Button text to retry exercise with a different question"
   },
   
   "submitAnswer": "Submit Answer",
   "@submitAnswer": {
-    "description": "Submit answer button text"
-  },
-  
-  "matchTheWords": "Match the Words",
-  "@matchTheWords": {
-    "description": "Matching exercise section title"
+    "description": "Button text to submit an answer"
   },
   
   "tapToMatch": "Tap to match",
   "@tapToMatch": {
-    "description": "Instruction to tap to create a match"
+    "description": "Hint text for matching exercise"
   },
   
   "translation": "Translation",
@@ -1057,13 +913,13 @@
     "description": "Translation label"
   },
   
-  "selectTranslationFor": "Select translation for \"{word}\"",
+  "selectTranslationFor": "Select translation for {word}",
   "@selectTranslationFor": {
-    "description": "Dialog title for selecting translation",
+    "description": "Instruction to select translation for a word",
     "placeholders": {
       "word": {
         "type": "String",
-        "example": "hello"
+        "example": "hola"
       }
     }
   },
@@ -1071,117 +927,6 @@
   "clearMatch": "Clear Match",
   "@clearMatch": {
     "description": "Button text to clear a match"
-  },
-  
-  "microphonePermissionRequired": "Microphone permission is required to practice pronunciation.",
-  "@microphonePermissionRequired": {
-    "description": "Error message when microphone permission is not granted"
-  },
-  
-  "microphonePermission": "Microphone Permission",
-  "@microphonePermission": {
-    "description": "Microphone permission dialog title"
-  },
-  
-  "microphonePermissionExplanation": "To practice pronunciation, we need access to your microphone to record and check your pronunciation.\n\nA system dialog will appear asking for permission.",
-  "@microphonePermissionExplanation": {
-    "description": "Explanation of why microphone permission is needed"
-  },
-  
-  "notNow": "Not Now",
-  "@notNow": {
-    "description": "Button text to decline permission request"
-  },
-  
-  "pleaseEnableInSettings": "Please enable it in your device settings.",
-  "@pleaseEnableInSettings": {
-    "description": "Instruction to enable permission in device settings"
-  },
-  
-  "speechRecognitionNotAvailable": "Speech recognition is not available on this device.",
-  "@speechRecognitionNotAvailable": {
-    "description": "Error message when speech recognition is not available"
-  },
-  
-  "pronunciationPractice": "Pronunciation Practice",
-  "@pronunciationPractice": {
-    "description": "Pronunciation practice section title"
-  },
-  
-  "greatPronunciation": "Great pronunciation!",
-  "@greatPronunciation": {
-    "description": "Positive feedback for correct pronunciation"
-  },
-  
-  "nextWord": "Next Word",
-  "@nextWord": {
-    "description": "Button text to move to next word"
-  },
-  
-  "enableMicrophonePermission": "Enable Microphone Permission",
-  "@enableMicrophonePermission": {
-    "description": "Button text to enable microphone permission"
-  },
-  
-  "permissionRequired": "Permission Required",
-  "@permissionRequired": {
-    "description": "Permission required dialog title"
-  },
-  
-  "openSettings": "Open Settings",
-  "@openSettings": {
-    "description": "Button text to open device settings"
-  },
-  
-  "wordXOfY": "Word {current} of {total}",
-  "@wordXOfY": {
-    "description": "Word progress indicator",
-    "placeholders": {
-      "current": {
-        "type": "int",
-        "example": "1"
-      },
-      "total": {
-        "type": "int",
-        "example": "5"
-      }
-    }
-  },
-  
-  "listenToPronunciation": "Listen to Pronunciation",
-  "@listenToPronunciation": {
-    "description": "Button text to listen to pronunciation"
-  },
-  
-  "listening": "Listening...",
-  "@listening": {
-    "description": "Listening state text"
-  },
-  
-  "initializing": "Initializing...",
-  "@initializing": {
-    "description": "Initializing state text"
-  },
-  
-  "recordYourPronunciation": "Record Your Pronunciation",
-  "@recordYourPronunciation": {
-    "description": "Button text to record pronunciation"
-  },
-  
-  "youSaid": "You said:",
-  "@youSaid": {
-    "description": "Label for recognized speech text"
-  },
-  
-  "confidence": "Confidence: {percentage}%",
-  "@confidence": {
-    "description": "Confidence percentage label",
-    "placeholders": {
-      "percentage": {
-        "type": "int",
-        "example": "85"
-      }
-    }
   }
 }
 

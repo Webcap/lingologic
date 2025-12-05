@@ -24,8 +24,6 @@ abstract class LessonSection {
         return MatchingExerciseSection.fromJson(json);
       case 'pronunciation':
         return PronunciationExerciseSection.fromJson(json);
-      case 'translation':
-        return TranslationExerciseSection.fromJson(json);
       default:
         throw Exception('Unknown lesson section type: $type');
     }
@@ -249,90 +247,7 @@ class LessonContent {
         .toList();
   }
 
-  List<TranslationExerciseSection> get translationExercises {
-    return sections
-        .whereType<TranslationExerciseSection>()
-        .toList();
-  }
-
-  int get totalExercises => exercises.length + matchingExercises.length + pronunciationExercises.length + translationExercises.length;
-}
-
-// Translation word for translation exercises
-class TranslationWord {
-  final String word; // Word in the sentence
-  final String translation; // Translation of the word
-  final String? wordId; // Optional: reference to word from lesson vocabulary
-
-  TranslationWord({
-    required this.word,
-    required this.translation,
-    this.wordId,
-  });
-
-  factory TranslationWord.fromJson(Map<String, dynamic> json) {
-    return TranslationWord(
-      word: json['word'] as String,
-      translation: json['translation'] as String,
-      wordId: json['word_id'] as String?,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'word': word,
-      'translation': translation,
-      if (wordId != null) 'word_id': wordId,
-    };
-  }
-}
-
-// Translation exercise section for typing translations
-class TranslationExerciseSection extends LessonSection {
-  final String instruction;
-  final String sentence; // English sentence to translate
-  final String correctAnswer; // Correct translation in target language
-  final List<TranslationWord> words; // Words in the sentence with their translations
-  final String? explanation;
-  final String? languageCode; // Target language code (e.g., 'es', 'fr')
-
-  TranslationExerciseSection({
-    required String id,
-    required this.instruction,
-    required this.sentence,
-    required this.correctAnswer,
-    required this.words,
-    this.explanation,
-    this.languageCode,
-  }) : super(type: 'translation', id: id);
-
-  factory TranslationExerciseSection.fromJson(Map<String, dynamic> json) {
-    return TranslationExerciseSection(
-      id: json['id'] as String,
-      instruction: json['instruction'] as String? ?? 'Translate the following sentence',
-      sentence: json['sentence'] as String,
-      correctAnswer: json['correct_answer'] as String,
-      words: (json['words'] as List)
-          .map((word) => TranslationWord.fromJson(word as Map<String, dynamic>))
-          .toList(),
-      explanation: json['explanation'] as String?,
-      languageCode: json['language_code'] as String?,
-    );
-  }
-
-  @override
-  Map<String, dynamic> toJson() {
-    return {
-      'type': type,
-      'id': id,
-      'instruction': instruction,
-      'sentence': sentence,
-      'correct_answer': correctAnswer,
-      'words': words.map((word) => word.toJson()).toList(),
-      if (explanation != null) 'explanation': explanation,
-      if (languageCode != null) 'language_code': languageCode,
-    };
-  }
+  int get totalExercises => exercises.length + matchingExercises.length + pronunciationExercises.length;
 }
 
 // Pronunciation exercise section for practicing pronunciation

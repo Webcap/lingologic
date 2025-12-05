@@ -541,92 +541,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pronunciation exercises are currently skipped. You can continue with the rest of the lesson.';
 
   @override
-  String get noActiveLanguageSelected => 'No active language selected';
+  String get matchTheWords => 'Match the Words';
 
   @override
-  String get noLessonsFoundForLevel => 'No lessons found for this level';
+  String get correct => 'Correct';
 
   @override
-  String get noVocabularyFoundForLevel => 'No vocabulary found for this level';
-
-  @override
-  String get notEnoughVocabularyForTest =>
-      'Not enough vocabulary for the test. Complete more lessons first.';
-
-  @override
-  String get noQuestionsAvailable => 'No questions available';
-
-  @override
-  String get errorLoadingTest => 'Error loading test';
-
-  @override
-  String get errorSavingTestResult => 'Error saving test result';
-
-  @override
-  String get congratulations => 'Congratulations!';
-
-  @override
-  String get testComplete => 'Test Complete';
-
-  @override
-  String youPassedLevelKnowledgeTest(String level) {
-    return 'You passed the $level knowledge test!';
-  }
-
-  @override
-  String testScoreMessage(int percentage) {
-    return 'You scored $percentage%. You need 70% to pass.';
-  }
-
-  @override
-  String score(int correct, int total) {
-    return 'Score: $correct / $total';
-  }
-
-  @override
-  String youCanNowAccessLevelLessons(String level) {
-    return 'You can now access $level lessons!';
-  }
-
-  @override
-  String levelKnowledgeTest(String level) {
-    return '$level Knowledge Test';
-  }
-
-  @override
-  String questionXOfY(int current, int total) {
-    return 'Question $current of $total';
-  }
-
-  @override
-  String get whatIsTranslationOf => 'What is the translation of:';
-
-  @override
-  String get nextLevel => 'next level';
-
-  @override
-  String get practiceSection => 'Practice';
-
-  @override
-  String get correct => 'Correct!';
-
-  @override
-  String get tryAgain => 'Try again';
-
-  @override
-  String get tryAgainButton => 'Try Again';
-
-  @override
-  String get tryDifferentQuestion => 'Try a different question';
+  String get tryAgain => 'Try Again';
 
   @override
   String get retryWithDifferentQuestion => 'Retry with Different Question';
 
   @override
   String get submitAnswer => 'Submit Answer';
-
-  @override
-  String get matchTheWords => 'Match the Words';
 
   @override
   String get tapToMatch => 'Tap to match';
@@ -636,74 +563,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String selectTranslationFor(String word) {
-    return 'Select translation for \"$word\"';
+    return 'Select translation for $word';
   }
 
   @override
   String get clearMatch => 'Clear Match';
-
-  @override
-  String get microphonePermissionRequired =>
-      'Microphone permission is required to practice pronunciation.';
-
-  @override
-  String get microphonePermission => 'Microphone Permission';
-
-  @override
-  String get microphonePermissionExplanation =>
-      'To practice pronunciation, we need access to your microphone to record and check your pronunciation.\n\nA system dialog will appear asking for permission.';
-
-  @override
-  String get notNow => 'Not Now';
-
-  @override
-  String get pleaseEnableInSettings =>
-      'Please enable it in your device settings.';
-
-  @override
-  String get speechRecognitionNotAvailable =>
-      'Speech recognition is not available on this device.';
-
-  @override
-  String get pronunciationPractice => 'Pronunciation Practice';
-
-  @override
-  String get greatPronunciation => 'Great pronunciation!';
-
-  @override
-  String get nextWord => 'Next Word';
-
-  @override
-  String get enableMicrophonePermission => 'Enable Microphone Permission';
-
-  @override
-  String get permissionRequired => 'Permission Required';
-
-  @override
-  String get openSettings => 'Open Settings';
-
-  @override
-  String wordXOfY(int current, int total) {
-    return 'Word $current of $total';
-  }
-
-  @override
-  String get listenToPronunciation => 'Listen to Pronunciation';
-
-  @override
-  String get listening => 'Listening...';
-
-  @override
-  String get initializing => 'Initializing...';
-
-  @override
-  String get recordYourPronunciation => 'Record Your Pronunciation';
-
-  @override
-  String get youSaid => 'You said:';
-
-  @override
-  String confidence(int percentage) {
-    return 'Confidence: $percentage%';
-  }
 }

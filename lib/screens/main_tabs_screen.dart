@@ -14,7 +14,6 @@ import '../services/language_service.dart';
 import '../models/mini_game_type.dart';
 import '../screens/mini_games/vocabulary_review_mini_game.dart';
 import '../screens/mini_games/word_search_mini_game.dart';
-import '../screens/mini_games/image_to_word_mini_game.dart';
 
 class MainTabsScreen extends StatefulWidget {
   const MainTabsScreen({super.key});
@@ -680,14 +679,17 @@ class _GamesTabState extends State<_GamesTab>
           colors: [AppTheme.softCyan, Color(0xFF22D3EE)],
         );
         break;
-      case MiniGameType.imageToWord:
+      case MiniGameType.pictionary:
         gradient = LinearGradient(
           colors: [AppTheme.electricLavender, Color(0xFFB794F6)],
         );
         break;
-      case MiniGameType.pictionary:
+      case MiniGameType.imageToWord:
+      case MiniGameType.hangman:
+      case MiniGameType.charades:
+        // Default gradient for unimplemented game types
         gradient = LinearGradient(
-          colors: [AppTheme.electricLavender, Color(0xFFB794F6)],
+          colors: [AppTheme.primaryMintGreen, AppTheme.softCyan],
         );
         break;
     }
@@ -866,17 +868,14 @@ class _GamesTabState extends State<_GamesTab>
             difficulty: difficulty,
           );
           break;
-        case MiniGameType.imageToWord:
-          gameWidget = ImageToWordMiniGame(
-            miniGameNumber: miniGameNumber,
-            words: words,
-          );
-          break;
+        case MiniGameType.pictionary:
         case MiniGameType.vocabularyReview:
         case MiniGameType.neuroMatch:
         case MiniGameType.syntaxConstructor:
-        case MiniGameType.pictionary:
-          // Default to vocabulary review for other types (pictionary is disabled)
+        case MiniGameType.imageToWord:
+        case MiniGameType.hangman:
+        case MiniGameType.charades:
+          // Default to vocabulary review for all types (pictionary not implemented yet)
           gameWidget = VocabularyReviewMiniGame(
             miniGameNumber: miniGameNumber,
             words: words,

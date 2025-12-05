@@ -4,7 +4,6 @@ import '../../models/lesson.dart';
 import '../../models/lesson_progress.dart';
 import '../../services/lesson_service.dart';
 import '../../services/auth_service.dart';
-import '../../services/language_service.dart';
 import '../../services/mini_game_service.dart';
 import '../../services/level_progression_service.dart';
 import '../../theme/app_theme.dart';
@@ -13,9 +12,6 @@ import '../../widgets/language_selector.dart';
 import '../../l10n/app_localizations.dart';
 import 'widgets/mini_game_card.dart';
 import '../mini_games/vocabulary_review_mini_game.dart';
-import '../mini_games/word_search_mini_game.dart';
-import '../mini_games/image_to_word_mini_game.dart';
-import '../../models/mini_game_type.dart';
 import '../level_tests/level_knowledge_test_screen.dart';
 import 'widgets/knowledge_test_card.dart';
 
@@ -29,7 +25,6 @@ class LessonsListScreen extends StatefulWidget {
 class _LessonsListScreenState extends State<LessonsListScreen> {
   final _lessonService = LessonService();
   final _authService = AuthService();
-  final _languageService = LanguageService();
   final _miniGameService = MiniGameService();
   final _levelProgressionService = LevelProgressionService();
 
@@ -56,8 +51,6 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
     // Skip the first call since initState already loads
     if (_hasInitialLoad && !_isLoading) {
       _loadLessons();
-      _hasInitialLoad =
-          false; // Reset to avoid reloading on every dependency change
     }
   }
 
@@ -76,15 +69,7 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
       }
 
       // GetLessons will automatically filter by active language
-      final activeLanguage = await _languageService.getActiveLanguage();
-      debugPrint('LessonsListScreen: Active language: $activeLanguage');
       final lessons = await _lessonService.getLessons();
-      debugPrint('LessonsListScreen: Loaded ${lessons.length} lessons');
-      if (lessons.isNotEmpty) {
-        debugPrint(
-          'LessonsListScreen: Lesson levels: ${lessons.map((l) => l.level).toSet()}',
-        );
-      }
       final progressList = await _lessonService.getUserLessonProgressAll();
 
       // Filter progress to only include lessons for active language
@@ -131,79 +116,14 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
         }
       }
 
-      // Default to A1 if no completed lessons, but ensure we have lessons at that level
-      String effectiveCurrentLevel = currentLevel ?? 'A1';
-
-      // If no completed lessons, find the lowest level that has lessons available
-      if (currentLevel == null && lessons.isNotEmpty) {
-        final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-        final availableLevels = lessons
-            .map((l) => l.level)
-            .whereType<String>()
-            .toSet()
-            .toList();
-
-        debugPrint('LessonsListScreen: Available levels: $availableLevels');
-
-        // Find the lowest available level
-        for (final level in cefrOrder) {
-          if (availableLevels.contains(level)) {
-            effectiveCurrentLevel = level;
-            debugPrint(
-              'LessonsListScreen: Selected lowest available level: $effectiveCurrentLevel',
-            );
-            break;
-          }
-        }
-
-        // If no valid level found, use first available level or A1
-        if (!availableLevels.contains(effectiveCurrentLevel) &&
-            availableLevels.isNotEmpty) {
-          effectiveCurrentLevel = availableLevels.first;
-          debugPrint(
-            'LessonsListScreen: No CEFR level found, using first available: $effectiveCurrentLevel',
-          );
-        }
-      }
-
-      debugPrint(
-        'LessonsListScreen: Effective current level: $effectiveCurrentLevel',
-      );
+      // Default to A1 if no completed lessons
+      final effectiveCurrentLevel = currentLevel ?? 'A1';
 
       // Check if all lessons in current level are completed
       // If so, advance to next level
       final currentLevelLessons = lessons
           .where((l) => l.level == effectiveCurrentLevel)
           .toList();
-      debugPrint(
-        'LessonsListScreen: Found ${currentLevelLessons.length} lessons at level $effectiveCurrentLevel',
-      );
-
-      // If no lessons at effective level, find the lowest level with lessons
-      if (currentLevelLessons.isEmpty && lessons.isNotEmpty) {
-        final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-        final availableLevels = lessons
-            .map((l) => l.level)
-            .whereType<String>()
-            .toSet()
-            .toList();
-
-        for (final level in cefrOrder) {
-          if (availableLevels.contains(level)) {
-            final levelLessons = lessons
-                .where((l) => l.level == level)
-                .toList();
-            if (levelLessons.isNotEmpty) {
-              effectiveCurrentLevel = level;
-              debugPrint(
-                'LessonsListScreen: Adjusted to level with lessons: $effectiveCurrentLevel',
-              );
-              break;
-            }
-          }
-        }
-      }
-
       final allCurrentLevelCompleted =
           currentLevelLessons.isNotEmpty &&
           currentLevelLessons.every((lesson) {
@@ -221,7 +141,7 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
             lessons,
             progressMap,
           );
-      final canTakeTest = completionPercentage >= 70 && !hasPassedTest;
+      final canTakeTest = completionPercentage >= 60 && !hasPassedTest;
 
       // Advance to next level if all current level lessons are completed OR if test is passed
       String finalCurrentLevel = effectiveCurrentLevel;
@@ -238,8 +158,6 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
           }
         }
       }
-
-      debugPrint('LessonsListScreen: Final current level: $finalCurrentLevel');
 
       if (mounted) {
         setState(() {
@@ -272,31 +190,15 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
   }
 
   List<Lesson> get _filteredLessons {
-    // Filter to show all lessons from accessible levels (A1 up to and including current level)
+    // Filter to only show lessons for current level
     var filtered = _lessons.where((lesson) {
-      // Show lessons from all levels up to and including current level
-      if (_currentLevel != null) {
-        final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-        final lessonLevel = lesson.level;
-        if (lessonLevel == null) return false;
-
-        final currentLevelIndex = cefrOrder.indexOf(_currentLevel!);
-        final lessonLevelIndex = cefrOrder.indexOf(lessonLevel);
-
-        // Only show lessons from levels up to and including current level
-        if (currentLevelIndex == -1 || lessonLevelIndex == -1) {
-          // If levels aren't in CEFR order, allow current level only
-          return lessonLevel == _currentLevel;
-        }
-
-        // Allow lessons from current level and all previous levels
-        if (lessonLevelIndex > currentLevelIndex) {
-          return false;
-        }
+      // Only show lessons matching current level
+      if (_currentLevel != null && lesson.level != _currentLevel) {
+        return false;
       }
-
-      // Don't filter out completed lessons - allow users to redo them
-      return true;
+      // Filter out completed lessons
+      final progress = _getProgress(lesson.id);
+      return progress?.isCompleted != true;
     }).toList();
 
     // Apply category filter if selected
@@ -318,57 +220,28 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
       grouped.putIfAbsent(level, () => []).add(lesson);
     }
 
-    // Sort lessons within each level: incomplete first (by orderIndex), then completed (by orderIndex)
+    // Sort lessons within each level by orderIndex
     for (final level in grouped.keys) {
-      grouped[level]!.sort((a, b) {
-        final progressA = _getProgress(a.id);
-        final progressB = _getProgress(b.id);
-        final isCompletedA = progressA?.isCompleted ?? false;
-        final isCompletedB = progressB?.isCompleted ?? false;
-        
-        // If one is completed and the other isn't, incomplete comes first
-        if (isCompletedA != isCompletedB) {
-          return isCompletedA ? 1 : -1; // Completed goes to the end
-        }
-        
-        // If both have same completion status, sort by orderIndex
-        return a.orderIndex.compareTo(b.orderIndex);
-      });
+      grouped[level]!.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
     }
 
     return grouped;
   }
 
   List<String> get _levels {
-    // Show all levels up to and including current level
+    // Only show current level
     if (_currentLevel == null) return [];
-
-    final cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-    final currentLevelIndex = cefrOrder.indexOf(_currentLevel!);
-
-    if (currentLevelIndex == -1) {
-      // Current level not in CEFR order, show only current level if it has lessons
-      if (_lessonsByLevel.containsKey(_currentLevel!)) {
-        return [_currentLevel!];
-      }
-      return [];
-    }
-
-    // Get all levels from A1 up to and including current level
-    final accessibleLevels = cefrOrder.sublist(0, currentLevelIndex + 1);
-
-    // Filter to only include levels that have lessons in _lessonsByLevel
-    final filteredLevels = accessibleLevels
-        .where((level) => _lessonsByLevel.containsKey(level))
-        .toList();
-    
-    // Reverse the order so current level appears first, then previous levels
-    return filteredLevels.reversed.toList();
+    if (!_lessonsByLevel.containsKey(_currentLevel!)) return [];
+    return [_currentLevel!];
   }
 
   List<String> get _categories {
-    // Include categories from all accessible lessons (including completed ones)
-    final categories = _filteredLessons
+    // Only include categories from visible (non-completed) lessons
+    final visibleLessons = _lessons.where((lesson) {
+      final progress = _getProgress(lesson.id);
+      return progress?.isCompleted != true;
+    }).toList();
+    final categories = visibleLessons
         .map((l) => l.category)
         .whereType<String>()
         .toSet()
@@ -647,21 +520,7 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                             ),
                           ),
                         ),
-                        // Mini Game Card (if available) - show under user level, before lessons
-                        if (_currentLevel == level &&
-                            _availableMiniGame != null)
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                              child: MiniGameCard(
-                                miniGameNumber: _availableMiniGame!,
-                                onTap: () async {
-                                  await _launchMiniGame(_availableMiniGame!);
-                                },
-                              ),
-                            ),
-                          ),
-                        // Knowledge Test Card (if 70% completed and test not passed)
+                        // Knowledge Test Card (if 60% completed and test not passed)
                         if (_currentLevel == level &&
                             _canTakeLevelTest &&
                             !_hasPassedLevelTest)
@@ -687,26 +546,19 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                             ) {
                               final lesson = levelLessons[index];
                               final progress = _getProgress(lesson.id);
-                              // Lock lessons if there's an available mini game
-                              final isLocked =
-                                  _currentLevel == level &&
-                                  _availableMiniGame != null;
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 16),
                                 child: _LessonCard(
                                   lesson: lesson,
                                   progress: progress,
-                                  isLocked: isLocked,
-                                  onTap: isLocked
-                                      ? null
-                                      : () async {
-                                          final result = await context.push(
-                                            '/lessons/${lesson.id}',
-                                          );
-                                          if (result == true) {
-                                            _loadLessons();
-                                          }
-                                        },
+                                  onTap: () async {
+                                    final result = await context.push(
+                                      '/lessons/${lesson.id}',
+                                    );
+                                    if (result == true) {
+                                      _loadLessons();
+                                    }
+                                  },
                                 ),
                               );
                             }, childCount: levelLessons.length),
@@ -714,6 +566,20 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                         ),
                       ];
                     }).toList(),
+
+                  // Mini Game Card (if available) - show before lessons
+                  if (_availableMiniGame != null)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                        child: MiniGameCard(
+                          miniGameNumber: _availableMiniGame!,
+                          onTap: () async {
+                            await _launchMiniGame(_availableMiniGame!);
+                          },
+                        ),
+                      ),
+                    ),
 
                   // Bottom padding
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -751,30 +617,8 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
 
   Future<void> _launchMiniGame(int miniGameNumber) async {
     try {
-      // Get the game type for this mini game (mini game 3 = word search)
-      final gameType = await _miniGameService.getMiniGameType(miniGameNumber);
-      if (gameType == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context)!.errorLaunchingMiniGame,
-              ),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-        return;
-      }
-
-      // Get difficulty settings
-      final difficulty = MiniGameDifficulty.fromMiniGameNumber(miniGameNumber);
-
       // Load words for the mini game
-      final words = await _miniGameService.getMiniGameWords(
-        miniGameNumber,
-        difficulty,
-      );
+      final words = await _miniGameService.getMiniGameWords(miniGameNumber);
 
       if (!mounted) return;
 
@@ -792,37 +636,15 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
         return;
       }
 
-      // Launch the appropriate mini game based on type
-      Widget gameWidget;
-      switch (gameType) {
-        case MiniGameType.wordSearch:
-          gameWidget = WordSearchMiniGame(
+      // Launch the mini game
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => VocabularyReviewMiniGame(
             miniGameNumber: miniGameNumber,
             words: words,
-            difficulty: difficulty,
-          );
-          break;
-        case MiniGameType.imageToWord:
-          gameWidget = ImageToWordMiniGame(
-            miniGameNumber: miniGameNumber,
-            words: words,
-          );
-          break;
-        case MiniGameType.vocabularyReview:
-        case MiniGameType.neuroMatch:
-        case MiniGameType.syntaxConstructor:
-        case MiniGameType.pictionary:
-          // Default to vocabulary review for other types (pictionary is disabled)
-          gameWidget = VocabularyReviewMiniGame(
-            miniGameNumber: miniGameNumber,
-            words: words,
-          );
-          break;
-      }
-
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (context) => gameWidget));
+          ),
+        ),
+      );
 
       // Reload lessons after completing mini game
       _loadLessons();
@@ -963,15 +785,9 @@ class _CategoryChip extends StatelessWidget {
 class _LessonCard extends StatelessWidget {
   final Lesson lesson;
   final LessonProgress? progress;
-  final VoidCallback? onTap;
-  final bool isLocked;
+  final VoidCallback onTap;
 
-  const _LessonCard({
-    required this.lesson,
-    this.progress,
-    required this.onTap,
-    this.isLocked = false,
-  });
+  const _LessonCard({required this.lesson, this.progress, required this.onTap});
 
   Color _getCategoryColor(String? category) {
     if (category == null) return AppTheme.electricLavender;
@@ -1010,286 +826,222 @@ class _LessonCard extends StatelessWidget {
     final categoryColor = _getCategoryColor(lesson.category);
     final categoryIcon = _getCategoryIcon(lesson.category);
 
-    return Opacity(
-      opacity: isLocked ? 0.5 : 1.0,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.cardWhite.withOpacity(0.95),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isLocked
-                ? AppTheme.textSecondary.withOpacity(0.2)
-                : isCompleted
-                ? AppTheme.successGreen.withOpacity(0.3)
-                : isInProgress
-                ? AppTheme.goldenOrange.withOpacity(0.3)
-                : AppTheme.textSecondary.withOpacity(0.1),
-            width: isCompleted || isInProgress ? 2 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardWhite.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isCompleted
+              ? AppTheme.successGreen.withOpacity(0.3)
+              : isInProgress
+              ? AppTheme.goldenOrange.withOpacity(0.3)
+              : AppTheme.textSecondary.withOpacity(0.1),
+          width: isCompleted || isInProgress ? 2 : 1,
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(24),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Category Icon
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              categoryColor,
-                              categoryColor.withOpacity(0.7),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: categoryColor.withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category Icon
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            categoryColor,
+                            categoryColor.withOpacity(0.7),
                           ],
                         ),
-                        child: Icon(
-                          categoryIcon,
-                          size: 28,
-                          color: Colors.white,
-                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: categoryColor.withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      // Title and Description
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    lesson.title,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          color: AppTheme.textPrimary,
-                                        ),
-                                  ),
+                      child: Icon(categoryIcon, size: 28, color: Colors.white),
+                    ),
+                    const SizedBox(width: 16),
+                    // Title and Description
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  lesson.title,
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppTheme.textPrimary,
+                                      ),
                                 ),
-                                // Status Badge
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isLocked
-                                        ? AppTheme.textSecondary.withOpacity(
-                                            0.15,
-                                          )
-                                        : isCompleted
-                                        ? AppTheme.successGreen.withOpacity(
-                                            0.15,
-                                          )
-                                        : isInProgress
-                                        ? AppTheme.goldenOrange.withOpacity(
-                                            0.15,
-                                          )
-                                        : Colors.grey.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        isLocked
-                                            ? Icons.lock_rounded
-                                            : isCompleted
-                                            ? Icons.check_circle_rounded
-                                            : isInProgress
-                                            ? Icons.play_circle_rounded
-                                            : Icons
-                                                  .radio_button_unchecked_rounded,
-                                        size: 14,
-                                        color: isLocked
-                                            ? AppTheme.textSecondary
-                                            : isCompleted
+                              ),
+                              // Status Badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isCompleted
+                                      ? AppTheme.successGreen.withOpacity(0.15)
+                                      : isInProgress
+                                      ? AppTheme.goldenOrange.withOpacity(0.15)
+                                      : Colors.grey.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isCompleted
+                                          ? Icons.check_circle_rounded
+                                          : isInProgress
+                                          ? Icons.play_circle_rounded
+                                          : Icons
+                                                .radio_button_unchecked_rounded,
+                                      size: 14,
+                                      color: isCompleted
+                                          ? AppTheme.successGreen
+                                          : isInProgress
+                                          ? AppTheme.goldenOrange
+                                          : Colors.grey,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      isCompleted
+                                          ? AppLocalizations.of(context)!.done
+                                          : isInProgress
+                                          ? AppLocalizations.of(context)!.active
+                                          : AppLocalizations.of(
+                                              context,
+                                            )!.newLesson,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: isCompleted
                                             ? AppTheme.successGreen
                                             : isInProgress
                                             ? AppTheme.goldenOrange
                                             : Colors.grey,
                                       ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        isLocked
-                                            ? AppLocalizations.of(
-                                                context,
-                                              )!.locked
-                                            : isCompleted
-                                            ? AppLocalizations.of(context)!.done
-                                            : isInProgress
-                                            ? AppLocalizations.of(
-                                                context,
-                                              )!.active
-                                            : AppLocalizations.of(
-                                                context,
-                                              )!.newLesson,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: isLocked
-                                              ? AppTheme.textSecondary
-                                              : isCompleted
-                                              ? AppTheme.successGreen
-                                              : isInProgress
-                                              ? AppTheme.goldenOrange
-                                              : Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            if (lesson.description != null) ...[
-                              const SizedBox(height: 6),
-                              Text(
-                                lesson.description!,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: AppTheme.textSecondary),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
+                          ),
+                          if (lesson.description != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              lesson.description!,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: AppTheme.textSecondary),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Progress Bar (if in progress or completed)
+                if (isInProgress || isCompleted) ...[
+                  const SizedBox(height: 16),
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.progress,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: AppTheme.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                          Text(
+                            '$progressPercentage%',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: isCompleted
+                                      ? AppTheme.successGreen
+                                      : AppTheme.goldenOrange,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: progressPercentage / 100,
+                          minHeight: 8,
+                          backgroundColor: Colors.grey.withOpacity(0.15),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isCompleted
+                                ? AppTheme.successGreen
+                                : AppTheme.goldenOrange,
+                          ),
                         ),
                       ),
                     ],
                   ),
+                ],
 
-                  // Progress Bar (if in progress or completed)
-                  if (isInProgress || isCompleted) ...[
-                    const SizedBox(height: 16),
-                    Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)!.progress,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: AppTheme.textSecondary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                            ),
-                            Text(
-                              '$progressPercentage%',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: isCompleted
-                                        ? AppTheme.successGreen
-                                        : AppTheme.goldenOrange,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: progressPercentage / 100,
-                            minHeight: 8,
-                            backgroundColor: Colors.grey.withOpacity(0.15),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              isCompleted
-                                  ? AppTheme.successGreen
-                                  : AppTheme.goldenOrange,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                const SizedBox(height: 16),
 
-                  const SizedBox(height: 16),
-
-                  // Footer with Category and Time
-                  Row(
-                    children: [
-                      if (lesson.category != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: categoryColor.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                categoryIcon,
-                                size: 14,
-                                color: categoryColor,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                lesson.category!.replaceAll('_', ' '),
-                                style: TextStyle(
-                                  color: categoryColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      const Spacer(),
+                // Footer with Category and Time
+                Row(
+                  children: [
+                    if (lesson.category != null)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.textSecondary.withOpacity(0.1),
+                          color: categoryColor.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.access_time_rounded,
-                              size: 14,
-                              color: AppTheme.textSecondary,
-                            ),
-                            const SizedBox(width: 4),
+                            Icon(categoryIcon, size: 14, color: categoryColor),
+                            const SizedBox(width: 6),
                             Text(
-                              '${lesson.estimatedMinutes} ${AppLocalizations.of(context)!.min}',
+                              lesson.category!.replaceAll('_', ' '),
                               style: TextStyle(
-                                color: AppTheme.textSecondary,
+                                color: categoryColor,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -1297,10 +1049,39 @@ class _LessonCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.textSecondary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 14,
+                            color: AppTheme.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${lesson.estimatedMinutes} ${AppLocalizations.of(context)!.min}',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),

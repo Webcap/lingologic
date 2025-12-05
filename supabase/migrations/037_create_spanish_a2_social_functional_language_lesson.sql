@@ -36,16 +36,16 @@ INSERT INTO words (id, language, word_text, translation, category) VALUES
 ('spanish_gracias', 'spanish', 'gracias', 'thank you', 'gratitude'),
 ('spanish_muchas_gracias', 'spanish', 'muchas gracias', 'thank you very much', 'gratitude'),
 ('spanish_de_nada', 'spanish', 'de nada', 'you''re welcome', 'gratitude'),
-('spanish_no_hay_de_que', 'spanish', 'no hay de qué', 'don''t mention it', 'gratitude'),
-('spanish_es_un_placer', 'spanish', 'es un placer', 'it''s a pleasure', 'gratitude'),
+('spanish_no_hay_de_que', 'spanish', 'no hay de qué', 'don\'t mention it', 'gratitude'),
+('spanish_es_un_placer', 'spanish', 'es un placer', 'it\'s a pleasure', 'gratitude'),
 -- Making Offers
-('spanish_te_ayudo', 'spanish', 'te ayudo', 'I''ll help you', 'offers'),
+('spanish_te_ayudo', 'spanish', 'te ayudo', 'I\'ll help you', 'offers'),
 ('spanish_quieres', 'spanish', 'quieres', 'do you want', 'offers'),
 ('spanish_te_gustaria', 'spanish', 'te gustaría', 'would you like', 'offers'),
 ('spanish_puedo_ayudarte', 'spanish', 'puedo ayudarte', 'I can help you', 'offers'),
 -- Making Suggestions
 ('spanish_que_tal', 'spanish', 'qué tal', 'how about', 'suggestions'),
-('spanish_por_que_no', 'spanish', 'por qué no', 'why don''t we', 'suggestions'),
+('spanish_por_que_no', 'spanish', 'por qué no', 'why don\'t we', 'suggestions'),
 ('spanish_te_parece', 'spanish', 'te parece', 'what do you think', 'suggestions'),
 ('spanish_sugiero', 'spanish', 'sugiero', 'I suggest', 'suggestions'),
 -- Polite Expressions
@@ -110,33 +110,6 @@ INSERT INTO lessons (
         "explanation": "Notice the time-specific greeting 'Buenos días' and the casual farewells 'Hasta luego' and 'Nos vemos'. These are very common in everyday Spanish."
       },
       {
-        "type": "matching",
-        "id": "greetings_matching",
-        "instruction": "Match the Spanish greetings and farewells with their English translations",
-        "pairs": [
-          {"word": "buenos días", "translation": "good morning"},
-          {"word": "buenas tardes", "translation": "good afternoon"},
-          {"word": "buenas noches", "translation": "good evening/night"},
-          {"word": "hasta luego", "translation": "see you later"},
-          {"word": "hasta mañana", "translation": "see you tomorrow"},
-          {"word": "nos vemos", "translation": "see you"}
-        ],
-        "distractors": ["hola", "adiós"],
-        "explanation": "Great! Remember: 'Buenos días' is used until around 12 PM, 'Buenas tardes' from 12 PM to evening, and 'Buenas noches' in the evening and night. 'Hasta luego' and 'Nos vemos' are casual ways to say goodbye."
-      },
-      {
-        "type": "exercise",
-        "id": "greetings_exercise",
-        "question": "What greeting should you use at 2 PM in Spanish?",
-        "options": [
-          {"text": "Buenas tardes", "is_correct": true},
-          {"text": "Buenos días", "is_correct": false},
-          {"text": "Buenas noches", "is_correct": false},
-          {"text": "Hola", "is_correct": false}
-        ],
-        "explanation": "Correct! 'Buenas tardes' is used in the afternoon (from around 12 PM to evening). 'Buenos días' is for morning, 'Buenas noches' is for evening/night, and 'Hola' can be used anytime but is less specific."
-      },
-      {
         "type": "text",
         "id": "making_requests",
         "title": "Making Requests",
@@ -170,18 +143,6 @@ INSERT INTO lessons (
         "explanation": "Excellent! These are essential phrases for making requests. Remember: 'por favor' always makes your requests more polite. '¿Puedes?' is casual, '¿Podrías?' is more polite."
       },
       {
-        "type": "exercise",
-        "id": "requests_exercise",
-        "question": "What is the difference between '¿Puedes?' and '¿Podrías?' in Spanish?",
-        "options": [
-          {"text": "'¿Podrías?' is more polite than '¿Puedes?'", "is_correct": true},
-          {"text": "'¿Puedes?' is more polite than '¿Podrías?'", "is_correct": false},
-          {"text": "They mean the same thing", "is_correct": false},
-          {"text": "'¿Puedes?' is formal, '¿Podrías?' is casual", "is_correct": false}
-        ],
-        "explanation": "Perfect! '¿Podrías?' uses the conditional form, making it more polite than '¿Puedes?'. Use '¿Podrías?' when you want to be more respectful, especially with people you don't know well or in formal situations."
-      },
-      {
         "type": "text",
         "id": "asking_help",
         "title": "Asking for Help",
@@ -202,18 +163,6 @@ INSERT INTO lessons (
         "explanation": "This is a very useful phrase when learning Spanish! 'No entiendo' means 'I don't understand'. 'Más despacio' means 'more slowly'. Always add 'por favor' to be polite."
       },
       {
-        "type": "exercise",
-        "id": "help_exercise",
-        "question": "How do you politely ask someone to speak more slowly in Spanish?",
-        "options": [
-          {"text": "Más despacio, por favor", "is_correct": true},
-          {"text": "Más rápido, por favor", "is_correct": false},
-          {"text": "Más alto, por favor", "is_correct": false},
-          {"text": "Repite, por favor", "is_correct": false}
-        ],
-        "explanation": "Perfect! 'Más despacio, por favor' means 'more slowly, please'. This is essential when learning Spanish and you need someone to slow down. Remember to always add 'por favor' to be polite."
-      },
-      {
         "type": "text",
         "id": "apologizing",
         "title": "Apologizing",
@@ -231,32 +180,6 @@ INSERT INTO lessons (
         "spanish_example": "Perdón, llegué tarde. Lo siento mucho.",
         "english_translation": "Sorry, I arrived late. I'm very sorry.",
         "explanation": "'Perdón' is used for casual apologies. 'Lo siento' is more serious and shows genuine regret. 'Lo siento mucho' means 'I'm very sorry'."
-      },
-      {
-        "type": "matching",
-        "id": "apologies_matching",
-        "instruction": "Match the Spanish apology phrases with their English translations",
-        "pairs": [
-          {"word": "perdón", "translation": "sorry"},
-          {"word": "disculpa", "translation": "excuse me/sorry"},
-          {"word": "lo siento", "translation": "I'm sorry"},
-          {"word": "perdona", "translation": "forgive me"},
-          {"word": "lo siento mucho", "translation": "I'm very sorry"}
-        ],
-        "distractors": ["gracias", "por favor"],
-        "explanation": "Excellent! 'Perdón' and 'Disculpa' are casual, while 'Lo siento' is more serious. 'Lo siento mucho' emphasizes the apology even more. Use the appropriate one based on the situation."
-      },
-      {
-        "type": "exercise",
-        "id": "apology_exercise",
-        "question": "What is the most serious way to apologize in Spanish?",
-        "options": [
-          {"text": "Lo siento mucho", "is_correct": true},
-          {"text": "Perdón", "is_correct": false},
-          {"text": "Disculpa", "is_correct": false},
-          {"text": "Perdona", "is_correct": false}
-        ],
-        "explanation": "Correct! 'Lo siento mucho' is the most serious and emphatic way to apologize. It shows genuine regret. Use it for more serious situations, while 'Perdón' and 'Disculpa' are for casual, minor mistakes."
       },
       {
         "type": "text",
@@ -291,32 +214,6 @@ INSERT INTO lessons (
         "explanation": "Perfect! 'Muchas gracias' is the correct way to say 'thank you very much'. Remember: 'muchas' (many) comes before 'gracias', not 'muy' (very)."
       },
       {
-        "type": "matching",
-        "id": "gratitude_matching",
-        "instruction": "Match the Spanish gratitude phrases with their English translations",
-        "pairs": [
-          {"word": "gracias", "translation": "thank you"},
-          {"word": "muchas gracias", "translation": "thank you very much"},
-          {"word": "de nada", "translation": "you're welcome"},
-          {"word": "no hay de qué", "translation": "don't mention it"},
-          {"word": "es un placer", "translation": "it's a pleasure"}
-        ],
-        "distractors": ["por favor", "perdón"],
-        "explanation": "Excellent! 'Gracias' is the basic thank you, while 'Muchas gracias' is more emphatic. Common responses are 'De nada' (casual), 'No hay de qué' (polite), and 'Es un placer' (formal/polite)."
-      },
-      {
-        "type": "exercise",
-        "id": "gratitude_response_exercise",
-        "question": "What is the most polite way to respond to 'Muchas gracias' in Spanish?",
-        "options": [
-          {"text": "De nada, es un placer", "is_correct": true},
-          {"text": "De nada", "is_correct": false},
-          {"text": "Gracias", "is_correct": false},
-          {"text": "Por favor", "is_correct": false}
-        ],
-        "explanation": "Perfect! 'De nada, es un placer' is the most polite response. 'De nada' alone is casual and friendly, but adding 'es un placer' makes it more formal and polite, showing that helping was a pleasure."
-      },
-      {
         "type": "text",
         "id": "making_offers",
         "title": "Making Offers",
@@ -336,18 +233,6 @@ INSERT INTO lessons (
         "explanation": "'¿Te gustaría?' is a polite way to offer something. 'Puedo ayudarte' is a friendly way to offer help. Both are very common in social situations."
       },
       {
-        "type": "exercise",
-        "id": "offers_exercise",
-        "question": "What is the most polite way to offer something to someone in Spanish?",
-        "options": [
-          {"text": "¿Te gustaría un café?", "is_correct": true},
-          {"text": "¿Quieres un café?", "is_correct": false},
-          {"text": "Toma un café", "is_correct": false},
-          {"text": "Un café para ti", "is_correct": false}
-        ],
-        "explanation": "Perfect! '¿Te gustaría?' is the most polite way to offer something. '¿Quieres?' is more casual. Always use the conditional form 'gustaría' for politeness when offering things to others."
-      },
-      {
         "type": "text",
         "id": "making_suggestions",
         "title": "Making Suggestions",
@@ -365,18 +250,6 @@ INSERT INTO lessons (
         "spanish_example": "¿Qué tal si vamos al restaurante? ¿Te parece bien?",
         "english_translation": "How about we go to the restaurant? What do you think?",
         "explanation": "'¿Qué tal si...?' is a casual way to make a suggestion. '¿Te parece bien?' asks for the other person's opinion. Both are very natural in conversation."
-      },
-      {
-        "type": "exercise",
-        "id": "suggestions_exercise",
-        "question": "How do you ask for someone's opinion about a suggestion in Spanish?",
-        "options": [
-          {"text": "¿Te parece bien?", "is_correct": true},
-          {"text": "¿Qué piensas?", "is_correct": false},
-          {"text": "¿Estás de acuerdo?", "is_correct": false},
-          {"text": "¿Vamos?", "is_correct": false}
-        ],
-        "explanation": "Correct! '¿Te parece bien?' is a natural way to ask for someone's opinion about a suggestion. It means 'What do you think?' or 'Does that seem good to you?'. It's very common in casual conversations."
       },
       {
         "type": "text",
@@ -430,19 +303,6 @@ INSERT INTO lessons (
         "explanation": "This is a complete, natural conversation! Notice how it combines: greeting (Buenos días), polite request (Disculpa, ¿puedes ayudarme?), offer of help (Te ayudo), gratitude (Muchas gracias), and response (De nada, es un placer)."
       },
       {
-        "type": "pronunciation",
-        "id": "pronunciation_social_phrases",
-        "instruction": "Practice pronouncing these essential social phrases in Spanish",
-        "words": [
-          {"word": "por favor", "translation": "please", "phonetic": "por fa-VOR"},
-          {"word": "gracias", "translation": "thank you", "phonetic": "GRA-see-as"},
-          {"word": "disculpa", "translation": "excuse me", "phonetic": "dis-KUL-pa"},
-          {"word": "buenos días", "translation": "good morning", "phonetic": "BWE-nos DEE-as"},
-          {"word": "muchas gracias", "translation": "thank you very much", "phonetic": "MU-chas GRA-see-as"}
-        ],
-        "explanation": "Great practice! Pay attention to the stress: 'por fa-VOR' (stress on 'vor'), 'GRA-see-as' (stress on 'gra'), 'dis-KUL-pa' (stress on 'kul'). Practice these phrases until they sound natural!"
-      },
-      {
         "type": "text",
         "id": "practice_tips",
         "title": "Practice Tips",
@@ -456,7 +316,7 @@ INSERT INTO lessons (
         ]
       }
     ]
-  }$lesson_json$::jsonb,
+  }$lesson_json$,
   ARRAY[
     'spanish_buenos_dias', 'spanish_buenas_tardes', 'spanish_buenas_noches', 'spanish_hola', 'spanish_adios',
     'spanish_hasta_luego', 'spanish_hasta_mañana', 'spanish_nos_vemos',
@@ -469,8 +329,8 @@ INSERT INTO lessons (
     'spanish_te_ayudo', 'spanish_quieres', 'spanish_te_gustaria', 'spanish_puedo_ayudarte',
     'spanish_que_tal', 'spanish_por_que_no', 'spanish_te_parece', 'spanish_sugiero',
     'spanish_con_permiso', 'spanish_perdone', 'spanish_por_supuesto', 'spanish_claro'
-  ]::TEXT[],
-  ARRAY['social_language', 'polite_expressions', 'functional_language', 'everyday_interactions', 'conversational_phrases']::TEXT[]
+  ],
+  ARRAY['social_language', 'polite_expressions', 'functional_language', 'everyday_interactions', 'conversational_phrases']
 )
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,

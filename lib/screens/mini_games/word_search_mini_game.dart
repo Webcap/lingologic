@@ -75,11 +75,9 @@ class _WordSearchMiniGameState extends State<WordSearchMiniGame>
     // Generate the word search grid
     _generateGrid();
 
-    // Start timer if time limit exists
-    if (widget.difficulty.timeLimitSeconds != null) {
-      _timeRemaining = widget.difficulty.timeLimitSeconds;
-      _startTimer();
-    }
+    // Start timer with time limit
+    _timeRemaining = widget.difficulty.timeLimitSeconds;
+    _startTimer();
 
     setState(() {});
   }

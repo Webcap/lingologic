@@ -1124,157 +1124,37 @@ abstract class AppLocalizations {
   /// **'Pronunciation exercises are currently skipped. You can continue with the rest of the lesson.'**
   String get pronunciationSkippedMessage;
 
-  /// Error message when no language is selected for knowledge test
-  ///
-  /// In en, this message translates to:
-  /// **'No active language selected'**
-  String get noActiveLanguageSelected;
-
-  /// Error message when no lessons exist for the test level
-  ///
-  /// In en, this message translates to:
-  /// **'No lessons found for this level'**
-  String get noLessonsFoundForLevel;
-
-  /// Error message when no vocabulary exists for the test level
-  ///
-  /// In en, this message translates to:
-  /// **'No vocabulary found for this level'**
-  String get noVocabularyFoundForLevel;
-
-  /// Error message when there isn't enough vocabulary to generate test questions
-  ///
-  /// In en, this message translates to:
-  /// **'Not enough vocabulary for the test. Complete more lessons first.'**
-  String get notEnoughVocabularyForTest;
-
-  /// Message shown when test has no questions to display
-  ///
-  /// In en, this message translates to:
-  /// **'No questions available'**
-  String get noQuestionsAvailable;
-
-  /// Error message when loading knowledge test fails
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading test'**
-  String get errorLoadingTest;
-
-  /// Error message when saving test result fails
-  ///
-  /// In en, this message translates to:
-  /// **'Error saving test result'**
-  String get errorSavingTestResult;
-
-  /// Congratulations message for passing test
-  ///
-  /// In en, this message translates to:
-  /// **'Congratulations!'**
-  String get congratulations;
-
-  /// Test completion message
-  ///
-  /// In en, this message translates to:
-  /// **'Test Complete'**
-  String get testComplete;
-
-  /// Success message for passing knowledge test
-  ///
-  /// In en, this message translates to:
-  /// **'You passed the {level} knowledge test!'**
-  String youPassedLevelKnowledgeTest(String level);
-
-  /// Test score message with percentage
-  ///
-  /// In en, this message translates to:
-  /// **'You scored {percentage}%. You need 70% to pass.'**
-  String testScoreMessage(int percentage);
-
-  /// Test score display
-  ///
-  /// In en, this message translates to:
-  /// **'Score: {correct} / {total}'**
-  String score(int correct, int total);
-
-  /// Message shown when user passes test and unlocks next level
-  ///
-  /// In en, this message translates to:
-  /// **'You can now access {level} lessons!'**
-  String youCanNowAccessLevelLessons(String level);
-
-  /// Knowledge test title with level
-  ///
-  /// In en, this message translates to:
-  /// **'{level} Knowledge Test'**
-  String levelKnowledgeTest(String level);
-
-  /// Question progress indicator
-  ///
-  /// In en, this message translates to:
-  /// **'Question {current} of {total}'**
-  String questionXOfY(int current, int total);
-
-  /// Question prompt for translation
-  ///
-  /// In en, this message translates to:
-  /// **'What is the translation of:'**
-  String get whatIsTranslationOf;
-
-  /// Generic next level text
-  ///
-  /// In en, this message translates to:
-  /// **'next level'**
-  String get nextLevel;
-
-  /// Practice section title
-  ///
-  /// In en, this message translates to:
-  /// **'Practice'**
-  String get practiceSection;
-
-  /// Correct answer feedback
-  ///
-  /// In en, this message translates to:
-  /// **'Correct!'**
-  String get correct;
-
-  /// Try again message for incorrect answers
-  ///
-  /// In en, this message translates to:
-  /// **'Try again'**
-  String get tryAgain;
-
-  /// Try again button text
-  ///
-  /// In en, this message translates to:
-  /// **'Try Again'**
-  String get tryAgainButton;
-
-  /// Message suggesting to try a different question
-  ///
-  /// In en, this message translates to:
-  /// **'Try a different question'**
-  String get tryDifferentQuestion;
-
-  /// Button text to retry with a different question
-  ///
-  /// In en, this message translates to:
-  /// **'Retry with Different Question'**
-  String get retryWithDifferentQuestion;
-
-  /// Submit answer button text
-  ///
-  /// In en, this message translates to:
-  /// **'Submit Answer'**
-  String get submitAnswer;
-
-  /// Matching exercise section title
+  /// Title for matching exercise section
   ///
   /// In en, this message translates to:
   /// **'Match the Words'**
   String get matchTheWords;
 
-  /// Instruction to tap to create a match
+  /// Label shown when answer is correct
+  ///
+  /// In en, this message translates to:
+  /// **'Correct'**
+  String get correct;
+
+  /// Label shown when answer is incorrect
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain;
+
+  /// Button text to retry exercise with a different question
+  ///
+  /// In en, this message translates to:
+  /// **'Retry with Different Question'**
+  String get retryWithDifferentQuestion;
+
+  /// Button text to submit an answer
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Answer'**
+  String get submitAnswer;
+
+  /// Hint text for matching exercise
   ///
   /// In en, this message translates to:
   /// **'Tap to match'**
@@ -1286,10 +1166,10 @@ abstract class AppLocalizations {
   /// **'Translation'**
   String get translation;
 
-  /// Dialog title for selecting translation
+  /// Instruction to select translation for a word
   ///
   /// In en, this message translates to:
-  /// **'Select translation for \"{word}\"'**
+  /// **'Select translation for {word}'**
   String selectTranslationFor(String word);
 
   /// Button text to clear a match
@@ -1297,120 +1177,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear Match'**
   String get clearMatch;
-
-  /// Error message when microphone permission is not granted
-  ///
-  /// In en, this message translates to:
-  /// **'Microphone permission is required to practice pronunciation.'**
-  String get microphonePermissionRequired;
-
-  /// Microphone permission dialog title
-  ///
-  /// In en, this message translates to:
-  /// **'Microphone Permission'**
-  String get microphonePermission;
-
-  /// Explanation of why microphone permission is needed
-  ///
-  /// In en, this message translates to:
-  /// **'To practice pronunciation, we need access to your microphone to record and check your pronunciation.\n\nA system dialog will appear asking for permission.'**
-  String get microphonePermissionExplanation;
-
-  /// Button text to decline permission request
-  ///
-  /// In en, this message translates to:
-  /// **'Not Now'**
-  String get notNow;
-
-  /// Instruction to enable permission in device settings
-  ///
-  /// In en, this message translates to:
-  /// **'Please enable it in your device settings.'**
-  String get pleaseEnableInSettings;
-
-  /// Error message when speech recognition is not available
-  ///
-  /// In en, this message translates to:
-  /// **'Speech recognition is not available on this device.'**
-  String get speechRecognitionNotAvailable;
-
-  /// Pronunciation practice section title
-  ///
-  /// In en, this message translates to:
-  /// **'Pronunciation Practice'**
-  String get pronunciationPractice;
-
-  /// Positive feedback for correct pronunciation
-  ///
-  /// In en, this message translates to:
-  /// **'Great pronunciation!'**
-  String get greatPronunciation;
-
-  /// Button text to move to next word
-  ///
-  /// In en, this message translates to:
-  /// **'Next Word'**
-  String get nextWord;
-
-  /// Button text to enable microphone permission
-  ///
-  /// In en, this message translates to:
-  /// **'Enable Microphone Permission'**
-  String get enableMicrophonePermission;
-
-  /// Permission required dialog title
-  ///
-  /// In en, this message translates to:
-  /// **'Permission Required'**
-  String get permissionRequired;
-
-  /// Button text to open device settings
-  ///
-  /// In en, this message translates to:
-  /// **'Open Settings'**
-  String get openSettings;
-
-  /// Word progress indicator
-  ///
-  /// In en, this message translates to:
-  /// **'Word {current} of {total}'**
-  String wordXOfY(int current, int total);
-
-  /// Button text to listen to pronunciation
-  ///
-  /// In en, this message translates to:
-  /// **'Listen to Pronunciation'**
-  String get listenToPronunciation;
-
-  /// Listening state text
-  ///
-  /// In en, this message translates to:
-  /// **'Listening...'**
-  String get listening;
-
-  /// Initializing state text
-  ///
-  /// In en, this message translates to:
-  /// **'Initializing...'**
-  String get initializing;
-
-  /// Button text to record pronunciation
-  ///
-  /// In en, this message translates to:
-  /// **'Record Your Pronunciation'**
-  String get recordYourPronunciation;
-
-  /// Label for recognized speech text
-  ///
-  /// In en, this message translates to:
-  /// **'You said:'**
-  String get youSaid;
-
-  /// Confidence percentage label
-  ///
-  /// In en, this message translates to:
-  /// **'Confidence: {percentage}%'**
-  String confidence(int percentage);
 }
 
 class _AppLocalizationsDelegate
