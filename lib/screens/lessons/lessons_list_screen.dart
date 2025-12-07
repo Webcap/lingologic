@@ -141,7 +141,7 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
             lessons,
             progressMap,
           );
-      final canTakeTest = completionPercentage >= 60 && !hasPassedTest;
+      final canTakeTest = completionPercentage >= 70 && !hasPassedTest;
 
       // Advance to next level if all current level lessons are completed OR if test is passed
       String finalCurrentLevel = effectiveCurrentLevel;
@@ -520,7 +520,21 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                             ),
                           ),
                         ),
-                        // Knowledge Test Card (if 60% completed and test not passed)
+                        // Mini Game Card (if required) - show below level header
+                        if (_availableMiniGame != null &&
+                            level == _levels.first)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                              child: MiniGameCard(
+                                miniGameNumber: _availableMiniGame!,
+                                onTap: () async {
+                                  await _launchMiniGame(_availableMiniGame!);
+                                },
+                              ),
+                            ),
+                          ),
+                        // Knowledge Test Card (if 70% completed and test not passed)
                         if (_currentLevel == level &&
                             _canTakeLevelTest &&
                             !_hasPassedLevelTest)
@@ -546,12 +560,33 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                             ) {
                               final lesson = levelLessons[index];
                               final progress = _getProgress(lesson.id);
+                              // Lock lesson if mini game is required
+                              final isLocked = _availableMiniGame != null;
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 16),
                                 child: _LessonCard(
                                   lesson: lesson,
                                   progress: progress,
+                                  isLocked: isLocked,
                                   onTap: () async {
+                                    if (isLocked) {
+                                      // Show message that mini game must be completed first
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            )!.completeMiniGameToContinue,
+                                          ),
+                                          backgroundColor:
+                                              AppTheme.goldenOrange,
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                      return;
+                                    }
                                     final result = await context.push(
                                       '/lessons/${lesson.id}',
                                     );
@@ -566,20 +601,6 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
                         ),
                       ];
                     }).toList(),
-
-                  // Mini Game Card (if available) - show before lessons
-                  if (_availableMiniGame != null)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                        child: MiniGameCard(
-                          miniGameNumber: _availableMiniGame!,
-                          onTap: () async {
-                            await _launchMiniGame(_availableMiniGame!);
-                          },
-                        ),
-                      ),
-                    ),
 
                   // Bottom padding
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -785,9 +806,15 @@ class _CategoryChip extends StatelessWidget {
 class _LessonCard extends StatelessWidget {
   final Lesson lesson;
   final LessonProgress? progress;
+  final bool isLocked;
   final VoidCallback onTap;
 
-  const _LessonCard({required this.lesson, this.progress, required this.onTap});
+  const _LessonCard({
+    required this.lesson,
+    this.progress,
+    this.isLocked = false,
+    required this.onTap,
+  });
 
   Color _getCategoryColor(String? category) {
     if (category == null) return AppTheme.electricLavender;
@@ -849,238 +876,292 @@ class _LessonCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
+          onTap: isLocked ? null : onTap,
           borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          child: Opacity(
+            opacity: isLocked ? 0.6 : 1.0,
+            child: Stack(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Category Icon
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            categoryColor,
-                            categoryColor.withOpacity(0.7),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: categoryColor.withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(categoryIcon, size: 28, color: Colors.white),
-                    ),
-                    const SizedBox(width: 16),
-                    // Title and Description
-                    Expanded(
-                      child: Column(
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  lesson.title,
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: AppTheme.textPrimary,
-                                      ),
-                                ),
+                          // Category Icon
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  categoryColor,
+                                  categoryColor.withOpacity(0.7),
+                                ],
                               ),
-                              // Status Badge
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 5,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: categoryColor.withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
-                                decoration: BoxDecoration(
-                                  color: isCompleted
-                                      ? AppTheme.successGreen.withOpacity(0.15)
-                                      : isInProgress
-                                      ? AppTheme.goldenOrange.withOpacity(0.15)
-                                      : Colors.grey.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                              ],
+                            ),
+                            child: Icon(
+                              categoryIcon,
+                              size: 28,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          // Title and Description
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    Icon(
-                                      isCompleted
-                                          ? Icons.check_circle_rounded
-                                          : isInProgress
-                                          ? Icons.play_circle_rounded
-                                          : Icons
-                                                .radio_button_unchecked_rounded,
-                                      size: 14,
-                                      color: isCompleted
-                                          ? AppTheme.successGreen
-                                          : isInProgress
-                                          ? AppTheme.goldenOrange
-                                          : Colors.grey,
+                                    Expanded(
+                                      child: Text(
+                                        lesson.title,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color: AppTheme.textPrimary,
+                                            ),
+                                      ),
                                     ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      isCompleted
-                                          ? AppLocalizations.of(context)!.done
-                                          : isInProgress
-                                          ? AppLocalizations.of(context)!.active
-                                          : AppLocalizations.of(
-                                              context,
-                                            )!.newLesson,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
+                                    // Status Badge
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
                                         color: isCompleted
-                                            ? AppTheme.successGreen
+                                            ? AppTheme.successGreen.withOpacity(
+                                                0.15,
+                                              )
                                             : isInProgress
-                                            ? AppTheme.goldenOrange
-                                            : Colors.grey,
+                                            ? AppTheme.goldenOrange.withOpacity(
+                                                0.15,
+                                              )
+                                            : Colors.grey.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isCompleted
+                                                ? Icons.check_circle_rounded
+                                                : isInProgress
+                                                ? Icons.play_circle_rounded
+                                                : Icons
+                                                      .radio_button_unchecked_rounded,
+                                            size: 14,
+                                            color: isCompleted
+                                                ? AppTheme.successGreen
+                                                : isInProgress
+                                                ? AppTheme.goldenOrange
+                                                : Colors.grey,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            isCompleted
+                                                ? AppLocalizations.of(
+                                                    context,
+                                                  )!.done
+                                                : isInProgress
+                                                ? AppLocalizations.of(
+                                                    context,
+                                                  )!.active
+                                                : AppLocalizations.of(
+                                                    context,
+                                                  )!.newLesson,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: isCompleted
+                                                  ? AppTheme.successGreen
+                                                  : isInProgress
+                                                  ? AppTheme.goldenOrange
+                                                  : Colors.grey,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          ),
-                          if (lesson.description != null) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              lesson.description!,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: AppTheme.textSecondary),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                                if (lesson.description != null) ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    lesson.description!,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: AppTheme.textSecondary,
+                                        ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ],
                             ),
-                          ],
+                          ),
                         ],
                       ),
-                    ),
-                  ],
-                ),
 
-                // Progress Bar (if in progress or completed)
-                if (isInProgress || isCompleted) ...[
-                  const SizedBox(height: 16),
-                  Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)!.progress,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: AppTheme.textSecondary,
-                                  fontWeight: FontWeight.w500,
+                      // Progress Bar (if in progress or completed)
+                      if (isInProgress || isCompleted) ...[
+                        const SizedBox(height: 16),
+                        Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  AppLocalizations.of(context)!.progress,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: AppTheme.textSecondary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                 ),
-                          ),
-                          Text(
-                            '$progressPercentage%',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: isCompleted
+                                Text(
+                                  '$progressPercentage%',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: isCompleted
+                                            ? AppTheme.successGreen
+                                            : AppTheme.goldenOrange,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: LinearProgressIndicator(
+                                value: progressPercentage / 100,
+                                minHeight: 8,
+                                backgroundColor: Colors.grey.withOpacity(0.15),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isCompleted
                                       ? AppTheme.successGreen
                                       : AppTheme.goldenOrange,
-                                  fontWeight: FontWeight.w600,
                                 ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
+                      const SizedBox(height: 16),
+
+                      // Footer with Category and Time
+                      Row(
+                        children: [
+                          if (lesson.category != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: categoryColor.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    categoryIcon,
+                                    size: 14,
+                                    color: categoryColor,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    lesson.category!.replaceAll('_', ' '),
+                                    style: TextStyle(
+                                      color: categoryColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.textSecondary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.access_time_rounded,
+                                  size: 14,
+                                  color: AppTheme.textSecondary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${lesson.estimatedMinutes} ${AppLocalizations.of(context)!.min}',
+                                  style: TextStyle(
+                                    color: AppTheme.textSecondary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: LinearProgressIndicator(
-                          value: progressPercentage / 100,
-                          minHeight: 8,
-                          backgroundColor: Colors.grey.withOpacity(0.15),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            isCompleted
-                                ? AppTheme.successGreen
-                                : AppTheme.goldenOrange,
-                          ),
-                        ),
                       ),
                     ],
                   ),
-                ],
-
-                const SizedBox(height: 16),
-
-                // Footer with Category and Time
-                Row(
-                  children: [
-                    if (lesson.category != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: categoryColor.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(categoryIcon, size: 14, color: categoryColor),
-                            const SizedBox(width: 6),
-                            Text(
-                              lesson.category!.replaceAll('_', ' '),
-                              style: TextStyle(
-                                color: categoryColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
+                ),
+                // Lock overlay icon
+                if (isLocked)
+                  Positioned(
+                    top: 20,
+                    right: 20,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppTheme.textSecondary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.access_time_rounded,
-                            size: 14,
-                            color: AppTheme.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${lesson.estimatedMinutes} ${AppLocalizations.of(context)!.min}',
-                            style: TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        color: AppTheme.goldenOrange.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
+                      child: const Icon(
+                        Icons.lock_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
-                  ],
-                ),
+                  ),
               ],
             ),
           ),

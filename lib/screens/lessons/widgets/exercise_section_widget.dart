@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../models/lesson_content.dart';
 import '../../../theme/app_theme.dart';
@@ -24,21 +25,25 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
   int? _selectedIndex;
   bool _showResult = false;
   bool? _isCorrect;
+  late List<ExerciseOption> _shuffledOptions;
+  late int _correctAnswerIndex; // Index in shuffled list
 
   @override
   void initState() {
     super.initState();
+    // Shuffle options to randomize answer order
+    _shuffledOptions = List<ExerciseOption>.from(widget.section.options);
+    _shuffledOptions.shuffle(Random());
+    
+    // Find the correct answer index in the shuffled list
+    _correctAnswerIndex = _shuffledOptions.indexWhere((opt) => opt.isCorrect);
+    
     // If already answered from parent, show result
     if (widget.isAnswered) {
       _showResult = true;
       _isCorrect = widget.isCorrect;
-      // Find the correct answer index
-      for (int i = 0; i < widget.section.options.length; i++) {
-        if (widget.section.options[i].isCorrect) {
-          _selectedIndex = i;
-          break;
-        }
-      }
+      // Set selected index to the correct answer in shuffled list
+      _selectedIndex = _correctAnswerIndex;
     }
   }
 
@@ -98,7 +103,7 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
                 ),
           ),
           const SizedBox(height: 16),
-          ...widget.section.options.asMap().entries.map((entry) {
+          ..._shuffledOptions.asMap().entries.map((entry) {
             final index = entry.key;
             final option = entry.value;
             final isSelected = _selectedIndex == index;
@@ -232,7 +237,7 @@ class _ExerciseSectionWidgetState extends State<ExerciseSectionWidget> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  final isCorrect = widget.section.options[_selectedIndex!].isCorrect;
+                  final isCorrect = _shuffledOptions[_selectedIndex!].isCorrect;
                   setState(() {
                     _showResult = true;
                     _isCorrect = isCorrect;

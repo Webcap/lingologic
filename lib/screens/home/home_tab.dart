@@ -4,11 +4,13 @@ import '../../services/user_service.dart';
 import '../../services/lesson_service.dart';
 import '../../services/language_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/mini_game_service.dart';
 import '../../models/lesson.dart';
 import '../../theme/app_theme.dart';
 import '../../config/supported_languages.dart';
 import '../../widgets/language_selector.dart';
 import '../../l10n/app_localizations.dart';
+import '../mini_games/vocabulary_review_mini_game.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -22,6 +24,7 @@ class _HomeTabState extends State<HomeTab> {
   final _lessonService = LessonService();
   final _languageService = LanguageService();
   final _authService = AuthService();
+  final _miniGameService = MiniGameService();
 
   int _streakDays = 0;
   int _totalTimeMinutes = 0;
@@ -29,6 +32,7 @@ class _HomeTabState extends State<HomeTab> {
   int _lessonsInProgress = 0;
   String? _activeLanguage;
   Lesson? _nextLesson;
+  int? _requiredMiniGame;
   String? _currentLevel;
   bool _isLoading = true;
 
@@ -75,8 +79,14 @@ class _HomeTabState extends State<HomeTab> {
       final completed = filteredProgress.where((p) => p.isCompleted).length;
       final inProgress = filteredProgress.where((p) => p.isInProgress).length;
       
-      // Get next recommended lesson
-      final nextLesson = await _lessonService.getNextRecommendedLesson(user.id);
+      // Check if mini game is required first (priority over next lesson)
+      final requiredMiniGame = await _miniGameService.shouldShowMiniGame();
+      
+      // Get next recommended lesson (only if no mini game required)
+      Lesson? nextLesson;
+      if (requiredMiniGame == null) {
+        nextLesson = await _lessonService.getNextRecommendedLesson(user.id);
+      }
       
       // Get current level (highest level from completed lessons)
       String? currentLevel;
@@ -118,6 +128,7 @@ class _HomeTabState extends State<HomeTab> {
           _lessonsCompleted = completed;
           _lessonsInProgress = inProgress;
           _nextLesson = nextLesson;
+          _requiredMiniGame = requiredMiniGame;
           _currentLevel = currentLevel;
           _isLoading = false;
         });
@@ -298,8 +309,11 @@ class _HomeTabState extends State<HomeTab> {
                       const SizedBox(height: 24),
                     ],
 
-                    // Next Lesson Card
-                    if (_nextLesson != null) ...[
+                    // Next Lesson or Mini Game Card (mini game has priority)
+                    if (_requiredMiniGame != null) ...[
+                      _buildNextMiniGameCard(context),
+                      const SizedBox(height: 24),
+                    ] else if (_nextLesson != null) ...[
                       _buildNextLessonCard(context),
                       const SizedBox(height: 24),
                     ],
@@ -483,6 +497,190 @@ class _HomeTabState extends State<HomeTab> {
         ],
       ),
     );
+  }
+
+  Widget _buildNextMiniGameCard(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.goldenOrange,
+            AppTheme.goldenOrange.withOpacity(0.8),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.goldenOrange.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () async {
+            await _launchMiniGame(_requiredMiniGame!);
+          },
+          borderRadius: BorderRadius.circular(28),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.celebration_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.nextMiniGame,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Mini Game $_requiredMiniGame',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  AppLocalizations.of(context)!.reviewVocabularyMiniGame,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.sports_esports_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            AppLocalizations.of(context)!.game,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        AppLocalizations.of(context)!.start,
+                        style: TextStyle(
+                          color: AppTheme.goldenOrange,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchMiniGame(int miniGameNumber) async {
+    try {
+      // Load words for the mini game
+      final words = await _miniGameService.getMiniGameWords(miniGameNumber);
+
+      if (!mounted) return;
+
+      if (words.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.noWordsAvailableForMiniGame,
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Launch the mini game
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => VocabularyReviewMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          ),
+        ),
+      );
+
+      // Reload user data after completing mini game
+      _loadUserData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.errorLaunchingMiniGame,
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildNextLessonCard(BuildContext context) {

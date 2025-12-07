@@ -178,10 +178,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Complete your first lesson to unlock games and practice what you\'ve learned!';
 
   @override
+  String get completeMiniGameToContinue =>
+      'Complete the mini game to unlock more lessons!';
+
+  @override
   String get goToLessons => 'Go to Lessons';
 
   @override
   String get refresh => 'Refresh';
+
+  @override
+  String get game => 'Game';
+
+  @override
+  String get nextMiniGame => 'Next Mini Game';
+
+  @override
+  String get reviewVocabularyMiniGame =>
+      'Review vocabulary from your recent lessons!';
 
   @override
   String get neuroMatch => 'Neuro-Match';

@@ -276,6 +276,11 @@
     "description": "Games locked message"
   },
   
+  "completeMiniGameToContinue": "Complete the mini game to unlock more lessons!",
+  "@completeMiniGameToContinue": {
+    "description": "Message shown when user tries to access locked lesson"
+  },
+  
   "goToLessons": "Go to Lessons",
   "@goToLessons": {
     "description": "Button to navigate to lessons"
@@ -284,6 +289,21 @@
   "refresh": "Refresh",
   "@refresh": {
     "description": "Refresh button text"
+  },
+  
+  "game": "Game",
+  "@game": {
+    "description": "Game label"
+  },
+  
+  "nextMiniGame": "Next Mini Game",
+  "@nextMiniGame": {
+    "description": "Next mini game label"
+  },
+  
+  "reviewVocabularyMiniGame": "Review vocabulary from your recent lessons!",
+  "@reviewVocabularyMiniGame": {
+    "description": "Mini game description"
   },
   
   "neuroMatch": "Neuro-Match",

@@ -428,6 +428,12 @@ abstract class AppLocalizations {
   /// **'Complete your first lesson to unlock games and practice what you\'ve learned!'**
   String get completeFirstLessonToUnlock;
 
+  /// Message shown when user tries to access locked lesson
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the mini game to unlock more lessons!'**
+  String get completeMiniGameToContinue;
+
   /// Button to navigate to lessons
   ///
   /// In en, this message translates to:
@@ -439,6 +445,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refresh'**
   String get refresh;
+
+  /// Game label
+  ///
+  /// In en, this message translates to:
+  /// **'Game'**
+  String get game;
+
+  /// Next mini game label
+  ///
+  /// In en, this message translates to:
+  /// **'Next Mini Game'**
+  String get nextMiniGame;
+
+  /// Mini game description
+  ///
+  /// In en, this message translates to:
+  /// **'Review vocabulary from your recent lessons!'**
+  String get reviewVocabularyMiniGame;
 
   /// Neuro-Match game title
   ///

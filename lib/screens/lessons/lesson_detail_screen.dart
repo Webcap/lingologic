@@ -129,6 +129,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         widget.lessonId,
         progressPercentage,
       );
+
+      // Note: Time is only added to total when lesson is completed to avoid double-counting
+      // when users save progress multiple times or resume lessons
     } catch (e) {
       debugPrint('Error saving progress: $e');
     }
@@ -138,11 +141,14 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   Future<void> _showExitDialog() async {
     if (!mounted) return;
 
+    // Capture the parent Navigator before showing dialog to use after async operations
+    final parentNavigator = Navigator.of(context);
+
     showDialog(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.6),
-      builder: (context) => Dialog(
+      builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
         child: Container(
@@ -181,8 +187,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
-                  AppLocalizations.of(context)!.exitLesson,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  AppLocalizations.of(dialogContext)!.exitLesson,
+                  style: Theme.of(dialogContext).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: AppTheme.textPrimary,
                   ),
@@ -194,8 +200,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
-                  AppLocalizations.of(context)!.exitLessonMessage,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  AppLocalizations.of(dialogContext)!.exitLessonMessage,
+                  style: Theme.of(dialogContext).textTheme.bodyLarge?.copyWith(
                     color: AppTheme.textSecondary,
                     height: 1.5,
                   ),
@@ -209,11 +215,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () async {
-                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(dialogContext); // Close dialog using dialog's context
                     await _confirmAndResetLesson();
                   },
                   icon: const Icon(Icons.refresh_rounded, size: 20),
-                  label: Text(AppLocalizations.of(context)!.reset),
+                  label: Text(AppLocalizations.of(dialogContext)!.reset),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.goldenOrange,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -231,26 +237,26 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(dialogContext); // Close dialog using dialog's context
                     try {
                       // Save current slide position first
                       await _saveSlidePosition(_currentSlideIndex);
                       // Save progress
                       await _saveCurrentProgress();
-                      // Navigate back after saving
+                      // Navigate back after saving using captured parent navigator
                       if (mounted) {
-                        Navigator.of(context).pop(true);
+                        parentNavigator.pop(true);
                       }
                     } catch (e) {
                       debugPrint('Error saving and closing lesson: $e');
                       // Error is logged, still navigate back even if save failed
                       if (mounted) {
-                        Navigator.of(context).pop(true);
+                        parentNavigator.pop(true);
                       }
                     }
                   },
                   icon: const Icon(Icons.check_rounded, size: 20),
-                  label: Text(AppLocalizations.of(context)!.saveAndClose),
+                  label: Text(AppLocalizations.of(dialogContext)!.saveAndClose),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryMintGreen,
                     foregroundColor: Colors.white,
@@ -268,8 +274,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 margin: const EdgeInsets.only(left: 32, right: 32, bottom: 32),
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(AppLocalizations.of(context)!.cancel),
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text(AppLocalizations.of(dialogContext)!.cancel),
                   style: TextButton.styleFrom(
                     foregroundColor: AppTheme.textSecondary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -333,6 +339,10 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   Future<void> _resetLesson() async {
     final user = _authService.currentUser;
     if (user == null) return;
+
+    // Reset time tracking
+    _startTime = DateTime.now();
+    _timeSpentMinutes = 0;
 
     if (mounted) {
       // Show loading indicator
@@ -703,6 +713,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         widget.lessonId,
         _timeSpentMinutes,
       );
+
+      // Add time spent to user's total time when lesson is completed
+      if (_timeSpentMinutes > 0) {
+        await _userService.addTimeSpent(_timeSpentMinutes);
+      }
 
       // Update streaks (both user profile and language-specific)
       await _userService.updateStreak();

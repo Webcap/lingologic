@@ -85,11 +85,20 @@ class _ProgressScreenState extends State<ProgressScreen>
       }
 
       final activeLanguage = await _languageService.getActiveLanguage();
+      
+      // Get unlocked words from completed lessons (this is what shows progress)
+      final unlockedWordIds = await _lessonService.getUnlockedWordIds(user.id, language: activeLanguage);
+      
+      // Get masteries for mastery breakdown (words that have been practiced)
+      final allMasteries = await _supabaseRepository.getWordMasteries(user.id);
       final words = await _supabaseRepository.getWords(language: activeLanguage);
       final wordIds = words.map((w) => w.id).toSet();
+      final unlockedWordIdsSet = unlockedWordIds.toSet();
       
-      final allMasteries = await _supabaseRepository.getWordMasteries(user.id);
-      final masteries = allMasteries.where((m) => wordIds.contains(m.wordId)).toList();
+      // Filter masteries to only include unlocked words from active language
+      final masteries = allMasteries
+          .where((m) => wordIds.contains(m.wordId) && unlockedWordIdsSet.contains(m.wordId))
+          .toList();
       
       final lessons = await _lessonService.getLessons();
       final lessonIds = lessons.map((l) => l.id).toSet();
@@ -103,7 +112,9 @@ class _ProgressScreenState extends State<ProgressScreen>
       if (mounted) {
         setState(() {
           _activeLanguage = activeLanguage;
-          _wordsLearned = masteries.length;
+          // Count unlocked words as words learned (from completed lessons)
+          _wordsLearned = unlockedWordIds.length;
+          // Mastery breakdown for words that have been practiced
           _noviceCount = masteries.where((m) => m.masteryLevel <= 2).length;
           _intermediateCount = masteries.where((m) => m.masteryLevel >= 3 && m.masteryLevel <= 4).length;
           _masteredCount = masteries.where((m) => m.masteryLevel >= 5).length;
