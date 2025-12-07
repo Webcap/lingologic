@@ -30,9 +30,9 @@ class MiniGameService {
       _languageService = LanguageService();
 
   /// Check if a mini game should be shown based on completed lessons
-  /// Returns the mini game index if one should be shown (e.g., after lessons 2, 4, 6...)
+  /// Returns a tuple with mini game number and game type if one should be shown
   /// Returns null if no mini game should be shown
-  Future<int?> shouldShowMiniGame() async {
+  Future<({int miniGameNumber, MiniGameType gameType})?> shouldShowMiniGame() async {
     final user = _authService.currentUser;
     if (user == null) return null;
 
@@ -66,12 +66,59 @@ class MiniGameService {
     // Mini game should appear after lessons 2, 4, 6, 8, etc.
     // So if completedCount is 2, 4, 6, 8... we should show a mini game
     if (completedCount >= 2 && completedCount % 2 == 0) {
+      // Calculate mini game number (1-6, cycling back to 1 after 6)
+      // After 2 lessons: mini game 1, After 4: mini game 2, ..., After 12: mini game 6
+      // After 14 lessons: cycles back to mini game 1
+      final miniGameSequenceNumber = completedCount ~/ 2; // 1, 2, 3, 4, 5, 6, 7, 8, ...
+      final miniGameNumber = ((miniGameSequenceNumber - 1) % 6) + 1; // Cycles 1-6
+      
       // Check if user has already completed this mini game
-      final miniGameId = 'minigame_${activeLanguage}_${completedCount ~/ 2}';
+      final miniGameId = 'minigame_${activeLanguage}_$miniGameNumber';
       final hasCompleted = await _hasCompletedMiniGame(user.id, miniGameId);
 
       if (!hasCompleted) {
-        return completedCount ~/ 2; // Return mini game number (1, 2, 3, etc.)
+        // Get game type from database
+        try {
+          debugPrint('MiniGameService: Looking up game type for miniGameId: $miniGameId (miniGameNumber: $miniGameNumber, sequenceNumber: $miniGameSequenceNumber)');
+          
+          final gameResponse = await _supabase
+              .from('games')
+              .select('game_type, name')
+              .eq('game_id', miniGameId)
+              .maybeSingle();
+
+          MiniGameType gameType = MiniGameType.vocabularyReview; // Default fallback
+          
+          if (gameResponse != null) {
+            final gameTypeString = gameResponse['game_type'] as String?;
+            final gameName = gameResponse['name'] as String?;
+            debugPrint('MiniGameService: Found game in database - game_id: $miniGameId, game_type: $gameTypeString, name: $gameName');
+            
+            if (gameTypeString != null) {
+              gameType = MiniGameType.fromString(gameTypeString) ?? 
+                  MiniGameType.vocabularyReview;
+              debugPrint('MiniGameService: Parsed game type: ${gameType.value}');
+            } else {
+              debugPrint('MiniGameService: Warning - game_type is null in database, using default');
+            }
+          } else {
+            debugPrint('MiniGameService: No game found in database for game_id: $miniGameId, using default type');
+          }
+          
+          debugPrint('MiniGameService: Returning mini game - number: $miniGameNumber, type: ${gameType.value}');
+          
+          return (
+            miniGameNumber: miniGameNumber,
+            gameType: gameType,
+          );
+        } catch (e) {
+          debugPrint('MiniGameService: Error getting game type for mini game $miniGameNumber: $e');
+          // Return default type on error
+          return (
+            miniGameNumber: miniGameNumber,
+            gameType: MiniGameType.vocabularyReview,
+          );
+        }
       }
     }
 
@@ -168,6 +215,7 @@ class MiniGameService {
   }
 
   /// Mark a mini game as completed
+  /// If gameType is not provided, it will be looked up from the database
   Future<void> completeMiniGame(
     String miniGameId, [
     MiniGameType? gameType,
@@ -176,14 +224,36 @@ class MiniGameService {
     if (user == null) return;
 
     try {
+      // If game type not provided, look it up from the database
+      MiniGameType? finalGameType = gameType;
+      if (finalGameType == null) {
+        try {
+          final gameResponse = await _supabase
+              .from('games')
+              .select('game_type')
+              .eq('game_id', miniGameId)
+              .maybeSingle();
+          
+          if (gameResponse != null) {
+            final gameTypeString = gameResponse['game_type'] as String?;
+            if (gameTypeString != null) {
+              finalGameType = MiniGameType.fromString(gameTypeString);
+            }
+          }
+        } catch (e) {
+          debugPrint('MiniGameService: Error looking up game type: $e');
+          // Continue with null if lookup fails
+        }
+      }
+      
       await _supabase.from('mini_game_completions').insert({
         'user_id': user.id,
         'mini_game_id': miniGameId,
-        'game_type': gameType?.value,
+        'game_type': finalGameType?.value,
         'completed_at': DateTime.now().toIso8601String(),
       });
 
-      debugPrint('MiniGameService: Marked mini game $miniGameId as completed');
+      debugPrint('MiniGameService: Marked mini game $miniGameId as completed (type: ${finalGameType?.value ?? 'unknown'})');
     } catch (e) {
       debugPrint('MiniGameService: Error completing mini game: $e');
       rethrow;

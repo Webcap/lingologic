@@ -14,6 +14,10 @@ import '../services/language_service.dart';
 import '../models/mini_game_type.dart';
 import '../screens/mini_games/vocabulary_review_mini_game.dart';
 import '../screens/mini_games/word_search_mini_game.dart';
+import '../screens/mini_games/hangman_mini_game.dart';
+import '../screens/mini_games/pictionary_mini_game.dart';
+import '../screens/mini_games/image_to_word_mini_game.dart';
+import '../screens/mini_games/charades_mini_game.dart';
 
 class MainTabsScreen extends StatefulWidget {
   const MainTabsScreen({super.key});
@@ -200,6 +204,7 @@ class _GamesTabState extends State<_GamesTab>
   final _languageService = LanguageService();
   bool _areGamesUnlocked = false;
   bool _isLoading = true;
+  String? _activeLanguage; // Store active language for game ID construction
   List<({int miniGameNumber, MiniGameType gameType, bool isCompleted})>
   _unlockedMiniGames = [];
   Map<String, Map<String, String>> _gameInfoCache =
@@ -254,6 +259,7 @@ class _GamesTabState extends State<_GamesTab>
           _areGamesUnlocked = unlocked;
           _unlockedMiniGames = miniGames;
           _gameInfoCache = gameInfoCache;
+          _activeLanguage = activeLanguage; // Store active language
           _isLoading = false;
         });
       }
@@ -639,11 +645,10 @@ class _GamesTabState extends State<_GamesTab>
     String gameName;
     String gameDescription;
 
-    // Find the game ID from cache
-    final gameId = _gameInfoCache.keys.firstWhere(
-      (id) => id.contains('_$miniGameNumber'),
-      orElse: () => '',
-    );
+    // Construct the game ID the same way it was stored in cache
+    final gameId = _activeLanguage != null
+        ? 'minigame_${_activeLanguage}_$miniGameNumber'
+        : '';
 
     if (gameId.isNotEmpty && _gameInfoCache.containsKey(gameId)) {
       gameName =
@@ -868,14 +873,37 @@ class _GamesTabState extends State<_GamesTab>
             difficulty: difficulty,
           );
           break;
-        case MiniGameType.pictionary:
-        case MiniGameType.vocabularyReview:
-        case MiniGameType.neuroMatch:
-        case MiniGameType.syntaxConstructor:
-        case MiniGameType.imageToWord:
         case MiniGameType.hangman:
+          gameWidget = HangmanMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
+        case MiniGameType.pictionary:
+          gameWidget = PictionaryMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
+        case MiniGameType.imageToWord:
+          gameWidget = ImageToWordMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
         case MiniGameType.charades:
-          // Default to vocabulary review for all types (pictionary not implemented yet)
+          gameWidget = CharadesMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
+        case MiniGameType.neuroMatch:
+          gameWidget = const NeuroMatchGame();
+          break;
+        case MiniGameType.syntaxConstructor:
+          gameWidget = const SyntaxConstructorGame();
+          break;
+        case MiniGameType.vocabularyReview:
           gameWidget = VocabularyReviewMiniGame(
             miniGameNumber: miniGameNumber,
             words: words,

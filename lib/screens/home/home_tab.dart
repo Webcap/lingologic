@@ -6,11 +6,18 @@ import '../../services/language_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/mini_game_service.dart';
 import '../../models/lesson.dart';
+import '../../models/mini_game_type.dart';
 import '../../theme/app_theme.dart';
 import '../../config/supported_languages.dart';
 import '../../widgets/language_selector.dart';
 import '../../l10n/app_localizations.dart';
 import '../mini_games/vocabulary_review_mini_game.dart';
+import '../mini_games/hangman_mini_game.dart';
+import '../mini_games/pictionary_mini_game.dart';
+import '../mini_games/image_to_word_mini_game.dart';
+import '../mini_games/charades_mini_game.dart';
+import '../../games/neuro_match/neuro_match_game.dart';
+import '../../games/syntax_constructor/syntax_constructor_game.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -33,6 +40,7 @@ class _HomeTabState extends State<HomeTab> {
   String? _activeLanguage;
   Lesson? _nextLesson;
   int? _requiredMiniGame;
+  MiniGameType? _requiredMiniGameType;
   String? _currentLevel;
   bool _isLoading = true;
 
@@ -80,11 +88,11 @@ class _HomeTabState extends State<HomeTab> {
       final inProgress = filteredProgress.where((p) => p.isInProgress).length;
       
       // Check if mini game is required first (priority over next lesson)
-      final requiredMiniGame = await _miniGameService.shouldShowMiniGame();
+      final requiredMiniGameInfo = await _miniGameService.shouldShowMiniGame();
       
       // Get next recommended lesson (only if no mini game required)
       Lesson? nextLesson;
-      if (requiredMiniGame == null) {
+      if (requiredMiniGameInfo == null) {
         nextLesson = await _lessonService.getNextRecommendedLesson(user.id);
       }
       
@@ -128,7 +136,8 @@ class _HomeTabState extends State<HomeTab> {
           _lessonsCompleted = completed;
           _lessonsInProgress = inProgress;
           _nextLesson = nextLesson;
-          _requiredMiniGame = requiredMiniGame;
+          _requiredMiniGame = requiredMiniGameInfo?.miniGameNumber;
+          _requiredMiniGameType = requiredMiniGameInfo?.gameType;
           _currentLevel = currentLevel;
           _isLoading = false;
         });
@@ -638,8 +647,11 @@ class _HomeTabState extends State<HomeTab> {
 
   Future<void> _launchMiniGame(int miniGameNumber) async {
     try {
+      final gameType = _requiredMiniGameType ?? MiniGameType.vocabularyReview;
+      final difficulty = MiniGameDifficulty.fromMiniGameNumber(miniGameNumber);
+      
       // Load words for the mini game
-      final words = await _miniGameService.getMiniGameWords(miniGameNumber);
+      final words = await _miniGameService.getMiniGameWords(miniGameNumber, difficulty);
 
       if (!mounted) return;
 
@@ -657,13 +669,59 @@ class _HomeTabState extends State<HomeTab> {
         return;
       }
 
+      // Launch the appropriate mini game based on type
+      Widget gameWidget;
+      debugPrint('HomeTab: Launching mini game $miniGameNumber with type: ${gameType.value}');
+      
+      switch (gameType) {
+        case MiniGameType.wordSearch:
+          gameWidget = VocabularyReviewMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
+        case MiniGameType.hangman:
+          gameWidget = HangmanMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
+        case MiniGameType.pictionary:
+          gameWidget = PictionaryMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
+        case MiniGameType.imageToWord:
+          gameWidget = ImageToWordMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
+        case MiniGameType.charades:
+          gameWidget = CharadesMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
+        case MiniGameType.neuroMatch:
+          gameWidget = const NeuroMatchGame();
+          break;
+        case MiniGameType.syntaxConstructor:
+          gameWidget = const SyntaxConstructorGame();
+          break;
+        case MiniGameType.vocabularyReview:
+          gameWidget = VocabularyReviewMiniGame(
+            miniGameNumber: miniGameNumber,
+            words: words,
+          );
+          break;
+      }
+
       // Launch the mini game
       await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => VocabularyReviewMiniGame(
-            miniGameNumber: miniGameNumber,
-            words: words,
-          ),
+          builder: (context) => gameWidget,
         ),
       );
 
