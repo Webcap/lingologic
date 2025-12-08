@@ -59,11 +59,10 @@ CREATE TRIGGER update_feature_flags_updated_at
   EXECUTE FUNCTION update_feature_flags_updated_at();
 
 -- Insert some default feature flags
+-- Note: Games are managed separately in the games table, not through feature flags
 INSERT INTO feature_flags (key, name, description, enabled) VALUES
-  ('mini_games', 'Mini Games', 'Enable mini games between lessons', true),
   ('pronunciation_exercises', 'Pronunciation Exercises', 'Enable pronunciation practice exercises', true),
   ('matching_exercises', 'Matching Exercises', 'Enable word matching exercises', true),
-  ('neuro_match_game', 'Neuro Match Game', 'Enable the Neuro Match vocabulary game', true),
   ('streak_tracking', 'Streak Tracking', 'Enable daily streak tracking', true),
   ('spaced_repetition', 'Spaced Repetition System', 'Enable spaced repetition for vocabulary learning', true),
   ('daily_goals', 'Daily Goals', 'Enable daily learning goals feature', false),

@@ -348,3 +348,4 @@ ON CONFLICT (id) DO UPDATE SET
 COMMENT ON TABLE words IS 'Vocabulary words unlocked by this lesson include sentence building components, word formation tools (prefixes/suffixes), connectors, and action verbs for constructing sentences';
 
 
+
