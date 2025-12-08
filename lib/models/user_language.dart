@@ -40,8 +40,8 @@ class UserLanguage {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
+  Map<String, dynamic> toJson({bool includeTimestamps = true}) {
+    final json = {
       'user_id': userId,
       'language': language,
       'is_active': isActive,
@@ -50,9 +50,16 @@ class UserLanguage {
       'total_lessons_completed': totalLessonsCompleted,
       'streak_days': streakDays,
       'last_practiced_at': lastPracticedAt?.toIso8601String(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
     };
+    
+    // Only include timestamps if explicitly requested
+    // For inserts, let the database defaults handle created_at and updated_at
+    if (includeTimestamps) {
+      json['created_at'] = createdAt.toIso8601String();
+      json['updated_at'] = updatedAt.toIso8601String();
+    }
+    
+    return json;
   }
 
   UserLanguage copyWith({

@@ -37,33 +37,38 @@ final appRouter = GoRouter(
       return '/login';
     }
     
-    // Check if authenticated user needs onboarding
-    if (isAuthenticated && !isLoginRoute && !isOnboardingRoute) {
+    // If user is authenticated, check onboarding status
+    if (isAuthenticated) {
       try {
+        debugPrint('Router redirect check:');
+        debugPrint('  Route: ${state.matchedLocation}');
+        debugPrint('  Is onboarding route: $isOnboardingRoute');
+        debugPrint('  Current user: ${_authService.currentUser?.id}');
+        
         final userService = UserService();
+        // Force a fresh fetch from database (don't use cache)
         final profile = await userService.getUserProfile();
         
-        // If user hasn't completed onboarding, redirect to onboarding
-        if (profile == null || !profile.onboardingCompleted) {
-          return '/onboarding';
-        }
-      } catch (e) {
-        // If there's an error checking profile, allow navigation to avoid blocking
-        debugPrint('Error checking user profile: $e');
-      }
-    }
-    
-    // If user is on onboarding but already completed it, redirect to home
-    if (isAuthenticated && isOnboardingRoute) {
-      try {
-        final userService = UserService();
-        final profile = await userService.getUserProfile();
+        debugPrint('  Profile: ${profile != null ? "exists" : "null"}');
+        debugPrint('  Onboarding completed: ${profile?.onboardingCompleted}');
         
-        if (profile != null && profile.onboardingCompleted) {
+        // If user is on onboarding but already completed it, redirect to home
+        if (isOnboardingRoute && profile != null && profile.onboardingCompleted) {
+          debugPrint('Router: User has completed onboarding, redirecting to home');
           return '/';
         }
-      } catch (e) {
-        debugPrint('Error checking user profile: $e');
+        
+        // If user hasn't completed onboarding and is not on onboarding route, redirect to onboarding
+        if (!isOnboardingRoute && (profile == null || !profile.onboardingCompleted)) {
+          debugPrint('Router: User has not completed onboarding, redirecting to onboarding');
+          return '/onboarding';
+        }
+        
+        debugPrint('Router: Allowing navigation to ${state.matchedLocation}');
+      } catch (e, stackTrace) {
+        // If there's an error checking profile, allow navigation to avoid blocking
+        debugPrint('Error checking user profile in router: $e');
+        debugPrint('Stack trace: $stackTrace');
       }
     }
     

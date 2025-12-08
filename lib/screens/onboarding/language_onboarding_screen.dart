@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/language_info.dart';
+import '../../models/user_profile.dart';
 import '../../services/language_service.dart';
 import '../../services/user_service.dart';
 import '../../theme/app_theme.dart';
@@ -106,8 +107,32 @@ class _LanguageOnboardingScreenState extends State<LanguageOnboardingScreen>
       await _userService.markOnboardingCompleted();
 
       if (mounted) {
-        // Navigate to home after onboarding
-        context.go('/');
+        // Wait a moment for the database update to be fully committed
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        // Verify the profile was updated - fetch fresh from database multiple times to ensure it's committed
+        UserProfile? profile;
+        for (int i = 0; i < 3; i++) {
+          profile = await _userService.getUserProfile();
+          if (profile != null && profile.onboardingCompleted) {
+            break;
+          }
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
+        
+        debugPrint('Profile after marking onboarding complete: ${profile?.onboardingCompleted}');
+        
+        if (profile != null && profile.onboardingCompleted) {
+          // Navigate to home using GoRouter
+          debugPrint('Onboarding complete, navigating to home');
+          if (mounted) {
+            // Use context.go which works with GoRouter
+            context.go('/');
+          }
+        } else {
+          debugPrint('ERROR: Profile still shows onboarding not completed!');
+          throw Exception('Failed to update onboarding status');
+        }
       }
     } catch (e) {
       if (mounted) {

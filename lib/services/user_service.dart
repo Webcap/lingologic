@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../models/user_profile.dart';
 import '../config/supabase_config.dart';
@@ -127,23 +129,41 @@ class UserService {
   }
 
   /// Get user profile
-  Future<UserProfile?> getUserProfile() async {
+  Future<UserProfile?> getUserProfile({bool forceRefresh = false}) async {
     final user = _authService.currentUser;
-    if (user == null) return null;
+    if (user == null) {
+      debugPrint('getUserProfile: User is null');
+      return null;
+    }
 
-            try {
-              final client = _supabaseClient;
-              if (client == null) return null;
-              
-              final response = await client
-                  .from('user_profiles')
-                  .select()
-                  .eq('id', user.id)
-                  .maybeSingle();
+    try {
+      final client = _supabaseClient;
+      if (client == null) {
+        debugPrint('getUserProfile: Supabase client is null');
+        return null;
+      }
+      
+      debugPrint('Fetching user profile for user: ${user.id}');
+      
+      final response = await client
+          .from('user_profiles')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
 
-      if (response == null) return null;
-      return UserProfile.fromJson(response);
-    } catch (e) {
+      if (response == null) {
+        debugPrint('No profile found for user: ${user.id}');
+        return null;
+      }
+      
+      debugPrint('Raw profile response: $response');
+      
+      final profile = UserProfile.fromJson(response);
+      debugPrint('Profile fetched - onboarding_completed: ${profile.onboardingCompleted}');
+      return profile;
+    } catch (e, stackTrace) {
+      debugPrint('Error fetching user profile: $e');
+      debugPrint('Stack trace: $stackTrace');
       return null;
     }
   }
@@ -160,9 +180,34 @@ class UserService {
       throw Exception('Supabase not initialized');
     }
 
-    await client.from('user_profiles').update({
-      'onboarding_completed': true,
-    }).eq('id', user.id);
+    try {
+      debugPrint('Marking onboarding as completed for user: ${user.id}');
+      
+      // Update the profile - don't use .select().single, just update
+      await client
+          .from('user_profiles')
+          .update({
+            'onboarding_completed': true,
+          })
+          .eq('id', user.id);
+      
+      debugPrint('Onboarding marked as completed successfully');
+      
+      // Refresh the cached profile to ensure it's up to date
+      final refreshedProfile = await getUserProfile();
+      debugPrint('Refreshed profile - onboarding_completed: ${refreshedProfile?.onboardingCompleted}');
+      
+      if (refreshedProfile == null) {
+        throw Exception('Failed to refresh user profile after marking onboarding as completed');
+      }
+      
+      if (!refreshedProfile.onboardingCompleted) {
+        throw Exception('Onboarding status was not updated correctly');
+      }
+    } catch (e) {
+      debugPrint('Error marking onboarding as completed: $e');
+      rethrow;
+    }
   }
 
   User? get currentUser => _authService.currentUser;

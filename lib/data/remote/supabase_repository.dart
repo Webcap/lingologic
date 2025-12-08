@@ -1,5 +1,6 @@
 // ignore_for_file: unnecessary_cast
 
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../models/word.dart';
 import '../../models/word_mastery.dart';
@@ -394,7 +395,48 @@ class SupabaseRepository {
 
   Future<void> upsertUserLanguage(UserLanguage userLanguage) async {
     final client = _getClient();
-    await client.from('user_languages').upsert(userLanguage.toJson());
+    // For upsert, don't include timestamps - let database defaults handle them
+    // This avoids the "updatedat" field name issue
+    final json = userLanguage.toJson(includeTimestamps: false);
+    
+    debugPrint('Attempting to upsert user language:');
+    debugPrint('  User ID: ${userLanguage.userId}');
+    debugPrint('  Language: ${userLanguage.language}');
+    debugPrint('  JSON: $json');
+    
+    try {
+      // First, verify the user profile exists (foreign key requirement)
+      final profileCheck = await client
+          .from('user_profiles')
+          .select('id')
+          .eq('id', userLanguage.userId)
+          .maybeSingle()
+          .timeout(const Duration(seconds: 5));
+      
+      if (profileCheck == null) {
+        throw Exception('User profile does not exist for user ID: ${userLanguage.userId}');
+      }
+      
+      debugPrint('User profile exists, proceeding with upsert...');
+      
+      // Add timeout to prevent hanging
+      final upsertFuture = client.from('user_languages').upsert(json);
+      await upsertFuture.timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw TimeoutException('Upsert user language timed out after 10 seconds');
+        },
+      );
+      
+      debugPrint('Successfully upserted user language: ${userLanguage.language}');
+    } on TimeoutException catch (e) {
+      debugPrint('Timeout upserting user language: $e');
+      throw Exception('Operation timed out. The database may be locked or there may be a trigger issue. Please try again.');
+    } catch (e) {
+      debugPrint('Error upserting user language: $e');
+      debugPrint('User language data: $json');
+      rethrow;
+    }
   }
 
   // Feature Flags
