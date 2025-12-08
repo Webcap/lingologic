@@ -14,6 +14,8 @@ class SupabaseConfig {
 
     // Get Supabase configuration from environment variables
     // Falls back to compile-time constants if .env is not available
+    // NOTE: Supabase is now only used for database operations, not authentication
+    // Authentication is handled by Better Auth via the API backend
     final supabaseUrl = dotenv.env['SUPABASE_URL'] ??
         const String.fromEnvironment(
           'SUPABASE_URL',
@@ -32,6 +34,7 @@ class SupabaseConfig {
     }
 
     // Only initialize if we have a valid key
+    // Note: We disable auth persistence since we're using Better Auth
     if (supabaseAnonKey != 'YOUR_SUPABASE_ANON_KEY' && supabaseAnonKey.isNotEmpty) {
       try {
         await Supabase.initialize(
@@ -39,11 +42,11 @@ class SupabaseConfig {
           anonKey: supabaseAnonKey,
           authOptions: const FlutterAuthClientOptions(
             authFlowType: AuthFlowType.pkce,
-            // Session persistence is enabled by default in Supabase Flutter
-            // It uses secure storage to persist sessions across app restarts
+            // Note: Supabase is only used for database operations
+            // Authentication is handled by Better Auth via the API backend
           ),
         );
-        debugPrint('Supabase initialized successfully');
+        debugPrint('Supabase initialized successfully (database operations only)');
       } catch (e, stackTrace) {
         debugPrint('Supabase initialization error: $e');
         debugPrint('Stack trace: $stackTrace');

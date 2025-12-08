@@ -39,6 +39,8 @@ dependencies:
 
   # Backend integration and authentication
   supabase_flutter: ^2.5.6
+  http: ^1.2.0
+  flutter_secure_storage: ^9.0.0
 
   # Local database for offline mode
   sqflite: ^2.3.3+2
