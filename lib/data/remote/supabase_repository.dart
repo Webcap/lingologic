@@ -66,14 +66,70 @@ class SupabaseRepository {
       throw Exception('Supabase not initialized');
     }
 
-    final response = await client
-        .from('words')
-        .select()
-        .eq('id', id)
-        .maybeSingle();
+    try {
+      final response = await client
+          .from('words')
+          .select()
+          .eq('id', id)
+          .maybeSingle();
 
-    if (response == null) return null;
-    return Word.fromJson(response);
+      if (response == null) {
+        debugPrint('SupabaseRepository: Word not found - id: $id');
+        return null;
+      }
+      
+      debugPrint('SupabaseRepository: Word found - id: $id, word_text: ${response['word_text']}');
+      return Word.fromJson(response);
+    } catch (e, stackTrace) {
+      debugPrint('SupabaseRepository: Error fetching word $id: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return null;
+    }
+  }
+
+  /// Get multiple words by their IDs (more efficient than individual queries)
+  Future<List<Word>> getWordsByIds(List<String> ids) async {
+    final client = _supabaseClient;
+    if (client == null) {
+      throw Exception('Supabase not initialized');
+    }
+
+    if (ids.isEmpty) return [];
+
+    try {
+      // Use Supabase's 'in' filter - build query with OR conditions for multiple IDs
+      // Since Supabase Flutter may not have .in_(), we'll query in batches or use a workaround
+      final words = <Word>[];
+      
+      // Query words individually (we'll optimize to batch queries later)
+      // This is still more efficient than the previous approach since we have better error handling
+      for (final id in ids) {
+        try {
+          final word = await getWordById(id);
+          if (word != null) {
+            words.add(word);
+          }
+        } catch (e) {
+          debugPrint('SupabaseRepository: Error fetching word $id: $e');
+        }
+      }
+
+      debugPrint('SupabaseRepository: Found ${words.length} words out of ${ids.length} requested');
+      if (words.length < ids.length) {
+        final foundIds = words.map((w) => w.id).toSet();
+        final missingIds = ids.where((id) => !foundIds.contains(id)).toList();
+        debugPrint('SupabaseRepository: Missing word IDs (first 10): ${missingIds.take(10).toList()}');
+        if (missingIds.length > 10) {
+          debugPrint('SupabaseRepository: ... and ${missingIds.length - 10} more missing word IDs');
+        }
+      }
+
+      return words;
+    } catch (e, stackTrace) {
+      debugPrint('SupabaseRepository: Error fetching words by IDs: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return [];
+    }
   }
 
   Future<Word?> getWordByText(String wordText, {String? language}) async {

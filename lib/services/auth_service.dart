@@ -271,13 +271,18 @@ class AuthService {
     await _betterAuth.waitForSessionLoad();
     debugPrint('ensureSessionLoaded: Initial load complete, isAuthenticated=${_betterAuth.isAuthenticated}, currentUser=${_betterAuth.currentUser?.id}');
     
-    // Always try to get session to ensure it's fully loaded and up to date
-    try {
-      debugPrint('ensureSessionLoaded: Fetching session to ensure it is loaded...');
-      final session = await _betterAuth.getSession();
-      debugPrint('ensureSessionLoaded: Session fetched, user: ${session?.user.id}');
-    } catch (e) {
-      debugPrint('AuthService: Error loading session: $e');
+    // Only fetch session from server if we have a cached session
+    // This avoids unnecessary network requests when user is clearly not authenticated
+    if (_betterAuth.isAuthenticated) {
+      try {
+        debugPrint('ensureSessionLoaded: Fetching session to ensure it is loaded...');
+        final session = await _betterAuth.getSession();
+        debugPrint('ensureSessionLoaded: Session fetched, user: ${session?.user.id}');
+      } catch (e) {
+        debugPrint('AuthService: Error loading session: $e');
+      }
+    } else {
+      debugPrint('ensureSessionLoaded: No cached session, skipping network request');
     }
   }
 

@@ -56,3 +56,4 @@ After updating, restart the Flutter app and the connection errors should be gone
 3. Try using the network IP in `.env`: `BETTER_AUTH_URL=http://192.168.1.38:3000`
 4. Make sure firewall allows connections on port 3000
 
+

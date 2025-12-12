@@ -131,15 +131,25 @@ class MiniGameService {
     MiniGameDifficulty? difficulty,
   ]) async {
     final user = _authService.currentUser;
-    if (user == null) return [];
+    if (user == null) {
+      debugPrint('MiniGameService: No user, returning empty words');
+      return [];
+    }
 
     final activeLanguage = await _languageService.getActiveLanguage();
-    if (activeLanguage == null) return [];
+    if (activeLanguage == null) {
+      debugPrint('MiniGameService: No active language, returning empty words');
+      return [];
+    }
+
+    debugPrint('MiniGameService: Getting words for mini game $miniGameNumber (language: $activeLanguage)');
 
     // Get all lessons for the active language, sorted by order_index
     final lessons = await _lessonService.getLessons();
     final sortedLessons = lessons
       ..sort((a, b) => (a.orderIndex).compareTo(b.orderIndex));
+
+    debugPrint('MiniGameService: Found ${sortedLessons.length} total lessons');
 
     // Get all completed lessons
     final progressList = await _lessonService.getUserLessonProgressAll();
@@ -152,46 +162,53 @@ class MiniGameService {
         .where((lesson) => completedLessonIds.contains(lesson.id))
         .toList();
 
+    debugPrint('MiniGameService: Found ${completedLessons.length} completed lessons');
+
     // Get the last 2 completed lessons for this mini game
     // Mini game 1 = lessons 1-2, Mini game 2 = lessons 3-4, etc.
     final startIndex = (miniGameNumber - 1) * 2;
     final endIndex = miniGameNumber * 2;
 
+    debugPrint('MiniGameService: Looking for lessons at indices $startIndex to ${endIndex - 1}');
+
     if (completedLessons.length < endIndex) {
-      return [];
-    }
-
-    final relevantLessons = completedLessons.sublist(startIndex, endIndex);
-
-    // Collect all word IDs from these lessons
-    final wordIds = <String>{};
-    for (final lesson in relevantLessons) {
-      wordIds.addAll(lesson.unlocksWordIds);
-    }
-
-    if (wordIds.isEmpty) {
       debugPrint(
-        'MiniGameService: No words found for mini game $miniGameNumber',
+        'MiniGameService: Not enough completed lessons (${completedLessons.length} < $endIndex) for mini game $miniGameNumber',
       );
       return [];
     }
 
-    // Load the words
-    final words = <Word>[];
-    for (final wordId in wordIds.take(20)) {
-      // Limit to 20 words for the mini game
-      try {
-        final word = await _repository.getWordById(wordId);
-        if (word != null) {
-          words.add(word);
-        }
-      } catch (e) {
-        debugPrint('MiniGameService: Error loading word $wordId: $e');
-      }
+    final relevantLessons = completedLessons.sublist(startIndex, endIndex);
+    debugPrint(
+      'MiniGameService: Using ${relevantLessons.length} lessons: ${relevantLessons.map((l) => '${l.title} (order: ${l.orderIndex}, unlocks: ${l.unlocksWordIds.length} words)').join(', ')}',
+    );
+
+    // Collect all word IDs from these lessons
+    final wordIds = <String>{};
+    for (final lesson in relevantLessons) {
+      debugPrint(
+        'MiniGameService: Lesson "${lesson.title}" has ${lesson.unlocksWordIds.length} word IDs: ${lesson.unlocksWordIds}',
+      );
+      wordIds.addAll(lesson.unlocksWordIds);
     }
 
+    debugPrint('MiniGameService: Collected ${wordIds.length} unique word IDs');
+
+    if (wordIds.isEmpty) {
+      debugPrint(
+        'MiniGameService: No words found for mini game $miniGameNumber - lessons have no unlocksWordIds',
+      );
+      return [];
+    }
+
+    // Load the words - use bulk loading for efficiency
+    final wordIdsList = wordIds.take(20).toList(); // Limit to 20 words for the mini game
+    final words = await _repository.getWordsByIds(wordIdsList);
+    
+    debugPrint('MiniGameService: Bulk loaded ${words.length} words out of ${wordIdsList.length} requested');
+
     debugPrint(
-      'MiniGameService: Loaded ${words.length} words for mini game $miniGameNumber',
+      'MiniGameService: Loaded ${words.length} words for mini game $miniGameNumber (attempted: ${wordIds.length}, requested: ${wordIdsList.length})',
     );
     return words;
   }

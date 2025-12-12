@@ -39,8 +39,15 @@ final appRouter = GoRouter(
       return '/login';
     }
     
+    // If user is not authenticated, allow navigation to login/signup/onboarding
+    // Don't check onboarding status for unauthenticated users
+    if (!isAuthenticated) {
+      return null;
+    }
+    
     // If user is authenticated, check onboarding status
-    if (isAuthenticated) {
+    // Only check onboarding for authenticated users on protected routes (not login/signup)
+    if (isAuthenticated && !isLoginRoute) {
       try {
         debugPrint('Router redirect check:');
         debugPrint('  Route: ${state.matchedLocation}');

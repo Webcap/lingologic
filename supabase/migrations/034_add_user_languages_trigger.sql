@@ -12,3 +12,4 @@ CREATE TRIGGER update_user_languages_updated_at
 -- Note: For INSERT, the default value (NOW()) in the schema handles it
 -- This trigger only handles UPDATE operations
 
+

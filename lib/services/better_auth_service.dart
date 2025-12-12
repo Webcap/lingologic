@@ -169,6 +169,20 @@ class BetterAuthService {
     return response;
   }
 
+  /// Safely parse JSON from response body, handling empty responses
+  Map<String, dynamic>? _parseJsonResponse(String body) {
+    if (body.isEmpty || body.trim().isEmpty) {
+      return null;
+    }
+    try {
+      return json.decode(body) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('Error parsing JSON response: $e');
+      debugPrint('Response body: $body');
+      return null;
+    }
+  }
+
   Future<BetterAuthSession> signIn({
     required String email,
     required String password,
@@ -180,14 +194,19 @@ class BetterAuthService {
     );
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body) as Map<String, dynamic>;
+      final data = _parseJsonResponse(response.body);
+      if (data == null || data['user'] == null) {
+        throw Exception('Invalid response from server: empty or missing user data');
+      }
       final user = BetterAuthUser.fromJson(data['user'] as Map<String, dynamic>);
       final session = BetterAuthSession(user: user);
       await _saveSession(session);
       return session;
     } else {
-      final error = json.decode(response.body) as Map<String, dynamic>;
-      throw Exception(error['error'] ?? 'Sign in failed');
+      final error = _parseJsonResponse(response.body);
+      final errorMessage = error?['error'] as String? ?? 
+          'Sign in failed (${response.statusCode})';
+      throw Exception(errorMessage);
     }
   }
 
@@ -202,14 +221,19 @@ class BetterAuthService {
     );
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body) as Map<String, dynamic>;
+      final data = _parseJsonResponse(response.body);
+      if (data == null || data['user'] == null) {
+        throw Exception('Invalid response from server: empty or missing user data');
+      }
       final user = BetterAuthUser.fromJson(data['user'] as Map<String, dynamic>);
       final session = BetterAuthSession(user: user);
       await _saveSession(session);
       return session;
     } else {
-      final error = json.decode(response.body) as Map<String, dynamic>;
-      throw Exception(error['error'] ?? 'Sign up failed');
+      final error = _parseJsonResponse(response.body);
+      final errorMessage = error?['error'] as String? ?? 
+          'Sign up failed (${response.statusCode})';
+      throw Exception(errorMessage);
     }
   }
 
@@ -242,8 +266,8 @@ class BetterAuthService {
     try {
       final response = await _makeRequest('GET', 'session');
       if (response.statusCode == 200) {
-        final data = json.decode(response.body) as Map<String, dynamic>;
-        if (data['user'] != null) {
+        final data = _parseJsonResponse(response.body);
+        if (data != null && data['user'] != null) {
           final user = BetterAuthUser.fromJson(data['user'] as Map<String, dynamic>);
           final session = BetterAuthSession(
             user: user,
@@ -266,14 +290,19 @@ class BetterAuthService {
     final response = await _makeRequest('POST', 'anonymous');
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body) as Map<String, dynamic>;
+      final data = _parseJsonResponse(response.body);
+      if (data == null || data['user'] == null) {
+        throw Exception('Invalid response from server: empty or missing user data');
+      }
       final user = BetterAuthUser.fromJson(data['user'] as Map<String, dynamic>);
       final session = BetterAuthSession(user: user);
       await _saveSession(session);
       return session;
     } else {
-      final error = json.decode(response.body) as Map<String, dynamic>;
-      throw Exception(error['error'] ?? 'Anonymous sign in failed');
+      final error = _parseJsonResponse(response.body);
+      final errorMessage = error?['error'] as String? ?? 
+          'Anonymous sign in failed (${response.statusCode})';
+      throw Exception(errorMessage);
     }
   }
 
@@ -288,7 +317,10 @@ class BetterAuthService {
     final response = await _makeRequest('POST', 'update-user', body: body);
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body) as Map<String, dynamic>;
+      final data = _parseJsonResponse(response.body);
+      if (data == null || data['user'] == null) {
+        throw Exception('Invalid response from server: empty or missing user data');
+      }
       final user = BetterAuthUser.fromJson(data['user'] as Map<String, dynamic>);
       // Update current session
       if (_currentSession != null) {
@@ -300,8 +332,10 @@ class BetterAuthService {
       }
       return user;
     } else {
-      final error = json.decode(response.body) as Map<String, dynamic>;
-      throw Exception(error['error'] ?? 'Update user failed');
+      final error = _parseJsonResponse(response.body);
+      final errorMessage = error?['error'] as String? ?? 
+          'Update user failed (${response.statusCode})';
+      throw Exception(errorMessage);
     }
   }
 
