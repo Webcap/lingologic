@@ -23,6 +23,8 @@ String _getInitialLocation() {
 final appRouter = GoRouter(
   initialLocation: _getInitialLocation(),
   redirect: (context, state) async {
+    // Ensure auth session is fully loaded before routing decisions
+    await _authService.ensureSessionLoaded();
     final isAuthenticated = _authService.isAuthenticated;
     final isLoginRoute = state.matchedLocation == '/login' || state.matchedLocation == '/signup';
     final isOnboardingRoute = state.matchedLocation == '/onboarding';

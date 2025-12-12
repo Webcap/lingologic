@@ -58,6 +58,9 @@ class LessonService {
 
   /// Get all lesson progress for the current user
   Future<List<LessonProgress>> getUserLessonProgressAll() async {
+    // Ensure session is loaded before checking user
+    await _authService.ensureSessionLoaded();
+    
     final user = _authService.currentUser;
     if (user == null) return [];
 

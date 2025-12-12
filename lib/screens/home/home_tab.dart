@@ -23,10 +23,10 @@ class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
 
   @override
-  State<HomeTab> createState() => _HomeTabState();
+  State<HomeTab> createState() => HomeTabState();
 }
 
-class _HomeTabState extends State<HomeTab> {
+class HomeTabState extends State<HomeTab> {
   final _userService = UserService();
   final _lessonService = LessonService();
   final _languageService = LanguageService();
@@ -50,6 +50,11 @@ class _HomeTabState extends State<HomeTab> {
     _loadUserData();
   }
 
+  // Exposed for parent to trigger a refresh when tab becomes visible again
+  void refresh() {
+    _loadUserData();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -65,8 +70,17 @@ class _HomeTabState extends State<HomeTab> {
     });
 
     try {
+      // Ensure auth session is fully loaded before accessing user
+      await _authService.ensureSessionLoaded();
       final user = _authService.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        return;
+      }
 
       // Initialize default language if needed
       await _languageService.initializeDefaultLanguage();

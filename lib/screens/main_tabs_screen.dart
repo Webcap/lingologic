@@ -30,7 +30,9 @@ class _MainTabsScreenState extends State<MainTabsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _currentIndex = 0;
+  final GlobalKey<HomeTabState> _homeTabKey = GlobalKey<HomeTabState>();
   final GlobalKey<_GamesTabState> _gamesTabKey = GlobalKey<_GamesTabState>();
+  final GlobalKey<ProgressScreenState> _progressTabKey = GlobalKey<ProgressScreenState>();
   int _previousTabIndex = 0;
 
   @override
@@ -39,10 +41,22 @@ class _MainTabsScreenState extends State<MainTabsScreen>
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
       final newIndex = _tabController.index;
+      // Refresh home tab when returning to it
+      if (newIndex == 0 && _previousTabIndex != 0) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _homeTabKey.currentState?.refresh();
+        });
+      }
       // Refresh games tab when it becomes visible
       if (newIndex == 2 && _previousTabIndex != 2) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _gamesTabKey.currentState?.refresh();
+        });
+      }
+      // Refresh progress tab when it becomes visible
+      if (newIndex == 3 && _previousTabIndex != 3) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _progressTabKey.currentState?.refresh();
         });
       }
       setState(() {
@@ -66,10 +80,10 @@ class _MainTabsScreenState extends State<MainTabsScreen>
         child: TabBarView(
           controller: _tabController,
           children: [
-            const HomeTab(),
+            HomeTab(key: _homeTabKey),
             const _LessonsTab(),
             _GamesTab(key: _gamesTabKey),
-            const ProgressScreen(),
+            ProgressScreen(key: _progressTabKey),
           ],
         ),
       ),

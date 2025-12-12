@@ -262,6 +262,25 @@ class AuthService {
     await signOut();
   }
 
+  /// Ensure session is loaded before accessing user
+  /// This fixes race conditions where isAuthenticated is true but currentUser is null
+  Future<void> ensureSessionLoaded() async {
+    debugPrint('ensureSessionLoaded: Starting...');
+    
+    // First, wait for the initial session load to complete
+    await _betterAuth.waitForSessionLoad();
+    debugPrint('ensureSessionLoaded: Initial load complete, isAuthenticated=${_betterAuth.isAuthenticated}, currentUser=${_betterAuth.currentUser?.id}');
+    
+    // Always try to get session to ensure it's fully loaded and up to date
+    try {
+      debugPrint('ensureSessionLoaded: Fetching session to ensure it is loaded...');
+      final session = await _betterAuth.getSession();
+      debugPrint('ensureSessionLoaded: Session fetched, user: ${session?.user.id}');
+    } catch (e) {
+      debugPrint('AuthService: Error loading session: $e');
+    }
+  }
+
   bool get isAuthenticated {
     return _betterAuth.isAuthenticated;
   }

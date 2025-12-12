@@ -69,9 +69,15 @@ class _LessonsListScreenState extends State<LessonsListScreen> {
     });
 
     try {
+      // Ensure auth session is loaded before accessing user
+      await _authService.ensureSessionLoaded();
       final user = _authService.currentUser;
       if (user == null) {
         if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _hasInitialLoad = true;
+          });
           context.go('/login');
         }
         return;

@@ -14,15 +14,15 @@ class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
 
   @override
-  State<ProgressScreen> createState() => _ProgressScreenState();
+  State<ProgressScreen> createState() => ProgressScreenState();
 }
 
-class _ProgressScreenState extends State<ProgressScreen>
+class ProgressScreenState extends State<ProgressScreen>
     with SingleTickerProviderStateMixin {
   final _supabaseRepository = SupabaseRepository();
   final _lessonService = LessonService();
   final _languageService = LanguageService();
-  
+
   int _wordsLearned = 0;
   int _noviceCount = 0;
   int _intermediateCount = 0;
@@ -32,7 +32,7 @@ class _ProgressScreenState extends State<ProgressScreen>
   String? _activeLanguage;
   bool _isLoading = true;
   bool _hasInitialLoad = false;
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -64,6 +64,11 @@ class _ProgressScreenState extends State<ProgressScreen>
     }
   }
 
+  /// Public method to refresh progress data
+  void refresh() {
+    _loadProgress();
+  }
+
   Future<void> _loadProgress() async {
     if (mounted) {
       setState(() {
@@ -73,6 +78,9 @@ class _ProgressScreenState extends State<ProgressScreen>
 
     try {
       final authService = AuthService();
+      // Ensure session is loaded before checking user
+      await authService.ensureSessionLoaded();
+
       final user = authService.currentUser;
       if (user == null) {
         if (mounted) {
@@ -85,30 +93,41 @@ class _ProgressScreenState extends State<ProgressScreen>
       }
 
       final activeLanguage = await _languageService.getActiveLanguage();
-      
+
       // Get unlocked words from completed lessons (this is what shows progress)
-      final unlockedWordIds = await _lessonService.getUnlockedWordIds(user.id, language: activeLanguage);
-      
+      final unlockedWordIds = await _lessonService.getUnlockedWordIds(
+        user.id,
+        language: activeLanguage,
+      );
+
       // Get masteries for mastery breakdown (words that have been practiced)
       final allMasteries = await _supabaseRepository.getWordMasteries(user.id);
-      final words = await _supabaseRepository.getWords(language: activeLanguage);
+      final words = await _supabaseRepository.getWords(
+        language: activeLanguage,
+      );
       final wordIds = words.map((w) => w.id).toSet();
       final unlockedWordIdsSet = unlockedWordIds.toSet();
-      
+
       // Filter masteries to only include unlocked words from active language
       final masteries = allMasteries
-          .where((m) => wordIds.contains(m.wordId) && unlockedWordIdsSet.contains(m.wordId))
+          .where(
+            (m) =>
+                wordIds.contains(m.wordId) &&
+                unlockedWordIdsSet.contains(m.wordId),
+          )
           .toList();
-      
+
       final lessons = await _lessonService.getLessons();
       final lessonIds = lessons.map((l) => l.id).toSet();
-      
+
       final allProgress = await _lessonService.getUserLessonProgressAll();
-      final progressList = allProgress.where((p) => lessonIds.contains(p.lessonId)).toList();
-      
+      final progressList = allProgress
+          .where((p) => lessonIds.contains(p.lessonId))
+          .toList();
+
       final completed = progressList.where((p) => p.isCompleted).length;
       final inProgress = progressList.where((p) => p.isInProgress).length;
-      
+
       if (mounted) {
         setState(() {
           _activeLanguage = activeLanguage;
@@ -116,7 +135,9 @@ class _ProgressScreenState extends State<ProgressScreen>
           _wordsLearned = unlockedWordIds.length;
           // Mastery breakdown for words that have been practiced
           _noviceCount = masteries.where((m) => m.masteryLevel <= 2).length;
-          _intermediateCount = masteries.where((m) => m.masteryLevel >= 3 && m.masteryLevel <= 4).length;
+          _intermediateCount = masteries
+              .where((m) => m.masteryLevel >= 3 && m.masteryLevel <= 4)
+              .length;
           _masteredCount = masteries.where((m) => m.masteryLevel >= 5).length;
           _lessonsCompleted = completed;
           _lessonsInProgress = inProgress;
@@ -127,7 +148,11 @@ class _ProgressScreenState extends State<ProgressScreen>
       }
     } catch (e) {
       if (mounted) {
-        ErrorHandler.handleError(context, e, contextMessage: AppLocalizations.of(context)!.errorLoadingProgress);
+        ErrorHandler.handleError(
+          context,
+          e,
+          contextMessage: AppLocalizations.of(context)!.errorLoadingProgress,
+        );
         setState(() {
           _isLoading = false;
           _hasInitialLoad = true;
@@ -148,110 +173,122 @@ class _ProgressScreenState extends State<ProgressScreen>
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.mainGradient,
-        ),
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
         child: SafeArea(
           child: RefreshIndicator(
             onRefresh: _loadProgress,
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _hasNoData()
-                    ? _buildEmptyState(context)
-                    : FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: CustomScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          slivers: [
-                            // App Bar
-                            SliverAppBar(
-                              expandedHeight: 0,
-                              floating: true,
-                              pinned: false,
-                              backgroundColor: Colors.transparent,
-                              elevation: 0,
-                              leading: IconButton(
-                                icon: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.cardWhite.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.arrow_back_ios_new,
-                                    color: AppTheme.textPrimary,
-                                    size: 18,
-                                  ),
-                                ),
-                                onPressed: () => Navigator.of(context).pop(),
+                ? _buildEmptyState(context)
+                : FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        // App Bar
+                        SliverAppBar(
+                          expandedHeight: 0,
+                          floating: true,
+                          pinned: false,
+                          backgroundColor: Colors.transparent,
+                          elevation: 0,
+                          leading: IconButton(
+                            icon: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.cardWhite.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              actions: [
-                                LanguageSelector(
-                                  onLanguageSelected: (language) {
-                                    _loadProgress();
-                                  },
-                                ),
-                                const SizedBox(width: 8),
-                              ],
-                            ),
-                            
-                            // Header Section
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      l10n.yourProgress,
-                                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                            color: AppTheme.textPrimary,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      l10n.trackYourLearningJourney,
-                                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                            color: AppTheme.textSecondary,
-                                          ),
-                                    ),
-                                  ],
-                                ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new,
+                                color: AppTheme.textPrimary,
+                                size: 18,
                               ),
                             ),
-                            
-                            // Hero Stats Card
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                child: _buildHeroCard(context),
-                              ),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                          actions: [
+                            LanguageSelector(
+                              onLanguageSelected: (language) {
+                                _loadProgress();
+                              },
                             ),
-                            
-                            // Mastery Progress Section
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                child: _buildMasterySection(context),
-                              ),
-                            ),
-                            
-                            // Lessons Progress Section
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                                child: _buildLessonsSection(context),
-                              ),
-                            ),
-                            
-                            // Bottom padding
-                            const SliverToBoxAdapter(
-                              child: SizedBox(height: 24),
-                            ),
+                            const SizedBox(width: 8),
                           ],
                         ),
-                      ),
+
+                        // Header Section
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 16,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.yourProgress,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displaySmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        color: AppTheme.textPrimary,
+                                      ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  l10n.trackYourLearningJourney,
+                                  style: Theme.of(context).textTheme.bodyLarge
+                                      ?.copyWith(color: AppTheme.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Hero Stats Card
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 8,
+                            ),
+                            child: _buildHeroCard(context),
+                          ),
+                        ),
+
+                        // Mastery Progress Section
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 8,
+                            ),
+                            child: _buildMasterySection(context),
+                          ),
+                        ),
+
+                        // Lessons Progress Section
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 8,
+                            ),
+                            child: _buildLessonsSection(context),
+                          ),
+                        ),
+
+                        // Bottom padding
+                        const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                      ],
+                    ),
+                  ),
           ),
         ),
       ),
@@ -266,10 +303,7 @@ class _ProgressScreenState extends State<ProgressScreen>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppTheme.softCyan,
-            AppTheme.electricLavender,
-          ],
+          colors: [AppTheme.softCyan, AppTheme.electricLavender],
         ),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
@@ -401,14 +435,14 @@ class _ProgressScreenState extends State<ProgressScreen>
               Text(
                 l10n.wordMastery,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          
+
           // Mastery Cards
           _buildMasteryLevelCard(
             title: l10n.mastered,
@@ -450,19 +484,14 @@ class _ProgressScreenState extends State<ProgressScreen>
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: color.withOpacity(0.2), width: 1.5),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color, color.withOpacity(0.7)],
-              ),
+              gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: Colors.white, size: 24),
@@ -484,7 +513,10 @@ class _ProgressScreenState extends State<ProgressScreen>
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: color.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
@@ -549,9 +581,9 @@ class _ProgressScreenState extends State<ProgressScreen>
               Text(
                 l10n.lessonsProgress,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
               ),
             ],
           ),
@@ -594,25 +626,17 @@ class _ProgressScreenState extends State<ProgressScreen>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            color.withOpacity(0.15),
-            color.withOpacity(0.05),
-          ],
+          colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: color.withOpacity(0.2), width: 1.5),
       ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color, color.withOpacity(0.7)],
-              ),
+              gradient: LinearGradient(colors: [color, color.withOpacity(0.7)]),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: Colors.white, size: 28),
@@ -642,83 +666,89 @@ class _ProgressScreenState extends State<ProgressScreen>
   }
 
   bool _hasNoData() {
-    return _wordsLearned == 0 && 
-           _lessonsCompleted == 0 && 
-           _lessonsInProgress == 0 &&
-           !_isLoading;
+    return _wordsLearned == 0 &&
+        _lessonsCompleted == 0 &&
+        _lessonsInProgress == 0 &&
+        !_isLoading;
   }
 
   Widget _buildEmptyState(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final mediaQuery = MediaQuery.of(context);
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 80),
-          Container(
-            padding: const EdgeInsets.all(40),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.electricLavender.withOpacity(0.2),
-                  AppTheme.softCyan.withOpacity(0.2),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(32),
-            ),
-            child: Icon(
-              Icons.trending_up_rounded,
-              size: 100,
-              color: AppTheme.textSecondary.withOpacity(0.4),
-            ),
-          ),
-          const SizedBox(height: 32),
-          Text(
-            l10n.noProgressYet,
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minHeight: mediaQuery.size.height - mediaQuery.padding.vertical,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 80),
+            Container(
+              padding: const EdgeInsets.all(40),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.electricLavender.withOpacity(0.2),
+                    AppTheme.softCyan.withOpacity(0.2),
+                  ],
                 ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              l10n.startLearningToSeeProgress,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondary,
+                borderRadius: BorderRadius.circular(32),
+              ),
+              child: Icon(
+                Icons.trending_up_rounded,
+                size: 100,
+                color: AppTheme.textSecondary.withOpacity(0.4),
+              ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              l10n.noProgressYet,
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                l10n.startLearningToSeeProgress,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 48),
+            Container(
+              decoration: AppTheme.pillDecoration(AppTheme.primaryMintGreen),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                icon: const Icon(Icons.school_rounded, size: 20),
+                label: Text(
+                  l10n.startLearning,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                   ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 48),
-          Container(
-            decoration: AppTheme.pillDecoration(AppTheme.primaryMintGreen),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              icon: const Icon(Icons.school_rounded, size: 20),
-              label: Text(
-                l10n.startLearning,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
                 ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

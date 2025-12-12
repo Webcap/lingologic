@@ -130,11 +130,21 @@ class UserService {
 
   /// Get user profile
   Future<UserProfile?> getUserProfile({bool forceRefresh = false}) async {
+    debugPrint('getUserProfile: Starting, isAuthenticated: ${_authService.isAuthenticated}');
+    
+    // Always ensure session is loaded before checking for user
+    debugPrint('getUserProfile: Ensuring session is loaded...');
+    await _authService.ensureSessionLoaded();
+    debugPrint('getUserProfile: After ensureSessionLoaded, currentUser: ${_authService.currentUser?.id}, isAuthenticated: ${_authService.isAuthenticated}');
+    
     final user = _authService.currentUser;
     if (user == null) {
-      debugPrint('getUserProfile: User is null');
+      debugPrint('getUserProfile: User is null after ensureSessionLoaded');
+      debugPrint('getUserProfile: isAuthenticated: ${_authService.isAuthenticated}');
       return null;
     }
+    
+    debugPrint('getUserProfile: User found: ${user.id}');
 
     try {
       final client = _supabaseClient;

@@ -57,9 +57,10 @@ class BetterAuthService {
   final String baseUrl = BetterAuthConfig.apiBaseUrl;
   BetterAuthSession? _currentSession;
   Map<String, String> _cookies = {};
+  Future<void>? _loadSessionFuture;
 
   BetterAuthService() {
-    _loadSession();
+    _loadSessionFuture = _loadSession();
   }
 
   Future<void> _loadSession() async {
@@ -68,6 +69,9 @@ class BetterAuthService {
       if (sessionJson != null) {
         final sessionData = json.decode(sessionJson) as Map<String, dynamic>;
         _currentSession = BetterAuthSession.fromJson(sessionData);
+        debugPrint('BetterAuthService: Session loaded from storage, user: ${_currentSession?.user.id}');
+      } else {
+        debugPrint('BetterAuthService: No session found in storage');
       }
 
       final cookiesJson = await _storage.read(key: _cookieKey);
@@ -76,6 +80,13 @@ class BetterAuthService {
       }
     } catch (e) {
       debugPrint('Error loading session: $e');
+    }
+  }
+
+  /// Wait for initial session load to complete
+  Future<void> waitForSessionLoad() async {
+    if (_loadSessionFuture != null) {
+      await _loadSessionFuture;
     }
   }
 
@@ -213,6 +224,9 @@ class BetterAuthService {
   }
 
   Future<BetterAuthSession?> getSession() async {
+    // Wait for initial session load to complete
+    await waitForSessionLoad();
+    
     // Check if we have a cached session
     if (_currentSession != null) {
       // Check if session is expired

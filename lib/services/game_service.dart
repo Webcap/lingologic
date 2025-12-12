@@ -11,6 +11,9 @@ class GameService {
   /// Check if games are unlocked by verifying if the first lesson is completed
   /// Games unlock when the user completes the first lesson (sorted by CEFR level first, then orderIndex)
   Future<bool> areGamesUnlocked() async {
+    // Ensure session is loaded before checking user
+    await _authService.ensureSessionLoaded();
+    
     final user = _authService.currentUser;
     if (user == null) {
       debugPrint('GameService: No user authenticated');
