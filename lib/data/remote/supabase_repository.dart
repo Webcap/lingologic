@@ -12,6 +12,7 @@ import '../../models/user_language.dart';
 import '../../models/feature_flag.dart';
 import '../../models/game.dart';
 import '../../config/supabase_config.dart';
+import '../local/word_fallback_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseRepository {
@@ -72,14 +73,24 @@ class SupabaseRepository {
           .select()
           .eq('id', id)
           .maybeSingle();
-
-      if (response == null) {
-        debugPrint('SupabaseRepository: Word not found - id: $id');
-        return null;
+      if (response != null) {
+        debugPrint(
+          'SupabaseRepository: Word found - id: $id, word_text: ${response['word_text']}',
+        );
+        return Word.fromJson(response);
       }
-      
-      debugPrint('SupabaseRepository: Word found - id: $id, word_text: ${response['word_text']}');
-      return Word.fromJson(response);
+
+      // Fallback to local vocabulary if Supabase is missing the entry
+      final fallback = WordFallbackRepository.getWordById(id);
+      if (fallback != null) {
+        debugPrint(
+          'SupabaseRepository: Word not found in Supabase, using fallback - id: $id',
+        );
+        return fallback;
+      }
+
+      debugPrint('SupabaseRepository: Word not found - id: $id');
+      return null;
     } catch (e, stackTrace) {
       debugPrint('SupabaseRepository: Error fetching word $id: $e');
       debugPrint('Stack trace: $stackTrace');

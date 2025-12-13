@@ -25,7 +25,7 @@ abstract class LessonSection {
       case 'pronunciation':
         return PronunciationExerciseSection.fromJson(json);
       default:
-        throw Exception('Unknown lesson section type: $type');
+        return UnknownLessonSection.fromJson(json);
     }
   }
 }
@@ -397,6 +397,32 @@ class MatchingExerciseSection extends LessonSection {
       if (distractors != null) 'distractors': distractors,
       if (explanation != null) 'explanation': explanation,
     };
+  }
+}
+
+/// Fallback section used when the app encounters an unknown section type.
+/// This prevents parsing failures when new section types are introduced
+/// before the app has been updated to support them explicitly.
+class UnknownLessonSection extends LessonSection {
+  final Map<String, dynamic> rawJson;
+
+  UnknownLessonSection({
+    required String type,
+    required String id,
+    required this.rawJson,
+  }) : super(type: type, id: id);
+
+  factory UnknownLessonSection.fromJson(Map<String, dynamic> json) {
+    return UnknownLessonSection(
+      type: (json['type'] as String?) ?? 'unknown',
+      id: (json['id'] as String?) ?? 'unknown',
+      rawJson: json,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return rawJson;
   }
 }
 

@@ -13,3 +13,5 @@ CREATE TRIGGER update_user_languages_updated_at
 -- This trigger only handles UPDATE operations
 
 
+
+
