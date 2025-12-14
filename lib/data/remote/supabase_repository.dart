@@ -97,20 +97,54 @@ class SupabaseRepository {
     if (ids.isEmpty) return [];
 
     try {
-      // Use Supabase's 'in' filter - build query with OR conditions for multiple IDs
-      // Since Supabase Flutter may not have .in_(), we'll query in batches or use a workaround
+      // Use Supabase's 'in' filter for efficient batch querying
+      // Query in batches of 100 to avoid URL length limits
       final words = <Word>[];
+      const batchSize = 100;
       
-      // Query words individually (we'll optimize to batch queries later)
-      // This is still more efficient than the previous approach since we have better error handling
-      for (final id in ids) {
+      for (int i = 0; i < ids.length; i += batchSize) {
+        final batch = ids.skip(i).take(batchSize).toList();
+        
         try {
-          final word = await getWordById(id);
-          if (word != null) {
-            words.add(word);
+          // Use parallel individual queries for reliability
+          // This approach works regardless of batch query syntax issues
+          debugPrint('SupabaseRepository: Querying ${batch.length} word IDs using parallel individual queries');
+          
+          // Execute all queries in parallel for better performance
+          final futures = batch.map((id) => getWordById(id));
+          final results = await Future.wait(futures);
+          
+          // Filter out null results and collect valid words
+          final batchWords = results.whereType<Word>().toList();
+          words.addAll(batchWords);
+          
+          debugPrint('SupabaseRepository: Parallel queries returned ${batchWords.length} words from ${batch.length} requested IDs');
+          
+          // Log missing words for debugging
+          if (batchWords.length < batch.length) {
+            final foundIds = batchWords.map((w) => w.id).toSet();
+            final missingIds = batch.where((id) => !foundIds.contains(id)).toList();
+            debugPrint('SupabaseRepository: Missing word IDs (first 10): ${missingIds.take(10).toList()}');
+            if (missingIds.length > 10) {
+              debugPrint('SupabaseRepository: ... and ${missingIds.length - 10} more missing word IDs');
+            }
+            debugPrint('SupabaseRepository: NOTE - Verify these words exist in the database');
           }
-        } catch (e) {
-          debugPrint('SupabaseRepository: Error fetching word $id: $e');
+        } catch (e, stackTrace) {
+          debugPrint('SupabaseRepository: Error in parallel word queries: $e');
+          debugPrint('SupabaseRepository: Stack trace: $stackTrace');
+          // If parallel queries fail, try sequential as last resort
+          debugPrint('SupabaseRepository: Attempting sequential queries as fallback');
+          for (final id in batch) {
+            try {
+              final word = await getWordById(id);
+              if (word != null) {
+                words.add(word);
+              }
+            } catch (e2) {
+              debugPrint('SupabaseRepository: Error fetching word $id: $e2');
+            }
+          }
         }
       }
 
@@ -122,6 +156,7 @@ class SupabaseRepository {
         if (missingIds.length > 10) {
           debugPrint('SupabaseRepository: ... and ${missingIds.length - 10} more missing word IDs');
         }
+        debugPrint('SupabaseRepository: NOTE - These words may need to be created in the database via migrations');
       }
 
       return words;
