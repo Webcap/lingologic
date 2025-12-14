@@ -707,29 +707,21 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     final user = _authService.currentUser;
     if (user == null) return;
 
-    // Calculate session time (round up to at least 1 minute when any time elapsed)
-    int sessionMinutes = 0;
+    // Calculate time spent
     if (_startTime != null) {
-      final elapsedSeconds = DateTime.now().difference(_startTime!).inSeconds;
-      if (elapsedSeconds > 0) {
-        sessionMinutes = (elapsedSeconds / 60).ceil();
-      }
+      _timeSpentMinutes = DateTime.now().difference(_startTime!).inMinutes;
     }
-
-    // Combine with any previously saved time on this lesson so we don't overwrite it
-    final previousMinutes = _progress?.timeSpentMinutes ?? 0;
-    final totalMinutes = previousMinutes + sessionMinutes;
 
     try {
       await _lessonService.completeLesson(
         user.id,
         widget.lessonId,
-        totalMinutes,
+        _timeSpentMinutes,
       );
 
       // Add time spent to user's total time when lesson is completed
-      if (sessionMinutes > 0) {
-        await _userService.addTimeSpent(sessionMinutes);
+      if (_timeSpentMinutes > 0) {
+        await _userService.addTimeSpent(_timeSpentMinutes);
       }
 
       // Update streaks (both user profile and language-specific)
