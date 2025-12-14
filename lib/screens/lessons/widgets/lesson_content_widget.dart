@@ -3,6 +3,9 @@ import '../../../models/lesson_content.dart';
 import 'text_section_widget.dart';
 import 'exercise_section_widget.dart';
 import 'example_section_widget.dart';
+import 'translation_exercise_widget.dart';
+import 'matching_exercise_widget.dart';
+import 'pronunciation_exercise_widget.dart';
 
 class LessonContentWidget extends StatelessWidget {
   final LessonContent content;
@@ -33,6 +36,31 @@ class LessonContentWidget extends StatelessWidget {
           final currentIndex = exerciseIndex++;
           return ExerciseSectionWidget(
             section: section,
+            onAnswerSubmitted: (isCorrect) {
+              onExerciseCompleted?.call(currentIndex);
+            },
+          );
+        } else if (section is MatchingExerciseSection) {
+          final currentIndex = exerciseIndex++;
+          return MatchingExerciseWidget(
+            section: section,
+            onAnswerSubmitted: (isCorrect) {
+              onExerciseCompleted?.call(currentIndex);
+            },
+          );
+        } else if (section is PronunciationExerciseSection) {
+          final currentIndex = exerciseIndex++;
+          return PronunciationExerciseWidget(
+            section: section,
+            onAnswerSubmitted: (isCorrect) {
+              onExerciseCompleted?.call(currentIndex);
+            },
+          );
+        } else if (section is TranslationSection) {
+          final currentIndex = exerciseIndex++;
+          return TranslationExerciseWidget(
+            section: section,
+            languageCode: languageCode,
             onAnswerSubmitted: (isCorrect) {
               onExerciseCompleted?.call(currentIndex);
             },

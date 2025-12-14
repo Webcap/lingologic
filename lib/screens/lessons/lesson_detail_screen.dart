@@ -20,6 +20,7 @@ import 'widgets/exercise_section_widget.dart';
 import 'widgets/example_section_widget.dart';
 import 'widgets/matching_exercise_widget.dart';
 import 'widgets/pronunciation_exercise_widget.dart';
+import 'widgets/translation_exercise_widget.dart';
 
 class LessonDetailScreen extends StatefulWidget {
   final String lessonId;
@@ -515,6 +516,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     if (section is ExerciseSection) return section.id;
     if (section is MatchingExerciseSection) return section.id;
     if (section is PronunciationExerciseSection) return section.id;
+    if (section is TranslationSection) return section.id;
     return null;
   }
 
@@ -634,7 +636,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     for (final section in sections) {
       if (section is ExerciseSection ||
           section is MatchingExerciseSection ||
-          section is PronunciationExerciseSection) {
+          section is PronunciationExerciseSection ||
+          section is TranslationSection) {
         exercises.add(section);
       }
     }
@@ -647,7 +650,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     for (final section in sections) {
       if (section is ExerciseSection ||
           section is MatchingExerciseSection ||
-          section is PronunciationExerciseSection) {
+          section is PronunciationExerciseSection ||
+          section is TranslationSection) {
         // Replace with shuffled exercise
         result.add(exercises[exerciseIndex]);
         exerciseIndex++;
@@ -923,7 +927,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     // If it's an exercise, allow proceeding if it's been answered
     if (currentSection is ExerciseSection ||
         currentSection is MatchingExerciseSection ||
-        currentSection is PronunciationExerciseSection) {
+        currentSection is PronunciationExerciseSection ||
+        currentSection is TranslationSection) {
       final exerciseId = _getExerciseId(currentSection);
       if (exerciseId != null) {
         final isInRetrySection = _currentSlideIndex >= _normalSectionCount;
@@ -1124,6 +1129,24 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             canRetry: false,
           );
         },
+      );
+    } else if (section is TranslationSection) {
+      final exerciseId = section.id;
+      final isAnswered = _exerciseAnswersById[exerciseId] != null;
+      final isCorrect = _exerciseAnswersById[exerciseId] == true;
+
+      return TranslationExerciseWidget(
+        section: section,
+        languageCode: _lesson?.language ?? 'es',
+        onAnswerSubmitted: (isCorrect) {
+          _onExerciseAnswered(
+            0, // Not used in new system
+            isCorrect,
+            exerciseId: exerciseId,
+          );
+        },
+        isAnswered: isAnswered,
+        isCorrect: isCorrect,
       );
     }
     return const SizedBox.shrink();

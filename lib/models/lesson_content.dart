@@ -24,6 +24,8 @@ abstract class LessonSection {
         return MatchingExerciseSection.fromJson(json);
       case 'pronunciation':
         return PronunciationExerciseSection.fromJson(json);
+      case 'translation':
+        return TranslationSection.fromJson(json);
       default:
         throw Exception('Unknown lesson section type: $type');
     }
@@ -395,6 +397,52 @@ class MatchingExerciseSection extends LessonSection {
       'instruction': instruction,
       'pairs': pairs.map((pair) => pair.toJson()).toList(),
       if (distractors != null) 'distractors': distractors,
+      if (explanation != null) 'explanation': explanation,
+    };
+  }
+}
+
+// Translation section for vocabulary translation exercises
+class TranslationSection extends LessonSection {
+  final String? title;
+  final String? instruction;
+  final List<WordPair>? wordPairs; // Optional word pairs for translation
+  final String? content; // Optional text content
+  final String? explanation;
+
+  TranslationSection({
+    required String id,
+    this.title,
+    this.instruction,
+    this.wordPairs,
+    this.content,
+    this.explanation,
+  }) : super(type: 'translation', id: id);
+
+  factory TranslationSection.fromJson(Map<String, dynamic> json) {
+    return TranslationSection(
+      id: json['id'] as String,
+      title: json['title'] as String?,
+      instruction: json['instruction'] as String?,
+      wordPairs: json['word_pairs'] != null || json['pairs'] != null
+          ? ((json['word_pairs'] as List? ?? json['pairs'] as List? ?? []))
+              .map((pair) => WordPair.fromJson(pair as Map<String, dynamic>))
+              .toList()
+          : null,
+      content: json['content'] as String?,
+      explanation: json['explanation'] as String?,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type,
+      'id': id,
+      if (title != null) 'title': title,
+      if (instruction != null) 'instruction': instruction,
+      if (wordPairs != null) 'word_pairs': wordPairs!.map((pair) => pair.toJson()).toList(),
+      if (content != null) 'content': content,
       if (explanation != null) 'explanation': explanation,
     };
   }

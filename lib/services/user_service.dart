@@ -7,7 +7,10 @@ import 'auth_service.dart';
 
 class UserService {
   SupabaseClient? _supabase;
-  final AuthService _authService = AuthService();
+  final AuthService _authService;
+  
+  UserService({AuthService? authService}) 
+      : _authService = authService ?? AuthService();
   
   SupabaseClient? get _supabaseClient {
     if (_supabase == null) {
@@ -132,15 +135,24 @@ class UserService {
   Future<UserProfile?> getUserProfile({bool forceRefresh = false}) async {
     debugPrint('getUserProfile: Starting, isAuthenticated: ${_authService.isAuthenticated}');
     
-    // Always ensure session is loaded before checking for user
-    debugPrint('getUserProfile: Ensuring session is loaded...');
-    await _authService.ensureSessionLoaded();
-    debugPrint('getUserProfile: After ensureSessionLoaded, currentUser: ${_authService.currentUser?.id}, isAuthenticated: ${_authService.isAuthenticated}');
+    // Wait for session to be loaded if we have a cached session
+    // This ensures that if this is a new AuthService instance, it loads the session from storage
+    if (_authService.isAuthenticated) {
+      // Only wait for session load if we think we're authenticated
+      // This avoids unnecessary waits for unauthenticated users
+      await _authService.ensureSessionLoaded();
+    }
     
+    // Re-check authentication after ensuring session is loaded
+    if (!_authService.isAuthenticated) {
+      debugPrint('getUserProfile: User is not authenticated after session load, returning null');
+      return null;
+    }
+    
+    // Get user from cached session (no network request needed)
     final user = _authService.currentUser;
     if (user == null) {
-      debugPrint('getUserProfile: User is null after ensureSessionLoaded');
-      debugPrint('getUserProfile: isAuthenticated: ${_authService.isAuthenticated}');
+      debugPrint('getUserProfile: User is null even though isAuthenticated is true');
       return null;
     }
     

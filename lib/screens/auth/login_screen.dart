@@ -35,51 +35,43 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
 
+      debugPrint('Login successful, waiting for session to be saved...');
+
+      // Wait for session storage write to complete and auth state to propagate
+      // The session is saved asynchronously, so we need to wait a bit longer
+      await Future.delayed(const Duration(milliseconds: 300));
+
       if (mounted) {
-        context.go('/');
+        // Verify we're authenticated - this should be true after signIn
+        final isAuth = _authService.isAuthenticated;
+        final userId = _authService.currentUser?.id;
+        debugPrint('After login - isAuthenticated: $isAuth, userId: $userId');
+
+        if (isAuth) {
+          debugPrint('Login verified, navigating to home');
+          // Navigate to home - router will handle onboarding redirect if needed
+          // Use pushReplacement or go to ensure navigation happens
+          context.go('/');
+        } else {
+          debugPrint('ERROR: Login succeeded but isAuthenticated is false');
+          debugPrint('Session may not have been saved properly');
+          // Don't navigate if not authenticated - let router handle it
+        }
       }
     } catch (e) {
       debugPrint('Login error: $e');
       if (mounted) {
         try {
-          ErrorHandler.handleError(context, e, contextMessage: AppLocalizations.of(context)!.loginFailed);
+          ErrorHandler.handleError(
+            context,
+            e,
+            contextMessage: AppLocalizations.of(context)!.loginFailed,
+          );
         } catch (e2) {
           debugPrint('Error handler error: $e2');
         }
         setState(() {
           _errorMessage = AppLocalizations.of(context)!.loginFailed;
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _handleAnonymousLogin() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      await _authService.signInAnonymously();
-      if (mounted) {
-        context.go('/');
-      }
-    } catch (e) {
-      debugPrint('Anonymous login error: $e');
-      if (mounted) {
-        try {
-          ErrorHandler.handleError(context, e, contextMessage: AppLocalizations.of(context)!.anonymousLoginFailed);
-        } catch (e2) {
-          debugPrint('Error handler error: $e2');
-        }
-        setState(() {
-          _errorMessage = AppLocalizations.of(context)!.anonymousLoginFailed;
         });
       }
     } finally {
@@ -102,9 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.mainGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppTheme.mainGradient),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -114,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 40),
-                  
+
                   // Logo and Welcome Section
                   Column(
                     children: [
@@ -148,7 +138,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 24),
                       Text(
                         AppLocalizations.of(context)!.welcomeBack,
-                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: AppTheme.textPrimary,
                             ),
@@ -158,15 +149,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text(
                         AppLocalizations.of(context)!.continueLanguageJourney,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
+                          color: AppTheme.textSecondary,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 48),
-                  
+
                   // Login Card
                   Container(
                     padding: const EdgeInsets.all(28),
@@ -222,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ],
                             ),
                           ),
-                        
+
                         // Email Field
                         _buildTextField(
                           controller: _emailController,
@@ -232,17 +223,21 @@ class _LoginScreenState extends State<LoginScreen> {
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return AppLocalizations.of(context)!.pleaseEnterEmail;
+                              return AppLocalizations.of(
+                                context,
+                              )!.pleaseEnterEmail;
                             }
                             if (!value.contains('@')) {
-                              return AppLocalizations.of(context)!.pleaseEnterValidEmail;
+                              return AppLocalizations.of(
+                                context,
+                              )!.pleaseEnterValidEmail;
                             }
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         // Password Field
                         _buildTextField(
                           controller: _passwordController,
@@ -265,17 +260,21 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return AppLocalizations.of(context)!.pleaseEnterPassword;
+                              return AppLocalizations.of(
+                                context,
+                              )!.pleaseEnterPassword;
                             }
                             if (value.length < 6) {
-                              return AppLocalizations.of(context)!.passwordMinLength;
+                              return AppLocalizations.of(
+                                context,
+                              )!.passwordMinLength;
                             }
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 8),
-                        
+
                         // Forgot Password (optional)
                         Align(
                           alignment: Alignment.centerRight,
@@ -284,7 +283,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               // TODO: Implement forgot password
                             },
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                             ),
                             child: Text(
                               AppLocalizations.of(context)!.forgotPassword,
@@ -296,9 +298,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Login Button
                         Container(
                           decoration: BoxDecoration(
@@ -311,7 +313,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primaryMintGreen.withOpacity(0.3),
+                                color: AppTheme.primaryMintGreen.withOpacity(
+                                  0.3,
+                                ),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -333,7 +337,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     width: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
                                     ),
                                   )
                                 : Text(
@@ -349,83 +355,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Divider
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          color: AppTheme.textSecondary.withOpacity(0.2),
-                          thickness: 1,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          AppLocalizations.of(context)!.or,
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Divider(
-                          color: AppTheme.textSecondary.withOpacity(0.2),
-                          thickness: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Guest Login Button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.cardWhite.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppTheme.textSecondary.withOpacity(0.2),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: OutlinedButton(
-                      onPressed: _isLoading ? null : _handleAnonymousLogin,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        side: BorderSide.none,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.person_outline_rounded,
-                            color: AppTheme.textPrimary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            AppLocalizations.of(context)!.continueAsGuest,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Sign Up Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -440,7 +372,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextButton(
                         onPressed: () => context.go('/signup'),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 4,
+                          ),
                         ),
                         child: Text(
                           AppLocalizations.of(context)!.signUp,
@@ -489,21 +424,14 @@ class _LoginScreenState extends State<LoginScreen> {
           obscureText: obscureText,
           keyboardType: keyboardType,
           validator: validator,
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppTheme.textPrimary,
-          ),
+          style: const TextStyle(fontSize: 16, color: AppTheme.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
               color: AppTheme.textSecondary.withOpacity(0.6),
               fontSize: 15,
             ),
-            prefixIcon: Icon(
-              icon,
-              color: AppTheme.textSecondary,
-              size: 22,
-            ),
+            prefixIcon: Icon(icon, color: AppTheme.textSecondary, size: 22),
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: AppTheme.textSecondary.withOpacity(0.05),
@@ -537,10 +465,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: Colors.red,
-                width: 2,
-              ),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
