@@ -589,4 +589,44 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get clearMatch => 'Limpiar Emparejamiento';
+
+  @override
+  String get talkTutor => 'Tutor de Conversación';
+
+  @override
+  String get practiceSpeaking => 'Practicar Hablando';
+
+  @override
+  String get tapToSpeak => 'Toca para hablar';
+
+  @override
+  String get talkTutorListening => 'Escuchando...';
+
+  @override
+  String get talkTutorMicRequired =>
+      'Se requiere permiso de micrófono para practicar hablando.';
+
+  @override
+  String get talkTutorPermissionRequired => 'Permiso Requerido';
+
+  @override
+  String get talkTutorPermissionMessage =>
+      'Se requiere permiso de micrófono para practicar hablando. Por favor, actívalo en la configuración de tu dispositivo.';
+
+  @override
+  String get openSettings => 'Abrir Configuración';
+
+  @override
+  String get talkTutorSpeechUnavailable =>
+      'El reconocimiento de voz no está disponible en este dispositivo.';
+
+  @override
+  String get talkTutorError =>
+      'No se pudo obtener respuesta del tutor. Por favor, inténtalo de nuevo.';
+
+  @override
+  String get talkTutorConversation => 'Conversación';
+
+  @override
+  String get speakingPractice => 'Práctica de Habla';
 }

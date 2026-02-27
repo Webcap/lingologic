@@ -9,6 +9,7 @@ import '../screens/lessons/lessons_list_screen.dart';
 import '../screens/lessons/lesson_detail_screen.dart';
 import '../screens/language_selection_screen.dart';
 import '../screens/onboarding/language_onboarding_screen.dart';
+import '../screens/talk_tutor/talk_tutor_screen.dart';
 import '../widgets/loading_screen.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
@@ -200,6 +201,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const LanguageOnboardingScreen(),
+    ),
+    GoRoute(
+      path: '/talktutor',
+      builder: (context, state) => const TalkTutorScreen(),
     ),
   ],
 );

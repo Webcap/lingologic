@@ -209,6 +209,19 @@
       }
     }
   },
-  "clearMatch": "Limpiar Emparejamiento"
+  "clearMatch": "Limpiar Emparejamiento",
+  
+  "talkTutor": "Tutor de Conversación",
+  "practiceSpeaking": "Practicar Hablando",
+  "tapToSpeak": "Toca para hablar",
+  "talkTutorListening": "Escuchando...",
+  "talkTutorMicRequired": "Se requiere permiso de micrófono para practicar hablando.",
+  "talkTutorPermissionRequired": "Permiso Requerido",
+  "talkTutorPermissionMessage": "Se requiere permiso de micrófono para practicar hablando. Por favor, actívalo en la configuración de tu dispositivo.",
+  "openSettings": "Abrir Configuración",
+  "talkTutorSpeechUnavailable": "El reconocimiento de voz no está disponible en este dispositivo.",
+  "talkTutorError": "No se pudo obtener respuesta del tutor. Por favor, inténtalo de nuevo.",
+  "talkTutorConversation": "Conversación",
+  "speakingPractice": "Práctica de Habla"
 }
 

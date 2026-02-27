@@ -5,6 +5,7 @@ import '../../services/lesson_service.dart';
 import '../../services/language_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/mini_game_service.dart';
+import '../../services/feature_flag_service.dart';
 import '../../models/lesson.dart';
 import '../../models/mini_game_type.dart';
 import '../../theme/app_theme.dart';
@@ -43,6 +44,7 @@ class HomeTabState extends State<HomeTab> {
   MiniGameType? _requiredMiniGameType;
   String? _currentLevel;
   bool _isLoading = true;
+  bool _talkTutorEnabled = false;
 
   @override
   void initState() {
@@ -135,17 +137,21 @@ class HomeTabState extends State<HomeTab> {
         }
       }
       
-      // Get language-specific stats
+      // Get language-specific stats (use effective streak - 0 if inactive for 2+ days)
       int languageStreak = 0;
       if (activeLanguage != null) {
         final langProgress = await _languageService.getLanguageProgress(activeLanguage);
-        languageStreak = langProgress?.streakDays ?? 0;
+        languageStreak = _languageService.getEffectiveStreakDays(langProgress);
       }
+
+      final talkTutorEnabled = await featureFlagService.isFeatureEnabled('talk_tutor');
       
       if (mounted) {
         setState(() {
           _activeLanguage = activeLanguage;
-          _streakDays = languageStreak > 0 ? languageStreak : (profile?.streakDays ?? 0);
+          _streakDays = languageStreak > 0
+              ? languageStreak
+              : _userService.getEffectiveStreakDays(profile);
           _totalTimeMinutes = profile?.totalTimeMinutes ?? 0;
           _lessonsCompleted = completed;
           _lessonsInProgress = inProgress;
@@ -153,6 +159,7 @@ class HomeTabState extends State<HomeTab> {
           _requiredMiniGame = requiredMiniGameInfo?.miniGameNumber;
           _requiredMiniGameType = requiredMiniGameInfo?.gameType;
           _currentLevel = currentLevel;
+          _talkTutorEnabled = talkTutorEnabled;
           _isLoading = false;
         });
       }
@@ -320,6 +327,12 @@ class HomeTabState extends State<HomeTab> {
                     ),
                     const SizedBox(height: 32),
 
+                    // Talk Tutor CTA Card (feature-flagged)
+                    if (_talkTutorEnabled) ...[
+                      _buildTalkTutorCard(context),
+                      const SizedBox(height: 24),
+                    ],
+
                     // Current Level Card
                     if (_currentLevel != null) ...[
                       _buildCurrentLevelCard(context),
@@ -349,6 +362,87 @@ class HomeTabState extends State<HomeTab> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTalkTutorCard(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppTheme.electricLavender, AppTheme.softCyan],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.electricLavender.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push('/talktutor'),
+          borderRadius: BorderRadius.circular(28),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(
+                    Icons.mic_rounded,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.speakingPractice,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        AppLocalizations.of(context)!.practiceSpeaking,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

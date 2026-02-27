@@ -115,6 +115,25 @@ class LanguageService {
     );
   }
 
+  /// Returns the effective streak for display - 0 if last practice was >1 day ago
+  int getEffectiveStreakDays(UserLanguage? langProgress) {
+    if (langProgress == null || langProgress.streakDays == 0) return 0;
+    final lastPractice = langProgress.lastPracticedAt;
+    if (lastPractice == null) return 0;
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+    final lastDate = DateTime(
+      lastPractice.year,
+      lastPractice.month,
+      lastPractice.day,
+    );
+    final daysSince = today.difference(lastDate).inDays;
+    return daysSince <= 1 ? langProgress.streakDays : 0;
+  }
+
   /// Get progress statistics for a specific language
   Future<UserLanguage?> getLanguageProgress(String language) async {
     final user = _authService.currentUser;

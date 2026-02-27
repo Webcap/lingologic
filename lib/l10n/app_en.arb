@@ -947,6 +947,66 @@
   "clearMatch": "Clear Match",
   "@clearMatch": {
     "description": "Button text to clear a match"
+  },
+  
+  "talkTutor": "Talk Tutor",
+  "@talkTutor": {
+    "description": "Talk Tutor feature title"
+  },
+  
+  "practiceSpeaking": "Practice Speaking",
+  "@practiceSpeaking": {
+    "description": "Talk Tutor subtitle"
+  },
+  
+  "tapToSpeak": "Tap to speak",
+  "@tapToSpeak": {
+    "description": "Mic button label"
+  },
+  
+  "talkTutorListening": "Listening...",
+  "@talkTutorListening": {
+    "description": "Mic listening state"
+  },
+  
+  "talkTutorMicRequired": "Microphone permission is required for speaking practice.",
+  "@talkTutorMicRequired": {
+    "description": "Permission required snackbar"
+  },
+  
+  "talkTutorPermissionRequired": "Permission Required",
+  "@talkTutorPermissionRequired": {
+    "description": "Permission dialog title"
+  },
+  
+  "talkTutorPermissionMessage": "Microphone permission is required to practice speaking. Please enable it in your device settings.",
+  "@talkTutorPermissionMessage": {
+    "description": "Permission dialog message"
+  },
+  
+  "openSettings": "Open Settings",
+  "@openSettings": {
+    "description": "Open app settings button"
+  },
+  
+  "talkTutorSpeechUnavailable": "Speech recognition is not available on this device.",
+  "@talkTutorSpeechUnavailable": {
+    "description": "Speech recognition unavailable message"
+  },
+  
+  "talkTutorError": "Could not get tutor response. Please try again.",
+  "@talkTutorError": {
+    "description": "API error message"
+  },
+  
+  "talkTutorConversation": "Conversation",
+  "@talkTutorConversation": {
+    "description": "Conversation history section title"
+  },
+  
+  "speakingPractice": "Speaking Practice",
+  "@speakingPractice": {
+    "description": "Talk Tutor CTA card title on home"
   }
 }
 

@@ -582,4 +582,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearMatch => 'Clear Match';
+
+  @override
+  String get talkTutor => 'Talk Tutor';
+
+  @override
+  String get practiceSpeaking => 'Practice Speaking';
+
+  @override
+  String get tapToSpeak => 'Tap to speak';
+
+  @override
+  String get talkTutorListening => 'Listening...';
+
+  @override
+  String get talkTutorMicRequired =>
+      'Microphone permission is required for speaking practice.';
+
+  @override
+  String get talkTutorPermissionRequired => 'Permission Required';
+
+  @override
+  String get talkTutorPermissionMessage =>
+      'Microphone permission is required to practice speaking. Please enable it in your device settings.';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
+  String get talkTutorSpeechUnavailable =>
+      'Speech recognition is not available on this device.';
+
+  @override
+  String get talkTutorError =>
+      'Could not get tutor response. Please try again.';
+
+  @override
+  String get talkTutorConversation => 'Conversation';
+
+  @override
+  String get speakingPractice => 'Speaking Practice';
 }

@@ -58,17 +58,19 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       final completed = filteredProgress.where((p) => p.isCompleted).length;
       final inProgress = filteredProgress.where((p) => p.isInProgress).length;
       
-      // Get language-specific stats
+      // Get language-specific stats (use effective streak - 0 if inactive for 2+ days)
       int languageStreak = 0;
       if (activeLanguage != null) {
         final langProgress = await _languageService.getLanguageProgress(activeLanguage);
-        languageStreak = langProgress?.streakDays ?? 0;
+        languageStreak = _languageService.getEffectiveStreakDays(langProgress);
       }
       
       if (mounted) {
         setState(() {
           _activeLanguage = activeLanguage;
-          _streakDays = languageStreak > 0 ? languageStreak : (profile?.streakDays ?? 0);
+          _streakDays = languageStreak > 0
+              ? languageStreak
+              : _userService.getEffectiveStreakDays(profile);
           _totalTimeMinutes = profile?.totalTimeMinutes ?? 0;
           _lessonsCompleted = completed;
           _lessonsInProgress = inProgress;

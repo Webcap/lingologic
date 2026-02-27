@@ -131,6 +131,24 @@ class UserService {
             }
   }
 
+  /// Returns the effective streak for display - 0 if last activity was >1 day ago
+  int getEffectiveStreakDays(UserProfile? profile) {
+    if (profile == null || profile.streakDays == 0) return 0;
+    final lastActivity = profile.lastActivityDate ?? profile.createdAt;
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+    final lastDate = DateTime(
+      lastActivity.year,
+      lastActivity.month,
+      lastActivity.day,
+    );
+    final daysSince = today.difference(lastDate).inDays;
+    return daysSince <= 1 ? profile.streakDays : 0;
+  }
+
   /// Get user profile
   Future<UserProfile?> getUserProfile({bool forceRefresh = false}) async {
     debugPrint('getUserProfile: Starting, isAuthenticated: ${_authService.isAuthenticated}');

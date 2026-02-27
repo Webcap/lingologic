@@ -1201,6 +1201,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear Match'**
   String get clearMatch;
+
+  /// Talk Tutor feature title
+  ///
+  /// In en, this message translates to:
+  /// **'Talk Tutor'**
+  String get talkTutor;
+
+  /// Talk Tutor subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Practice Speaking'**
+  String get practiceSpeaking;
+
+  /// Mic button label
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to speak'**
+  String get tapToSpeak;
+
+  /// Mic listening state
+  ///
+  /// In en, this message translates to:
+  /// **'Listening...'**
+  String get talkTutorListening;
+
+  /// Permission required snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission is required for speaking practice.'**
+  String get talkTutorMicRequired;
+
+  /// Permission dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Permission Required'**
+  String get talkTutorPermissionRequired;
+
+  /// Permission dialog message
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission is required to practice speaking. Please enable it in your device settings.'**
+  String get talkTutorPermissionMessage;
+
+  /// Open app settings button
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
+  /// Speech recognition unavailable message
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition is not available on this device.'**
+  String get talkTutorSpeechUnavailable;
+
+  /// API error message
+  ///
+  /// In en, this message translates to:
+  /// **'Could not get tutor response. Please try again.'**
+  String get talkTutorError;
+
+  /// Conversation history section title
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation'**
+  String get talkTutorConversation;
+
+  /// Talk Tutor CTA card title on home
+  ///
+  /// In en, this message translates to:
+  /// **'Speaking Practice'**
+  String get speakingPractice;
 }
 
 class _AppLocalizationsDelegate

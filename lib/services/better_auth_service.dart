@@ -343,5 +343,36 @@ class BetterAuthService {
   BetterAuthSession? get currentSession => _currentSession;
   bool get isAuthenticated => _currentSession != null;
   bool get isAnonymous => _currentSession?.user.isAnonymous ?? false;
+
+  /// Makes an authenticated POST request to a non-auth API path (e.g. /api/talk-tutor/chat).
+  /// Uses stored session cookies. Returns parsed JSON or null.
+  Future<Map<String, dynamic>?> postToApi(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    await waitForSessionLoad();
+    if (_currentSession == null) return null;
+
+    final uri = Uri.parse('${BetterAuthConfig.baseUrl}$path');
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+    final cookieHeader = _getCookieHeader();
+    if (cookieHeader.isNotEmpty) {
+      headers['Cookie'] = cookieHeader;
+    }
+    final response = await http.post(
+      uri,
+      headers: headers,
+      body: json.encode(body),
+    );
+    _updateCookies(response);
+    if (response.body.isEmpty) return null;
+    try {
+      return json.decode(response.body) as Map<String, dynamic>?;
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
