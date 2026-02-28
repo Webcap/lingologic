@@ -1004,6 +1004,11 @@
     "description": "Conversation history section title"
   },
   
+  "talkTutorSpeaking": "Speaking",
+  "@talkTutorSpeaking": {
+    "description": "Label when tutor is saying something (TTS playing)"
+  },
+  
   "speakingPractice": "Speaking Practice",
   "@speakingPractice": {
     "description": "Talk Tutor CTA card title on home"

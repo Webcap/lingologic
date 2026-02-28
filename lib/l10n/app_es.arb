@@ -222,6 +222,7 @@
   "talkTutorSpeechUnavailable": "El reconocimiento de voz no está disponible en este dispositivo.",
   "talkTutorError": "No se pudo obtener respuesta del tutor. Por favor, inténtalo de nuevo.",
   "talkTutorConversation": "Conversación",
+  "talkTutorSpeaking": "Hablando",
   "speakingPractice": "Práctica de Habla"
 }
 

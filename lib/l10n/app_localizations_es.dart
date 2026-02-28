@@ -628,5 +628,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get talkTutorConversation => 'Conversación';
 
   @override
+  String get talkTutorSpeaking => 'Hablando';
+
+  @override
   String get speakingPractice => 'Práctica de Habla';
 }

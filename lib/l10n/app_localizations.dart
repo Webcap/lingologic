@@ -1268,6 +1268,12 @@ abstract class AppLocalizations {
   /// **'Conversation'**
   String get talkTutorConversation;
 
+  /// Label when tutor is saying something (TTS playing)
+  ///
+  /// In en, this message translates to:
+  /// **'Speaking'**
+  String get talkTutorSpeaking;
+
   /// Talk Tutor CTA card title on home
   ///
   /// In en, this message translates to:

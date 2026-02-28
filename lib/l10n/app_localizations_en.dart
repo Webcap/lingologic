@@ -621,5 +621,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get talkTutorConversation => 'Conversation';
 
   @override
+  String get talkTutorSpeaking => 'Speaking';
+
+  @override
   String get speakingPractice => 'Speaking Practice';
 }

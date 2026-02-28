@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme/app_theme.dart';
 import '../../services/talk_tutor_service.dart';
 import '../../services/language_service.dart';
@@ -31,6 +32,10 @@ class _TalkTutorScreenState extends State<TalkTutorScreen> {
   bool _permissionGranted = false;
   final List<Map<String, String>> _conversationHistory = [];
   static const int _maxHistoryTurns = 5;
+  bool _welcomePlayed = false;
+  bool _ttsReady = false;
+  String? _currentSpeakingText;
+  static const String _welcomePlayedKey = 'talk_tutor_welcome_played';
 
   @override
   void initState() {
@@ -53,7 +58,37 @@ class _TalkTutorScreenState extends State<TalkTutorScreen> {
       setState(() {
         _activeLanguage = lang;
       });
+      _maybePlayWelcome();
     }
+  }
+
+  /// Onboarding script (voice-only): hello, I'm your tutor, prompt user to speak so we can assess their level.
+  String _getWelcomeMessage(String? lang) {
+    switch (lang?.toLowerCase()) {
+      case 'spanish':
+        return '¡Hola! Soy tu tutor. Toca el micrófono y di hola, o cuéntame algo en español. Te diré en qué nivel estás y te responderé.';
+      case 'english':
+        return "Hello! I'm your tutor. Tap the mic and say hello, or tell me a bit about yourself. I'll tell you what level you're at and reply.";
+      case 'french':
+        return 'Bonjour ! Je suis ton tuteur. Appuie sur le micro et dis bonjour, ou dis-moi un peu qui tu es. Je te dirai ton niveau et te répondrai.';
+      default:
+        return "Hello! I'm your tutor. Tap the mic and say hello, or tell me a bit about yourself. I'll tell you what level you're at and reply.";
+    }
+  }
+
+  Future<void> _maybePlayWelcome() async {
+    if (_welcomePlayed || !_ttsReady || _activeLanguage == null || !mounted) {
+      return;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_welcomePlayedKey) == true) {
+      if (mounted) setState(() => _welcomePlayed = true);
+      return;
+    }
+    _welcomePlayed = true;
+    await prefs.setBool(_welcomePlayedKey, true);
+    final message = _getWelcomeMessage(_activeLanguage);
+    await _speakResponse(message);
   }
 
   String _languageToLocale(String? lang) {
@@ -69,13 +104,34 @@ class _TalkTutorScreenState extends State<TalkTutorScreen> {
     }
   }
 
+  /// Short language code for TTS fallback when full locale is not available on device.
+  String _languageToShortCode(String? lang) {
+    switch (lang?.toLowerCase()) {
+      case 'spanish':
+        return 'es';
+      case 'english':
+        return 'en';
+      case 'french':
+        return 'fr';
+      default:
+        return 'en';
+    }
+  }
+
   Future<void> _initializeTTS() async {
     await _flutterTts.setSpeechRate(0.45);
     await _flutterTts.setPitch(1.0);
     await _flutterTts.setVolume(1.0);
     _flutterTts.setCompletionHandler(() {
-      if (mounted) setState(() => _isSpeaking = false);
+      if (mounted) setState(() {
+        _isSpeaking = false;
+        _currentSpeakingText = null;
+      });
     });
+    if (mounted) {
+      setState(() => _ttsReady = true);
+      _maybePlayWelcome();
+    }
   }
 
   Future<void> _checkPermissions() async {
@@ -218,6 +274,7 @@ class _TalkTutorScreenState extends State<TalkTutorScreen> {
       transcript,
       language: _activeLanguage ?? 'spanish',
       history: history.isEmpty ? null : history,
+      isFirstMessage: _conversationHistory.isEmpty,
     );
 
     if (!mounted) return;
@@ -245,8 +302,22 @@ class _TalkTutorScreenState extends State<TalkTutorScreen> {
   }
 
   Future<void> _speakResponse(String text) async {
-    await _flutterTts.setLanguage(_languageToLocale(_activeLanguage));
-    setState(() => _isSpeaking = true);
+    if (text.trim().isEmpty) return;
+    final lang = _activeLanguage ?? 'spanish';
+    final locale = _languageToLocale(lang);
+    final shortCode = _languageToShortCode(lang);
+    try {
+      await _flutterTts.setLanguage(locale);
+    } catch (_) {
+      try {
+        await _flutterTts.setLanguage(shortCode);
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    setState(() {
+      _isSpeaking = true;
+      _currentSpeakingText = text;
+    });
     await _flutterTts.speak(text);
   }
 
@@ -335,6 +406,70 @@ class _TalkTutorScreenState extends State<TalkTutorScreen> {
                               fontWeight: FontWeight.w600,
                             ),
                       ),
+                      if (_isSpeaking && _currentSpeakingText != null) ...[
+                        const SizedBox(height: 20),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.cardWhite.withOpacity(0.95),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: AppTheme.primaryMintGreen.withOpacity(0.5),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryMintGreen.withOpacity(0.2),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.volume_up_rounded,
+                                color: AppTheme.primaryMintGreen,
+                                size: 28,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.talkTutorSpeaking,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            color: AppTheme.primaryMintGreen,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      _currentSpeakingText!,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            color: AppTheme.textPrimary,
+                                            height: 1.4,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       if (_recognizedText.isNotEmpty) ...[
                         const SizedBox(height: 24),
                         _buildBubble(context, _recognizedText, isUser: true),
