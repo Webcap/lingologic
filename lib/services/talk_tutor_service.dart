@@ -8,11 +8,13 @@ class TalkTutorService {
 
   /// Sends user transcript to the Talk Tutor API and returns the AI response text.
   /// Returns null on error.
+  /// [personality] optional: one of 'funny_serious', 'friendly', 'encouraging'.
   Future<String?> sendMessage(
     String transcript, {
     String? language,
     String? level,
     List<Map<String, String>>? history,
+    String? personality,
   }) async {
     final lang = language ?? await _languageService.getActiveLanguage();
     if (lang == null || transcript.trim().isEmpty) {
@@ -28,6 +30,9 @@ class TalkTutorService {
     }
     if (history != null && history.isNotEmpty) {
       body['conversationHistory'] = history;
+    }
+    if (personality != null && personality.isNotEmpty) {
+      body['personality'] = personality;
     }
 
     try {
