@@ -15,7 +15,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _authService = AuthService();
+  final _authService = authService;
   final _syncService = SyncService();
   final _appLanguageService = AppLanguageService();
   double _volume = 1.0;

@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
-import 'better_auth_service.dart';
+import 'auth_service.dart';
 import 'language_service.dart';
 
 class TalkTutorService {
-  final BetterAuthService _auth = BetterAuthService();
+  final AuthService _auth = authService;
   final LanguageService _languageService = LanguageService();
 
   /// Sends user transcript to the Talk Tutor API and returns the AI response text.

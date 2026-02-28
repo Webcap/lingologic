@@ -53,6 +53,9 @@ enum AuthChangeEvent {
   passwordRecovery,
 }
 
+/// Shared singleton - use this so router, login, settings all see the same auth state
+final authService = AuthService();
+
 class AuthService {
   final BetterAuthService _betterAuth = BetterAuthService();
   final _authStateController = StreamController<AuthState>.broadcast();
@@ -264,12 +267,13 @@ class AuthService {
 
   /// Ensure session is loaded before accessing user
   /// This fixes race conditions where isAuthenticated is true but currentUser is null
+  /// Also reloads from storage to pick up session saved by another AuthService instance (e.g. login screen)
   Future<void> ensureSessionLoaded() async {
     debugPrint('ensureSessionLoaded: Starting...');
     
-    // First, wait for the initial session load to complete
-    await _betterAuth.waitForSessionLoad();
-    debugPrint('ensureSessionLoaded: Initial load complete, isAuthenticated=${_betterAuth.isAuthenticated}, currentUser=${_betterAuth.currentUser?.id}');
+    // Reload from storage to pick up any session saved by another AuthService instance (e.g. login)
+    await _betterAuth.reloadFromStorage();
+    debugPrint('ensureSessionLoaded: Load complete, isAuthenticated=${_betterAuth.isAuthenticated}, currentUser=${_betterAuth.currentUser?.id}');
     
     // Only fetch session from server if we have a cached session
     // This avoids unnecessary network requests when user is clearly not authenticated
@@ -292,6 +296,14 @@ class AuthService {
 
   bool get isAnonymous {
     return _betterAuth.isAnonymous;
+  }
+
+  /// POST to API with stored session (cookies). Returns parsed JSON or null.
+  Future<Map<String, dynamic>?> postToApi(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    return _betterAuth.postToApi(path, body);
   }
 
   void dispose() {

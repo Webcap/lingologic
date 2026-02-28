@@ -8,7 +8,7 @@ import 'lesson_translation_service.dart';
 
 class LessonService {
   final SupabaseRepository _repository = SupabaseRepository();
-  final AuthService _authService = AuthService();
+  final AuthService _authService = authService;
   final LanguageService _languageService = LanguageService();
   final LessonTranslationService _translationService = LessonTranslationService();
 

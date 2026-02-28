@@ -32,7 +32,7 @@ class LessonsListScreen extends StatefulWidget {
 
 class _LessonsListScreenState extends State<LessonsListScreen> {
   final _lessonService = LessonService();
-  final _authService = AuthService();
+  final _authService = authService;
   final _miniGameService = MiniGameService();
   final _levelProgressionService = LevelProgressionService();
 

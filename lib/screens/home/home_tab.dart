@@ -31,7 +31,7 @@ class HomeTabState extends State<HomeTab> {
   final _userService = UserService();
   final _lessonService = LessonService();
   final _languageService = LanguageService();
-  final _authService = AuthService();
+  final _authService = authService;
   final _miniGameService = MiniGameService();
 
   int _streakDays = 0;

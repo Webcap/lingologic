@@ -6,7 +6,7 @@ import '../services/auth_service.dart';
 
 class LanguageService {
   final SupabaseRepository _repository = SupabaseRepository();
-  final AuthService _authService = AuthService();
+  final AuthService _authService = authService;
 
   /// Get all available languages
   List<LanguageInfo> getAvailableLanguages() {

@@ -39,7 +39,7 @@ class _NeuroMatchGameState extends State<NeuroMatchGame>
   final _srsService = SRSService();
   final _ddaService = DDAService();
   final _supabaseRepository = SupabaseRepository();
-  final _authService = AuthService();
+  final _authService = authService;
   final _lessonService = LessonService();
   final _languageService = LanguageService();
   final _userService = UserService();

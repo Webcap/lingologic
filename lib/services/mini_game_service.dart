@@ -7,6 +7,7 @@ import '../models/mini_game_type.dart';
 import 'lesson_service.dart';
 import 'auth_service.dart';
 import 'language_service.dart';
+import 'feature_flag_service.dart';
 import '../data/remote/supabase_repository.dart';
 import '../config/supabase_config.dart';
 
@@ -26,13 +27,17 @@ class MiniGameService {
 
   MiniGameService()
     : _lessonService = LessonService(),
-      _authService = AuthService(),
+      _authService = authService,
       _languageService = LanguageService();
 
   /// Check if a mini game should be shown based on completed lessons
   /// Returns a tuple with mini game number and game type if one should be shown
   /// Returns null if no mini game should be shown
+  /// Respects feature flag mini_games_between_lessons (toggle in admin panel)
   Future<({int miniGameNumber, MiniGameType gameType})?> shouldShowMiniGame() async {
+    final enabled = await featureFlagService.isFeatureEnabled('mini_games_between_lessons');
+    if (!enabled) return null;
+
     final user = _authService.currentUser;
     if (user == null) return null;
 

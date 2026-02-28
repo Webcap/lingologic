@@ -90,6 +90,12 @@ class BetterAuthService {
     }
   }
 
+  /// Reload session and cookies from storage (e.g. after another instance saved a session)
+  Future<void> reloadFromStorage() async {
+    _loadSessionFuture = _loadSession();
+    await _loadSessionFuture;
+  }
+
   Future<void> _saveSession(BetterAuthSession? session) async {
     _currentSession = session;
     if (session != null) {

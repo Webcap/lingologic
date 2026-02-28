@@ -14,7 +14,7 @@ import '../widgets/loading_screen.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
 
-final _authService = AuthService();
+final _authService = authService;
 
 // Determine initial location - start at login and let redirect handle routing
 // This ensures session is loaded before making routing decisions

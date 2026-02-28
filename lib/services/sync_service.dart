@@ -45,7 +45,7 @@ class SyncQueueItem {
 
 class SyncService {
   SupabaseClient? _supabase;
-  final AuthService _authService = AuthService();
+  final AuthService _authService = authService;
   ConnectivityService? _connectivityService;
   final List<SyncQueueItem> _localQueue = [];
   bool _isSyncing = false;

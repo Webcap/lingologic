@@ -25,7 +25,7 @@ class HangmanMiniGame extends StatefulWidget {
 class _HangmanMiniGameState extends State<HangmanMiniGame>
     with SingleTickerProviderStateMixin {
   final _miniGameService = MiniGameService();
-  final _authService = AuthService();
+  final _authService = authService;
   final _languageService = LanguageService();
   late AnimationController _animationController;
 

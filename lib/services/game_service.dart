@@ -5,7 +5,7 @@ import '../services/language_service.dart';
 
 class GameService {
   final LessonService _lessonService = LessonService();
-  final AuthService _authService = AuthService();
+  final AuthService _authService = authService;
   final LanguageService _languageService = LanguageService();
 
   /// Check if games are unlocked by verifying if the first lesson is completed

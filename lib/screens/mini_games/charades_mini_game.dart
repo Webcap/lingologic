@@ -25,7 +25,7 @@ class CharadesMiniGame extends StatefulWidget {
 class _CharadesMiniGameState extends State<CharadesMiniGame>
     with SingleTickerProviderStateMixin {
   final _miniGameService = MiniGameService();
-  final _authService = AuthService();
+  final _authService = authService;
   final _languageService = LanguageService();
   late AnimationController _animationController;
 

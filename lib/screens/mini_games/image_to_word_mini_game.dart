@@ -25,7 +25,7 @@ class ImageToWordMiniGame extends StatefulWidget {
 class _ImageToWordMiniGameState extends State<ImageToWordMiniGame>
     with SingleTickerProviderStateMixin {
   final _miniGameService = MiniGameService();
-  final _authService = AuthService();
+  final _authService = authService;
   final _languageService = LanguageService();
   late AnimationController _animationController;
 

@@ -33,7 +33,7 @@ class LessonDetailScreen extends StatefulWidget {
 
 class _LessonDetailScreenState extends State<LessonDetailScreen> {
   final _lessonService = LessonService();
-  final _authService = AuthService();
+  final _authService = authService;
   final _userService = UserService();
   final _languageService = LanguageService();
   final _pronunciationSkipService = PronunciationSkipService();

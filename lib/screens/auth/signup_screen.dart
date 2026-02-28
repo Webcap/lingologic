@@ -21,7 +21,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _authService = AuthService();
+  final _authService = authService;
   final _userService = UserService();
   final _languageService = LanguageService();
   bool _isLoading = false;

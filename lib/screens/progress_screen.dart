@@ -77,7 +77,6 @@ class ProgressScreenState extends State<ProgressScreen>
     }
 
     try {
-      final authService = AuthService();
       // Ensure session is loaded before checking user
       await authService.ensureSessionLoaded();
 

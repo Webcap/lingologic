@@ -8,7 +8,7 @@ import '../services/language_service.dart';
 import '../config/supabase_config.dart';
 
 class LevelProgressionService {
-  final AuthService _authService = AuthService();
+  final AuthService _authService = authService;
   final LanguageService _languageService = LanguageService();
 
   SupabaseClient get _supabase {

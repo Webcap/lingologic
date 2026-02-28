@@ -3,14 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../models/user_profile.dart';
 import '../config/supabase_config.dart';
-import 'auth_service.dart';
+import 'auth_service.dart' as auth_lib;
 
 class UserService {
   SupabaseClient? _supabase;
-  final AuthService _authService;
-  
-  UserService({AuthService? authService}) 
-      : _authService = authService ?? AuthService();
+  final auth_lib.AuthService _authService;
+
+  UserService({auth_lib.AuthService? authService})
+      : _authService = authService ?? auth_lib.authService;
   
   SupabaseClient? get _supabaseClient {
     if (_supabase == null) {
@@ -250,6 +250,6 @@ class UserService {
     }
   }
 
-  User? get currentUser => _authService.currentUser;
+  auth_lib.User? get currentUser => _authService.currentUser;
 }
 

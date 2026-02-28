@@ -27,7 +27,7 @@ class WordSearchMiniGame extends StatefulWidget {
 class _WordSearchMiniGameState extends State<WordSearchMiniGame>
     with SingleTickerProviderStateMixin {
   final _miniGameService = MiniGameService();
-  final _authService = AuthService();
+  final _authService = authService;
   final _languageService = LanguageService();
   late AnimationController _animationController;
 
