@@ -5,19 +5,18 @@ import 'dart:io';
 class BetterAuthConfig {
   static String get baseUrl {
     if (kDebugMode) {
-      // For Android emulator, ALWAYS use 10.0.2.2 (even if BETTER_AUTH_URL is set)
-      // This ensures emulator can connect to host machine
+      // Prefer BETTER_AUTH_URL when set. Required for real device: in .env set
+      // BETTER_AUTH_URL=http://<your-pc-lan-ip>:3000 (same WiFi as device).
+      final envUrl = dotenv.env['BETTER_AUTH_URL'];
+      if (envUrl != null && envUrl.isNotEmpty) {
+        return envUrl;
+      }
+      // No env set: assume emulator/simulator
       if (Platform.isAndroid) {
-        return 'http://10.0.2.2:3000';
+        return 'http://10.0.2.2:3000'; // Android emulator → host machine
       } else if (Platform.isIOS) {
-        // iOS simulator: localhost works
-        return 'http://localhost:3000';
+        return 'http://localhost:3000'; // iOS simulator
       } else {
-        // Web or other platforms: check .env first, then default
-        final envUrl = dotenv.env['BETTER_AUTH_URL'];
-        if (envUrl != null && envUrl.isNotEmpty) {
-          return envUrl;
-        }
         return 'http://localhost:3000';
       }
     } else {
